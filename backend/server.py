@@ -197,6 +197,13 @@ async def check_compatibility(request: CompatibilityRequest):
 async def create_profile(profile_data: UserProfile):
     try:
         profile_dict = profile_data.dict()
+        
+        # Convert date objects to strings for MongoDB compatibility
+        if 'birth_details' in profile_dict and 'date_of_birth' in profile_dict['birth_details']:
+            profile_dict['birth_details']['date_of_birth'] = str(profile_dict['birth_details']['date_of_birth'])
+        if 'birth_details' in profile_dict and 'time_of_birth' in profile_dict['birth_details']:
+            profile_dict['birth_details']['time_of_birth'] = str(profile_dict['birth_details']['time_of_birth'])
+        
         result = await db.user_profiles.insert_one(profile_dict)
         profile_dict['_id'] = str(result.inserted_id)
         return UserProfile(**profile_dict)
