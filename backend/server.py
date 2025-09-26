@@ -122,6 +122,16 @@ async def generate_horoscope(request: HoroscopeRequest):
             if 'end_date' in horoscope_dict['current_dasa']:
                 horoscope_dict['current_dasa']['end_date'] = str(horoscope_dict['current_dasa']['end_date'])
         
+        # Convert chart house keys from integers to strings for MongoDB
+        if 'rasi_chart' in horoscope_dict and 'houses' in horoscope_dict['rasi_chart']:
+            horoscope_dict['rasi_chart']['houses'] = {str(k): v for k, v in horoscope_dict['rasi_chart']['houses'].items()}
+        if 'rasi_chart' in horoscope_dict and 'houses_tamil' in horoscope_dict['rasi_chart']:
+            horoscope_dict['rasi_chart']['houses_tamil'] = {str(k): v for k, v in horoscope_dict['rasi_chart']['houses_tamil'].items()}
+        if 'navamsa_chart' in horoscope_dict and 'houses' in horoscope_dict['navamsa_chart']:
+            horoscope_dict['navamsa_chart']['houses'] = {str(k): v for k, v in horoscope_dict['navamsa_chart']['houses'].items()}
+        if 'navamsa_chart' in horoscope_dict and 'houses_tamil' in horoscope_dict['navamsa_chart']:
+            horoscope_dict['navamsa_chart']['houses_tamil'] = {str(k): v for k, v in horoscope_dict['navamsa_chart']['houses_tamil'].items()}
+        
         await db.horoscopes.insert_one(horoscope_dict)
         
         return horoscope
