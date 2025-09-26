@@ -102,6 +102,26 @@ async def generate_horoscope(request: HoroscopeRequest):
         horoscope_dict['created_at'] = datetime.utcnow()
         horoscope_dict['system'] = request.system
         
+        # Convert date objects to strings for MongoDB compatibility
+        if 'birth_details' in horoscope_dict and 'date_of_birth' in horoscope_dict['birth_details']:
+            horoscope_dict['birth_details']['date_of_birth'] = str(horoscope_dict['birth_details']['date_of_birth'])
+        if 'birth_details' in horoscope_dict and 'time_of_birth' in horoscope_dict['birth_details']:
+            horoscope_dict['birth_details']['time_of_birth'] = str(horoscope_dict['birth_details']['time_of_birth'])
+        
+        # Convert dasa period dates to strings
+        if 'dasa_periods' in horoscope_dict:
+            for dasa in horoscope_dict['dasa_periods']:
+                if 'start_date' in dasa:
+                    dasa['start_date'] = str(dasa['start_date'])
+                if 'end_date' in dasa:
+                    dasa['end_date'] = str(dasa['end_date'])
+        
+        if 'current_dasa' in horoscope_dict and horoscope_dict['current_dasa']:
+            if 'start_date' in horoscope_dict['current_dasa']:
+                horoscope_dict['current_dasa']['start_date'] = str(horoscope_dict['current_dasa']['start_date'])
+            if 'end_date' in horoscope_dict['current_dasa']:
+                horoscope_dict['current_dasa']['end_date'] = str(horoscope_dict['current_dasa']['end_date'])
+        
         await db.horoscopes.insert_one(horoscope_dict)
         
         return horoscope
