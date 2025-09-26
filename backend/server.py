@@ -174,6 +174,16 @@ async def check_compatibility(request: CompatibilityRequest):
         compatibility_dict['created_at'] = datetime.utcnow()
         compatibility_dict['system'] = request.system
         
+        # Convert date objects to strings for MongoDB compatibility
+        if 'male_details' in compatibility_dict and 'date_of_birth' in compatibility_dict['male_details']:
+            compatibility_dict['male_details']['date_of_birth'] = str(compatibility_dict['male_details']['date_of_birth'])
+        if 'male_details' in compatibility_dict and 'time_of_birth' in compatibility_dict['male_details']:
+            compatibility_dict['male_details']['time_of_birth'] = str(compatibility_dict['male_details']['time_of_birth'])
+        if 'female_details' in compatibility_dict and 'date_of_birth' in compatibility_dict['female_details']:
+            compatibility_dict['female_details']['date_of_birth'] = str(compatibility_dict['female_details']['date_of_birth'])
+        if 'female_details' in compatibility_dict and 'time_of_birth' in compatibility_dict['female_details']:
+            compatibility_dict['female_details']['time_of_birth'] = str(compatibility_dict['female_details']['time_of_birth'])
+        
         await db.compatibility_reports.insert_one(compatibility_dict)
         
         return compatibility
