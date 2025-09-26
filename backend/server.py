@@ -136,6 +136,9 @@ async def generate_horoscope(request: HoroscopeRequest):
         
         return horoscope
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         logging.error(f"Error generating horoscope: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating horoscope: {str(e)}")
