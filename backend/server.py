@@ -201,6 +201,9 @@ async def check_compatibility(request: CompatibilityRequest):
         
         return compatibility
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         logging.error(f"Error checking compatibility: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error checking compatibility: {str(e)}")
