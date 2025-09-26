@@ -6,7 +6,8 @@ from astrology.models import (
 )
 from astrology.vakkiam_system import VakkiamCalculator
 from astrology.constants import (
-    TITHI_NAMES, TITHI_NAMES_TAMIL, YOGA_NAMES, KARANA_NAMES
+    TITHI_NAMES, TITHI_NAMES_TAMIL, YOGA_NAMES, KARANA_NAMES,
+    SIGNS, SIGNS_TAMIL, NAKSHATRAS, NAKSHATRAS_TAMIL
 )
 
 class ThirukkanithamCalculator(VakkiamCalculator):
