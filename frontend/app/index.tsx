@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function HomePage() {
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
