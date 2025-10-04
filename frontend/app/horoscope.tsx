@@ -231,19 +231,13 @@ export default function HoroscopePage() {
       const result = await response.json();
       
       if (response.ok) {
-        Alert.alert(
-          getText('வெற்றி', 'Success'),
-          getText('ஜாதகம் வெற்றிகரமாக உருவாக்கப்பட்டது', 'Horoscope generated successfully'),
-          [
-            {
-              text: getText('சரி', 'OK'),
-              onPress: () => {
-                console.log('Horoscope result:', result);
-                // TODO: Navigate to result display page
-              }
-            }
-          ]
-        );
+        // Navigate to results page with horoscope data
+        router.push({
+          pathname: '/horoscope-result',
+          params: {
+            data: JSON.stringify(result)
+          }
+        });
       } else {
         throw new Error(result.detail || 'Failed to generate horoscope');
       }
