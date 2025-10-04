@@ -818,4 +818,45 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2C3E50',
   },
+  pickerContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  datePicker: {
+    width: '100%',
+    height: 200,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E8E8E8',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  cancelButton: {
+    backgroundColor: '#95A5A6',
+  },
+  confirmButton: {
+    backgroundColor: '#4A90E2',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
