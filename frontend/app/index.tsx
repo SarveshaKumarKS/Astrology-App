@@ -79,8 +79,7 @@ export default function HomePage() {
               setSystem('thirukkanitham');
               // Navigate after switching
               setTimeout(() => {
-                // TODO: Navigate to route
-                console.log('Navigate to:', route);
+                router.push(route);
               }, 100);
             }
           }
@@ -89,8 +88,8 @@ export default function HomePage() {
       return;
     }
     
-    // TODO: Navigate to route
-    console.log('Navigate to:', route, 'with system:', system);
+    // Navigate to the route
+    router.push(route);
   };
 
   return (
