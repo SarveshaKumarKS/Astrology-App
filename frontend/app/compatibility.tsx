@@ -34,6 +34,7 @@ export default function CompatibilityPage() {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState<{show: boolean, person: 'male' | 'female'}>({show: false, person: 'male'});
   const [showTimePicker, setShowTimePicker] = useState<{show: boolean, person: 'male' | 'female'}>({show: false, person: 'male'});
+  const [geocoding, setGeocoding] = useState(false);
   
   const [maleDetails, setMaleDetails] = useState<BirthDetails>({
     name: '',
