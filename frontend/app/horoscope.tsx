@@ -578,13 +578,29 @@ export default function HoroscopePage() {
                 </TouchableOpacity>
               </View>
               <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={selectedTime}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleTimeChange}
-                  style={styles.datePicker}
-                />
+{Platform.OS === 'web' ? (
+                  <>
+                    <TextInput
+                      style={styles.webDateInput}
+                      value={birthDetails.time_of_birth}
+                      onChangeText={(value) => {
+                        handleInputChange('time_of_birth', value);
+                      }}
+                      placeholder="HH:MM"
+                      placeholderTextColor="#95A5A6"
+                    />
+                    <Text style={styles.webDateHelper}>
+                      {getText('வடிவம்: HH:MM (உதா: 14:30)', 'Format: HH:MM (e.g., 14:30)')}
+                    </Text>
+                  </>
+                ) : (
+                  <DateTimePicker
+                    value={selectedTime}
+                    mode="time"
+                    display="default"
+                    onChange={handleTimeChange}
+                  />
+                )}
               </View>
               <View style={styles.modalActions}>
                 <TouchableOpacity
