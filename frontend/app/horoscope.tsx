@@ -515,14 +515,31 @@ export default function HoroscopePage() {
                 </TouchableOpacity>
               </View>
               <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
-                  style={styles.datePicker}
-                />
+{Platform.OS === 'web' ? (
+                  <>
+                    <TextInput
+                      style={styles.webDateInput}
+                      value={birthDetails.date_of_birth}
+                      onChangeText={(value) => {
+                        handleInputChange('date_of_birth', value);
+                        setSelectedDate(new Date(value));
+                      }}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#95A5A6"
+                    />
+                    <Text style={styles.webDateHelper}>
+                      {getText('வடிவம்: YYYY-MM-DD (உதா: 2000-01-15)', 'Format: YYYY-MM-DD (e.g., 2000-01-15)')}
+                    </Text>
+                  </>
+                ) : (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
               </View>
               <View style={styles.modalActions}>
                 <TouchableOpacity
