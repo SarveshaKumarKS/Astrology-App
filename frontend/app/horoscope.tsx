@@ -560,13 +560,33 @@ export default function HoroscopePage() {
                   <Ionicons name="close" size={24} color="#2C3E50" />
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={selectedTime}
-                mode="time"
-                display="spinner"
-                onChange={handleTimeChange}
-                textColor="#2C3E50"
-              />
+              <View style={styles.pickerContainer}>
+                <DateTimePicker
+                  value={selectedTime}
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleTimeChange}
+                  style={styles.datePicker}
+                />
+              </View>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowTimePicker(false)}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    {getText('रद्द करें', 'Cancel')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.confirmButton]}
+                  onPress={() => setShowTimePicker(false)}
+                >
+                  <Text style={styles.confirmButtonText}>
+                    {getText('ठीक है', 'Done')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
