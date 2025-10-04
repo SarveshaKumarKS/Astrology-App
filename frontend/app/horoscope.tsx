@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -28,12 +29,26 @@ interface BirthDetails {
   time_correction: string;
 }
 
+interface GeocodeResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    country?: string;
+    state?: string;
+    city?: string;
+  };
+}
+
 export default function HoroscopePage() {
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
   const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
   const [loading, setLoading] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
   
   const [birthDetails, setBirthDetails] = useState<BirthDetails>({
     name: '',
@@ -54,20 +69,107 @@ export default function HoroscopePage() {
     setBirthDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      handleInputChange('date_of_birth', selectedDate.toISOString().split('T')[0]);
+  // Geocoding function to get latitude, longitude from place name
+  const geocodePlace = async (placeName: string) => {
+    if (!placeName.trim()) return;
+    
+    setGeocoding(true);
+    try {
+      // Using Nominatim (OpenStreetMap) geocoding service - it's free
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeName)}&limit=1&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'TamilAstrologyApp/1.0'
+          }
+        }
+      );
+      
+      const data: GeocodeResult[] = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat).toFixed(4);
+        const lon = parseFloat(result.lon).toFixed(4);
+        
+        // Update latitude and longitude
+        setBirthDetails(prev => ({
+          ...prev,
+          latitude: lat,
+          longitude: lon,
+          timezone: getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon))
+        }));
+        
+        Alert.alert(
+          getText('இடம் கண்டறியப்பட்டது', 'Location Found'),
+          getText(
+            `அட்சரேகை: ${lat}\\nதீர்க்கரேகை: ${lon}\\nநேர மண்டலம்: ${getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon))}`,
+            `Latitude: ${lat}\\nLongitude: ${lon}\\nTimezone: ${getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon))}`
+          )
+        );
+      } else {
+        Alert.alert(
+          getText('இடம் கண்டுபிடிக்க முடியவில்லை', 'Location Not Found'),
+          getText(
+            'தயவுசெய்து வேறு வடிவத்தில் முயற்சிக்கவும் (எ.கா: சென்னை, தமிழ்நாடு, இந்தியா)',
+            'Please try a different format (e.g., Chennai, Tamil Nadu, India)'
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      Alert.alert(
+        getText('பிழை', 'Error'),
+        getText('இடம் கண்டுபிடிக்க முடியவில்லை', 'Could not find location')
+      );
+    } finally {
+      setGeocoding(false);
     }
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      handleInputChange('time_of_birth', `${hours}:${minutes}`);
+  // Simple timezone detection based on coordinates
+  const getTimezoneFromCoordinates = (lat: number, lon: number): string => {
+    // India
+    if (lat >= 6.0 && lat <= 37.0 && lon >= 68.0 && lon <= 97.0) {
+      return 'IST';
     }
+    // Sri Lanka
+    if (lat >= 5.9 && lat <= 9.9 && lon >= 79.6 && lon <= 81.9) {
+      return 'IST';
+    }
+    // USA Eastern
+    if (lat >= 25.0 && lat <= 49.0 && lon >= -84.0 && lon <= -66.9) {
+      return 'EST';
+    }
+    // USA Pacific
+    if (lat >= 32.5 && lat <= 49.0 && lon >= -125.0 && lon <= -114.0) {
+      return 'PST';
+    }
+    // UK
+    if (lat >= 50.0 && lat <= 61.0 && lon >= -8.0 && lon <= 2.0) {
+      return 'GMT';
+    }
+    // Default to UTC
+    return 'UTC';
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || new Date();
+    setShowDatePicker(false);
+    setSelectedDate(currentDate);
+    
+    const dateString = currentDate.toISOString().split('T')[0];
+    handleInputChange('date_of_birth', dateString);
+  };
+
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    const currentTime = selectedTime || new Date();
+    setShowTimePicker(false);
+    setSelectedTime(currentTime);
+    
+    const hours = currentTime.getHours().toString().padStart(2, '0');
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+    handleInputChange('time_of_birth', `${hours}:${minutes}`);
   };
 
   const validateForm = (): boolean => {
@@ -90,27 +192,7 @@ export default function HoroscopePage() {
     if (!birthDetails.latitude.trim() || !birthDetails.longitude.trim()) {
       Alert.alert(
         getText('அட்சரேகை மற்றும் தீர்க்கரேகை தேவை', 'Latitude and Longitude Required'),
-        getText('தயவுசெய்து அட்சரேகை மற்றும் தீர்க்கரேகை உள்ளிடவும்', 'Please enter latitude and longitude')
-      );
-      return false;
-    }
-    
-    // Validate latitude and longitude ranges
-    const lat = parseFloat(birthDetails.latitude);
-    const lng = parseFloat(birthDetails.longitude);
-    
-    if (isNaN(lat) || lat < -90 || lat > 90) {
-      Alert.alert(
-        getText('தவறான அட்சரேகை', 'Invalid Latitude'),
-        getText('அட்சரேகை -90 முதல் 90 வரை இருக்க வேண்டும்', 'Latitude must be between -90 and 90')
-      );
-      return false;
-    }
-    
-    if (isNaN(lng) || lng < -180 || lng > 180) {
-      Alert.alert(
-        getText('தவறான தீர்க்கரேகை', 'Invalid Longitude'),
-        getText('தீர்க்கரேகை -180 முதல் 180 வரை இருக்க வேண்டும்', 'Longitude must be between -180 and 180')
+        getText('பிறந்த இடத்தை உள்ளிட்ட பிறகு "இடம் கண்டறி" பொத்தானைச் சொடுக்கவும்', 'Please click "Find Location" button after entering birth place')
       );
       return false;
     }
@@ -134,7 +216,7 @@ export default function HoroscopePage() {
           birth_details: {
             name: birthDetails.name,
             date_of_birth: birthDetails.date_of_birth,
-            time_of_birth: birthDetails.time_of_birth + ':00',  // Add seconds
+            time_of_birth: birthDetails.time_of_birth + ':00',
             place_of_birth: birthDetails.place_of_birth,
             latitude: parseFloat(birthDetails.latitude),
             longitude: parseFloat(birthDetails.longitude),
@@ -149,7 +231,6 @@ export default function HoroscopePage() {
       const result = await response.json();
       
       if (response.ok) {
-        // Navigate to horoscope result page
         Alert.alert(
           getText('வெற்றி', 'Success'),
           getText('ஜாதகம் வெற்றிகரமாக உருவாக்கப்பட்டது', 'Horoscope generated successfully'),
@@ -157,8 +238,8 @@ export default function HoroscopePage() {
             {
               text: getText('சரி', 'OK'),
               onPress: () => {
-                // TODO: Navigate to result page with horoscope data
                 console.log('Horoscope result:', result);
+                // TODO: Navigate to result display page
               }
             }
           ]
@@ -283,7 +364,7 @@ export default function HoroscopePage() {
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateTimeText}>
-                  {new Date(birthDetails.date_of_birth).toLocaleDateString()}
+                  {new Date(birthDetails.date_of_birth).toLocaleDateString('en-GB')}
                 </Text>
                 <Ionicons name="calendar-outline" size={20} color="#7F8C8D" />
               </TouchableOpacity>
@@ -299,67 +380,89 @@ export default function HoroscopePage() {
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text style={styles.dateTimeText}>
-                  {birthDetails.time_of_birth}
+                  {birthDetails.time_of_birth} ({birthDetails.timezone})
                 </Text>
                 <Ionicons name="time-outline" size={20} color="#7F8C8D" />
               </TouchableOpacity>
             </View>
             
-            {/* Birth Place */}
+            {/* Birth Place with Geocoding */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 {getText('பிறந்த இடம்', 'Place of Birth')} *
               </Text>
-              <TextInput
-                style={styles.textInput}
-                value={birthDetails.place_of_birth}
-                onChangeText={(value) => handleInputChange('place_of_birth', value)}
-                placeholder={getText('நகரம், மாநிலம், நாடு', 'City, State, Country')}
-                placeholderTextColor="#95A5A6"
-              />
+              <View style={styles.placeInputContainer}>
+                <TextInput
+                  style={[styles.textInput, { flex: 1 }]}
+                  value={birthDetails.place_of_birth}
+                  onChangeText={(value) => handleInputChange('place_of_birth', value)}
+                  placeholder={getText('நகரம், மாநிலம், நாடு', 'City, State, Country')}
+                  placeholderTextColor="#95A5A6"
+                />
+                <TouchableOpacity
+                  style={[styles.geocodeButton, geocoding && styles.geocodeButtonDisabled]}
+                  onPress={() => geocodePlace(birthDetails.place_of_birth)}
+                  disabled={geocoding || !birthDetails.place_of_birth.trim()}
+                >
+                  {geocoding ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="location" size={16} color="#FFFFFF" />
+                      <Text style={styles.geocodeButtonText}>
+                        {getText('கண்டறி', 'Find')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
             
-            {/* Latitude */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                {getText('அட்சரேகை (Latitude)', 'Latitude')} *
-              </Text>
-              <TextInput
-                style={styles.textInput}
-                value={birthDetails.latitude}
-                onChangeText={(value) => handleInputChange('latitude', value)}
-                placeholder={getText('உதா: 13.0827', 'e.g., 13.0827')}
-                placeholderTextColor="#95A5A6"
-                keyboardType="numeric"
-              />
+            {/* Latitude & Longitude (Auto-filled) */}
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.halfWidth]}>
+                <Text style={styles.inputLabel}>
+                  {getText('அட்சரேகை', 'Latitude')} *
+                </Text>
+                <TextInput
+                  style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
+                  value={birthDetails.latitude}
+                  onChangeText={(value) => handleInputChange('latitude', value)}
+                  placeholder="13.0827"
+                  placeholderTextColor="#95A5A6"
+                  keyboardType="numeric"
+                  editable={true}
+                />
+              </View>
+              
+              <View style={[styles.inputGroup, styles.halfWidth]}>
+                <Text style={styles.inputLabel}>
+                  {getText('தீர்க்கரேகை', 'Longitude')} *
+                </Text>
+                <TextInput
+                  style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
+                  value={birthDetails.longitude}
+                  onChangeText={(value) => handleInputChange('longitude', value)}
+                  placeholder="80.2707"
+                  placeholderTextColor="#95A5A6"
+                  keyboardType="numeric"
+                  editable={true}
+                />
+              </View>
             </View>
             
-            {/* Longitude */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                {getText('தீர்க்கரேகை (Longitude)', 'Longitude')} *
-              </Text>
-              <TextInput
-                style={styles.textInput}
-                value={birthDetails.longitude}
-                onChangeText={(value) => handleInputChange('longitude', value)}
-                placeholder={getText('உதா: 80.2707', 'e.g., 80.2707')}
-                placeholderTextColor="#95A5A6"
-                keyboardType="numeric"
-              />
-            </View>
-            
-            {/* Timezone */}
+            {/* Timezone (Auto-detected) */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 {getText('நேர மண்டலம்', 'Timezone')}
               </Text>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
                 value={birthDetails.timezone}
                 onChangeText={(value) => handleInputChange('timezone', value)}
-                placeholder={getText('IST, UTC+5:30', 'IST, UTC+5:30')}
+                placeholder="IST"
                 placeholderTextColor="#95A5A6"
+                editable={true}
               />
             </View>
             
@@ -372,7 +475,7 @@ export default function HoroscopePage() {
                 style={styles.textInput}
                 value={birthDetails.time_correction}
                 onChangeText={(value) => handleInputChange('time_correction', value)}
-                placeholder={getText('0', '0')}
+                placeholder="0"
                 placeholderTextColor="#95A5A6"
                 keyboardType="numeric"
               />
@@ -398,25 +501,55 @@ export default function HoroscopePage() {
         </View>
       </KeyboardAvoidingView>
       
-      {/* Date Picker */}
+      {/* Date Picker Modal */}
       {showDatePicker && (
-        <DateTimePicker
-          value={new Date(birthDetails.date_of_birth)}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
+        <Modal transparent={true} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {getText('தேதி தேர்ந்தெடுக்கவум்', 'Select Date')}
+                </Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Ionicons name="close" size={24} color="#2C3E50" />
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                textColor="#2C3E50"
+              />
+            </View>
+          </View>
+        </Modal>
       )}
       
-      {/* Time Picker */}
+      {/* Time Picker Modal */}
       {showTimePicker && (
-        <DateTimePicker
-          value={new Date(`2000-01-01T${birthDetails.time_of_birth}:00`)}
-          mode="time"
-          display="default"
-          onChange={handleTimeChange}
-        />
+        <Modal transparent={true} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {getText('நேரம் தேர்ந்தெடுக்கவும்', 'Select Time')}
+                </Text>
+                <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                  <Ionicons name="close" size={24} color="#2C3E50" />
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={selectedTime}
+                mode="time"
+                display="spinner"
+                onChange={handleTimeChange}
+                textColor="#2C3E50"
+              />
+            </View>
+          </View>
+        </Modal>
       )}
     </SafeAreaView>
   );
@@ -566,6 +699,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2C3E50',
   },
+  placeInputContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-end',
+  },
+  geocodeButton: {
+    backgroundColor: '#27AE60',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+    minHeight: 48,
+  },
+  geocodeButtonDisabled: {
+    opacity: 0.6,
+  },
+  geocodeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
+  },
   buttonContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
@@ -588,5 +753,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2C3E50',
   },
 });
