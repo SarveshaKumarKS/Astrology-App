@@ -118,6 +118,28 @@ class AstronomicalCalculations:
         omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000.0
         return (360.0 - omega) % 360.0
     
+    def calculate_lahiri_ayanamsa(self, jd: float) -> float:
+        """Calculate Lahiri Ayanamsa for given Julian Day"""
+        # Lahiri Ayanamsa calculation based on Spica at 0° Libra
+        # Reference epoch: J2000.0 (JD 2451545.0)
+        t = (jd - 2451545.0) / 36525.0
+        
+        # Mean longitude of the sun
+        l0 = 280.4664567 + 36000.76982779 * t + 0.0003032028 * t * t + t * t * t / 49931000.0
+        
+        # Nutation in longitude
+        omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000.0
+        nutation = -17.20 * math.sin(math.radians(omega)) / 3600.0
+        
+        # Lahiri ayanamsa formula
+        # At J2000.0, ayanamsa was approximately 23.85°
+        ayanamsa = 23.85 + 50.27 * t + 0.000464 * t * t
+        
+        # Apply nutation correction
+        ayanamsa += nutation
+        
+        return ayanamsa % 360.0
+    
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """Calculate Ascendant (Lagna)"""
         lst = self.get_sidereal_time(jd, longitude)
