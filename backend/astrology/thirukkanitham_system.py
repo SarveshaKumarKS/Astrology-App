@@ -16,8 +16,8 @@ class ThirukkanithamCalculator(VakkiamCalculator):
     def __init__(self):
         super().__init__()
         self.system_name = "thirukkanitham"
-        # Thirukkanitham uses different ayanamsa and calculations
-        self.ayanamsa_offset = 23.85  # Thirukkanitham ayanamsa
+        # Thirukkanitham uses the same sidereal calculations as base class
+        # No additional ayanamsa offset needed since base class now handles sidereal conversion
     
     def generate_horoscope(self, birth_details: BirthDetails, language: str = "tamil") -> HoroscopeResult:
         """Generate horoscope using Thirukkanitham system"""
