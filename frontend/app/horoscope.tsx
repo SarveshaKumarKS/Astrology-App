@@ -158,7 +158,12 @@ export default function HoroscopePage() {
     setShowDatePicker(false);
     setSelectedDate(currentDate);
     
-    const dateString = currentDate.toISOString().split('T')[0];
+    // Format date without timezone conversion to avoid date shifting
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = currentDate.getDate().toString().padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
     handleInputChange('date_of_birth', dateString);
   };
 
