@@ -118,8 +118,8 @@ class AstronomicalCalculations:
     def get_moon_mean_longitude(self, jd: float) -> float:
         """Calculate Moon's mean longitude"""
         t = (jd - 2451545.0) / 36525.0
-        l = 218.3164477 + 481267.88123421 * t - 0.0015786 * t * t + t * t * t / 538841.0 - t * t * t * t / 65194000.0
-        return l % 360.0
+        longitude = 218.3164477 + 481267.88123421 * t - 0.0015786 * t * t + t * t * t / 538841.0 - t * t * t * t / 65194000.0
+        return longitude % 360.0
     
     def get_rahu_longitude(self, jd: float) -> float:
         """Calculate Rahu's (North Node) longitude"""
