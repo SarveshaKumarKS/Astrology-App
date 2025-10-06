@@ -99,20 +99,14 @@ class ThirukkanithamCalculator(VakkiamCalculator):
     
     def _apply_thirukkanitham_corrections(self, horoscope: HoroscopeResult) -> HoroscopeResult:
         """Apply Thirukkanitham specific corrections to horoscope"""
-        # Apply ayanamsa correction to all planetary positions
+        # No additional ayanamsa correction needed since base class now handles sidereal conversion
+        # Thirukkanitham uses the same sidereal positions as standard Indian astrology
+        
+        # Apply any Thirukkanitham-specific interpretations or formatting here
+        # For now, just ensure Tamil names are properly set
         for planet_pos in horoscope.planetary_positions:
-            # Adjust longitude with Thirukkanitham ayanamsa
-            corrected_longitude = (planet_pos.longitude - self.ayanamsa_offset) % 360
-            planet_pos.longitude = corrected_longitude
-            
-            # Recalculate sign and nakshatra
-            planet_pos.sign = self.get_sign_from_longitude(corrected_longitude)
-            planet_pos.nakshatra = self.get_nakshatra_from_longitude(corrected_longitude)
-            
-            # Update names
-            planet_pos.sign_name = SIGNS[planet_pos.sign]
+            # Ensure Tamil names are set
             planet_pos.sign_name_tamil = SIGNS_TAMIL[planet_pos.sign]
-            planet_pos.nakshatra_name = NAKSHATRAS[planet_pos.nakshatra]
             planet_pos.nakshatra_name_tamil = NAKSHATRAS_TAMIL[planet_pos.nakshatra]
         
         return horoscope
