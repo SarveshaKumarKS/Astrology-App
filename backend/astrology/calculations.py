@@ -57,7 +57,11 @@ class AstronomicalCalculations:
     def calculate_planetary_positions(self, jd: float) -> Dict[str, Dict]:
         """Calculate positions of all planets"""
         observer = ephem.Observer()
-        observer.date = ephem.Date(jd - 2415020)  # Convert JD to ephem date
+        # Fix the Julian Day conversion for ephem
+        observer.date = ephem.Date(jd - 2415020.0)
+        
+        # Calculate ayanamsa for this date
+        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
         
         positions = {}
         
@@ -66,33 +70,38 @@ class AstronomicalCalculations:
                 continue
                 
             planet_obj.compute(observer)
-            longitude = math.degrees(planet_obj.hlong)
+            # Get tropical longitude from ephem
+            tropical_longitude = math.degrees(planet_obj.hlong)
             latitude = math.degrees(planet_obj.hlat)
             
+            # Convert to sidereal longitude by subtracting ayanamsa
+            sidereal_longitude = (tropical_longitude - ayanamsa) % 360.0
+            
             positions[planet_name] = {
-                'longitude': longitude,
+                'longitude': sidereal_longitude,
                 'latitude': latitude,
-                'sign': self.get_sign_from_longitude(longitude),
-                'nakshatra': self.get_nakshatra_from_longitude(longitude)
+                'sign': self.get_sign_from_longitude(sidereal_longitude),
+                'nakshatra': self.get_nakshatra_from_longitude(sidereal_longitude)
             }
         
-        # Calculate Rahu and Ketu (Lunar Nodes)
-        moon_mean_longitude = self.get_moon_mean_longitude(jd)
+        # Calculate Rahu and Ketu (Lunar Nodes) - these are already sidereal
         rahu_longitude = self.get_rahu_longitude(jd)
-        ketu_longitude = (rahu_longitude + 180) % 360
+        # Apply ayanamsa correction to Rahu as well
+        rahu_sidereal = (rahu_longitude - ayanamsa) % 360.0
+        ketu_sidereal = (rahu_sidereal + 180) % 360.0
         
         positions['Rahu'] = {
-            'longitude': rahu_longitude,
+            'longitude': rahu_sidereal,
             'latitude': 0,
-            'sign': self.get_sign_from_longitude(rahu_longitude),
-            'nakshatra': self.get_nakshatra_from_longitude(rahu_longitude)
+            'sign': self.get_sign_from_longitude(rahu_sidereal),
+            'nakshatra': self.get_nakshatra_from_longitude(rahu_sidereal)
         }
         
         positions['Ketu'] = {
-            'longitude': ketu_longitude,
+            'longitude': ketu_sidereal,
             'latitude': 0,
-            'sign': self.get_sign_from_longitude(ketu_longitude),
-            'nakshatra': self.get_nakshatra_from_longitude(ketu_longitude)
+            'sign': self.get_sign_from_longitude(ketu_sidereal),
+            'nakshatra': self.get_nakshatra_from_longitude(ketu_sidereal)
         }
         
         return positions
