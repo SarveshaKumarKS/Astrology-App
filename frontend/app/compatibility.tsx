@@ -71,10 +71,16 @@ export default function CompatibilityPage() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
+    const person = showDatePicker.person;
     setShowDatePicker({show: false, person: 'male'});
     if (selectedDate) {
-      const dateString = selectedDate.toISOString().split('T')[0];
-      handleInputChange(showDatePicker.person, 'date_of_birth', dateString);
+      // Format date without timezone conversion to avoid date shifting
+      const year = selectedDate.getFullYear();
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = selectedDate.getDate().toString().padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      handleInputChange(person, 'date_of_birth', dateString);
     }
   };
 
