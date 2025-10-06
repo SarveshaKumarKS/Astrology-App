@@ -133,9 +133,6 @@ class AstronomicalCalculations:
         # Reference epoch: J2000.0 (JD 2451545.0)
         t = (jd - 2451545.0) / 36525.0
         
-        # Mean longitude of the sun
-        l0 = 280.4664567 + 36000.76982779 * t + 0.0003032028 * t * t + t * t * t / 49931000.0
-        
         # Nutation in longitude
         omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000.0
         nutation = -17.20 * math.sin(math.radians(omega)) / 3600.0
