@@ -284,7 +284,6 @@ class ThirukkanithamCalculator(VakkiamCalculator):
     
     def _get_nakshatra_name(self, nakshatra_num: int) -> str:
         """Get nakshatra name in English"""
-        from astrology.constants import NAKSHATRAS
         return NAKSHATRAS.get(nakshatra_num, f"Nakshatra {nakshatra_num}")
     
     def _get_nakshatra_name_tamil(self, nakshatra_num: int) -> str:
