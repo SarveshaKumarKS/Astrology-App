@@ -363,7 +363,13 @@ export default function HoroscopePage() {
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateTimeText}>
-                  {new Date(birthDetails.date_of_birth).toLocaleDateString('en-GB')}
+                  {birthDetails.date_of_birth ? 
+                    (() => {
+                      const [year, month, day] = birthDetails.date_of_birth.split('-');
+                      return `${day}/${month}/${year}`;
+                    })() 
+                    : getText('தேதி தேர்ந்தெடுக்கவும்', 'Select Date')
+                  }
                 </Text>
                 <Ionicons name="calendar-outline" size={20} color="#7F8C8D" />
               </TouchableOpacity>
