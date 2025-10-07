@@ -1,4 +1,4 @@
-from datetime import datetime, date, time, timedelta
+from datetime import date, timedelta
 from typing import Dict, List
 from astrology.calculations import AstronomicalCalculations
 from astrology.models import (
@@ -12,40 +12,53 @@ from astrology.constants import (
 
 class VakkiamCalculator(AstronomicalCalculations):
     """Vakkiam system astrology calculations"""
-    
+
     def __init__(self):
         super().__init__()
         self.system_name = "vakkiam"
-    
+
+    # ---------- Public APIs ----------
+
     def generate_horoscope(self, birth_details: BirthDetails, language: str = "tamil") -> HoroscopeResult:
         """Generate complete horoscope using Vakkiam system"""
-        
+
         # Parse timezone
         timezone_offset = self._parse_timezone(birth_details.timezone)
-        
-        # Calculate Julian Day
+
+        # Calculate Julian Day (UTC)
         jd = self.get_julian_day(
-            birth_details.date_of_birth, 
-            birth_details.time_of_birth, 
+            birth_details.date_of_birth,
+            birth_details.time_of_birth,
             timezone_offset
         )
-        
-        # Calculate planetary positions
+
+        # Calculate planetary positions (sidereal)
         planetary_positions_raw = self.calculate_planetary_positions(jd)
-        
-        # Calculate ascendant
+
+        # Ascendant
         ascendant_longitude = self.calculate_ascendant(
             jd, birth_details.latitude, birth_details.longitude
         )
-        
-        # Calculate house cusps
+
+        # Houses (equal for now)
         house_cusps = self.calculate_houses(ascendant_longitude)
-        
-        # Process planetary positions
-        planetary_positions = []
+
+        # Process planetary positions (with retrograde detection via day-1 comparison)
+        planetary_positions: List[PlanetaryPosition] = []
+        prev_day_positions = self.calculate_planetary_positions(jd - 1.0)
+
         for planet_name, position in planetary_positions_raw.items():
+            if planet_name in ("Rahu", "Ketu"):
+                retro = False  # nodes are always retrograde conceptually; keep False for UI
+            else:
+                # retrograde if longitude decreased compared to previous day
+                prev_lon = prev_day_positions[planet_name]['longitude']
+                cur_lon = position['longitude']
+                delta = (cur_lon - prev_lon + 540.0) % 360.0 - 180.0  # shortest arc
+                retro = delta < 0
+
             house = self.get_planet_house(position['longitude'], house_cusps)
-            
+
             planet_pos = PlanetaryPosition(
                 planet=planet_name,
                 planet_tamil=PLANET_NAMES.get(planet_name, planet_name),
@@ -57,26 +70,29 @@ class VakkiamCalculator(AstronomicalCalculations):
                 nakshatra_name=NAKSHATRAS[position['nakshatra']],
                 nakshatra_name_tamil=NAKSHATRAS_TAMIL[position['nakshatra']],
                 house=house,
-                retrograde=False  # TODO: Calculate retrograde status
+                retrograde=retro
             )
             planetary_positions.append(planet_pos)
-        
-        # Calculate charts
+
+        # Charts
         rasi_chart = self._create_rasi_chart(planetary_positions_raw, ascendant_longitude)
         navamsa_positions = self.calculate_navamsa(planetary_positions_raw)
         navamsa_chart = self._create_navamsa_chart(navamsa_positions)
-        
-        # Calculate Dasa periods
+
+        # Dasa periods (with first-balance using Moon longitude)
         moon_position = planetary_positions_raw['Moon']
-        dasa_periods = self._calculate_dasa_periods(moon_position['nakshatra'], birth_details.date_of_birth)
+        dasa_periods = self._calculate_dasa_periods(
+            moon_position['nakshatra'],
+            birth_details.date_of_birth,
+            moon_position['longitude']
+        )
         current_dasa = self._get_current_dasa(dasa_periods)
-        
-        # Get ascendant and moon sign info
+
+        # Asc/Moon/Nakshatra names
         ascendant_sign = self.get_sign_from_longitude(ascendant_longitude)
         moon_sign = moon_position['sign']
         moon_nakshatra = moon_position['nakshatra']
-        
-        # Create horoscope result
+
         horoscope = HoroscopeResult(
             birth_details=birth_details,
             system=self.system_name,
@@ -92,31 +108,27 @@ class VakkiamCalculator(AstronomicalCalculations):
             navamsa_chart=navamsa_chart,
             dasa_periods=dasa_periods,
             current_dasa=current_dasa,
-            special_yogas=[],  # TODO: Calculate yogas
+            special_yogas=[],  # TODO
             special_yogas_tamil=[]
         )
-        
+
         return horoscope
-    
-    def check_compatibility(self, male_details: BirthDetails, female_details: BirthDetails, 
-                          language: str = "tamil") -> CompatibilityResult:
+
+    def check_compatibility(self, male_details: BirthDetails, female_details: BirthDetails,
+                            language: str = "tamil") -> CompatibilityResult:
         """Check marriage compatibility using Vakkiam system"""
-        
-        # Generate horoscopes for both
+
         male_horoscope = self.generate_horoscope(male_details, language)
         female_horoscope = self.generate_horoscope(female_details, language)
-        
-        # Calculate compatibility factors
-        factors = []
-        total_points = 0
-        max_total_points = 36  # Standard Ashtakoota system
-        
-        # Implement Ashtakoota matching
+
+        factors: List[CompatibilityFactor] = []
+        total_points = 0.0
+        max_total_points = 36.0  # Ashtakoota standard
+
         for factor_key, factor_info in COMPATIBILITY_FACTORS.items():
             points = self._calculate_compatibility_factor(
                 factor_key, male_horoscope, female_horoscope
             )
-            
             factor = CompatibilityFactor(
                 factor_name=factor_info['name'],
                 factor_name_tamil=factor_info['tamil'],
@@ -131,19 +143,16 @@ class VakkiamCalculator(AstronomicalCalculations):
             )
             factors.append(factor)
             total_points += points
-        
-        # Calculate percentage and overall rating
-        percentage = (total_points / max_total_points) * 100
+
+        percentage = (total_points / max_total_points) * 100.0
         overall_rating = self._get_overall_rating(percentage)
         overall_rating_tamil = self._get_overall_rating_tamil(percentage)
-        
-        # Dosha analysis
+
         dosha_analysis = self._analyze_doshas(male_horoscope, female_horoscope)
-        
-        # Generate recommendation
+
         recommendation = self._generate_recommendation(percentage, dosha_analysis, language)
         recommendation_tamil = self._generate_recommendation_tamil(percentage, dosha_analysis)
-        
+
         return CompatibilityResult(
             male_details=male_details,
             female_details=female_details,
@@ -159,215 +168,183 @@ class VakkiamCalculator(AstronomicalCalculations):
             recommendation=recommendation,
             recommendation_tamil=recommendation_tamil
         )
-    
+
+    # ---------- Internals ----------
+
     def _parse_timezone(self, timezone_str: str) -> float:
-        """Parse timezone string to offset in hours"""
-        # Simple parsing - extend as needed
-        if timezone_str.startswith('+'):
-            return float(timezone_str[1:])
-        elif timezone_str.startswith('-'):
-            return -float(timezone_str[1:])
-        elif timezone_str.upper() == 'IST':
+        """Parse timezone: supports 'IST', '+/-H', '+/-HH:MM'."""
+        s = timezone_str.strip().upper()
+        if s == 'IST':
             return 5.5
-        else:
+        # ±HH:MM
+        if (s.startswith('+') or s.startswith('-')) and ':' in s:
+            sign = 1 if s[0] == '+' else -1
+            hh, mm = s[1:].split(':', 1)
+            return sign * (int(hh) + int(mm) / 60.0)
+        # ±H or ±HH or float string
+        try:
+            if s.startswith('+'):
+                return float(s[1:])
+            if s.startswith('-'):
+                return -float(s[1:])
+            return float(s)  # allow plain number
+        except ValueError:
             return 0.0
-    
+
     def _create_rasi_chart(self, positions: Dict, ascendant: float) -> Chart:
-        """Create Rasi chart"""
+        """Create Rasi chart: planets placed by houses from ascendant."""
         houses = {i: [] for i in range(1, 13)}
         houses_tamil = {i: [] for i in range(1, 13)}
-        
-        # Place ascendant
+
+        # Ascendant marker
         asc_house = 1
         houses[asc_house].append("Asc")
         houses_tamil[asc_house].append("லக்")
-        
-        # Place planets
+
+        cusps = self.calculate_houses(ascendant)
         for planet, position in positions.items():
-            house = self.get_planet_house(position['longitude'], self.calculate_houses(ascendant))
+            house = self.get_planet_house(position['longitude'], cusps)
             houses[house].append(planet)
             houses_tamil[house].append(PLANET_NAMES.get(planet, planet))
-        
+
         return Chart(
             chart_type="rasi",
             houses=houses,
             houses_tamil=houses_tamil,
             ascendant_house=asc_house
         )
-    
+
     def _create_navamsa_chart(self, navamsa_positions: Dict) -> Chart:
-        """Create Navamsa chart"""
+        """Create Navamsa chart: planets grouped by D9 sign."""
         houses = {i: [] for i in range(1, 13)}
         houses_tamil = {i: [] for i in range(1, 13)}
-        
+
         for planet, position in navamsa_positions.items():
             house = position['sign']
             houses[house].append(planet)
             houses_tamil[house].append(PLANET_NAMES.get(planet, planet))
-        
+
         return Chart(
             chart_type="navamsa",
             houses=houses,
             houses_tamil=houses_tamil,
-            ascendant_house=1  # Will be calculated properly
+            ascendant_house=1  # TODO: compute D9 ascendant if needed
         )
-    
-    def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date) -> List[DasaPeriod]:
-        """Calculate Vimshottari Dasa periods"""
-        # Determine starting dasa lord based on birth nakshatra
+
+    def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float) -> List[DasaPeriod]:
+        """Vimshottari Mahadasha periods with first-dasha balance from Moon's position."""
+        # Nakshatra lords (1..27)
         nakshatra_lords = {
             1: 'Ketu', 2: 'Venus', 3: 'Sun', 4: 'Moon', 5: 'Mars', 6: 'Rahu', 7: 'Jupiter', 8: 'Saturn', 9: 'Mercury',
             10: 'Ketu', 11: 'Venus', 12: 'Sun', 13: 'Moon', 14: 'Mars', 15: 'Rahu', 16: 'Jupiter', 17: 'Saturn', 18: 'Mercury',
             19: 'Ketu', 20: 'Venus', 21: 'Sun', 22: 'Moon', 23: 'Mars', 24: 'Rahu', 25: 'Jupiter', 26: 'Saturn', 27: 'Mercury'
         }
-        
+        span = 360.0 / 27.0  # 13°20'
+        nk_start = ((birth_nakshatra - 1) * span) % 360.0
+        f_elapsed = ((moon_longitude_deg - nk_start) % 360.0) / span  # 0..1
         starting_lord = nakshatra_lords[birth_nakshatra]
-        starting_index = DASA_ORDER.index(starting_lord)
-        
-        dasa_periods = []
-        current_date = birth_date
-        
-        # Generate 120 years of dasa periods
-        for cycle in range(2):  # Two complete cycles
-            for i in range(9):
-                planet_index = (starting_index + i) % 9
-                planet = DASA_ORDER[planet_index]
-                years = DASA_YEARS[planet]
-                
-                end_date = current_date + timedelta(days=years * 365.25)
-                
-                dasa_period = DasaPeriod(
-                    planet=planet,
-                    planet_tamil=PLANET_NAMES[planet],
-                    start_date=current_date,
-                    end_date=end_date,
-                    level="maha",
-                    years=years,
-                    months=int(years * 12),
-                    days=int(years * 365.25)
-                )
-                
-                dasa_periods.append(dasa_period)
-                current_date = end_date
-        
+
+        # First (truncated) mahadasha
+        remaining_years = DASA_YEARS[starting_lord] * (1.0 - f_elapsed)
+
+        dasa_periods: List[DasaPeriod] = []
+        cur_start = birth_date
+        first_end = cur_start + timedelta(days=remaining_years * 365.2425)
+        dasa_periods.append(DasaPeriod(
+            planet=starting_lord,
+            planet_tamil=PLANET_NAMES[starting_lord],
+            start_date=cur_start,
+            end_date=first_end,
+            level="maha",
+            years=remaining_years,
+            months=int(round(remaining_years * 12)),
+            days=int(round(remaining_years * 365.2425))
+        ))
+        cur_start = first_end
+
+        # Continue cycles (~120 years total)
+        idx0 = DASA_ORDER.index(starting_lord)
+        for k in range(1, 18):  # 2 cycles minus the first partial already added
+            planet = DASA_ORDER[(idx0 + k) % 9]
+            yrs = DASA_YEARS[planet]
+            end = cur_start + timedelta(days=yrs * 365.2425)
+            dasa_periods.append(DasaPeriod(
+                planet=planet,
+                planet_tamil=PLANET_NAMES[planet],
+                start_date=cur_start,
+                end_date=end,
+                level="maha",
+                years=yrs,
+                months=int(yrs * 12),
+                days=int(yrs * 365.2425)
+            ))
+            cur_start = end
+
         return dasa_periods
-    
+
     def _get_current_dasa(self, dasa_periods: List[DasaPeriod]) -> DasaPeriod:
-        """Get current running dasa"""
+        """Get current running mahadasha (by today's date)."""
         today = date.today()
-        
-        for dasa in dasa_periods:
-            if dasa.start_date <= today <= dasa.end_date:
-                return dasa
-        
-        # Return first dasa if none found
+        for d in dasa_periods:
+            if d.start_date <= today <= d.end_date:
+                return d
         return dasa_periods[0] if dasa_periods else None
-    
-    def _calculate_compatibility_factor(self, factor: str, male_horoscope: HoroscopeResult, 
-                                      female_horoscope: HoroscopeResult) -> float:
-        """Calculate points for a specific compatibility factor"""
-        # Simplified implementation - extend with actual calculation logic
-        if factor == 'varna':
-            return 1.0  # Placeholder
-        elif factor == 'vashya':
-            return 1.5  # Placeholder
-        elif factor == 'tara':
-            return 2.0  # Placeholder
-        elif factor == 'yoni':
-            return 3.0  # Placeholder
-        elif factor == 'graha_maitri':
-            return 4.0  # Placeholder
-        elif factor == 'gana':
-            return 5.0  # Placeholder
-        elif factor == 'bhakoot':
-            return 6.0  # Placeholder
-        elif factor == 'nadi':
-            return 7.0  # Placeholder
-        else:
-            return 0.0
-    
-    def _get_factor_value(self, factor: str, horoscope: HoroscopeResult) -> str:
-        """Get the value of a compatibility factor for a horoscope"""
-        if factor == 'varna':
-            return "Brahmin"  # Placeholder
-        elif factor == 'gana':
-            return "Deva"  # Placeholder
-        else:
-            return "TBD"  # Placeholder
-    
-    def _get_status_from_points(self, points: float, max_points: float) -> str:
-        """Get status description from points"""
-        percentage = (points / max_points) * 100
-        if percentage >= 80:
-            return "excellent"
-        elif percentage >= 60:
-            return "good"
-        elif percentage >= 40:
-            return "average"
-        else:
-            return "poor"
-    
-    def _get_status_tamil(self, points: float, max_points: float) -> str:
-        """Get Tamil status description from points"""
-        percentage = (points / max_points) * 100
-        if percentage >= 80:
-            return "மிகச்சிறந்த"
-        elif percentage >= 60:
-            return "நல்ல"
-        elif percentage >= 40:
-            return "சராசரி"
-        else:
-            return "குறைவு"
-    
-    def _get_overall_rating(self, percentage: float) -> str:
-        """Get overall compatibility rating"""
-        if percentage >= 75:
-            return "excellent"
-        elif percentage >= 60:
-            return "good"
-        elif percentage >= 45:
-            return "average"
-        else:
-            return "poor"
-    
-    def _get_overall_rating_tamil(self, percentage: float) -> str:
-        """Get Tamil overall compatibility rating"""
-        if percentage >= 75:
-            return "மிகச்சிறந்த பொருத்தம்"
-        elif percentage >= 60:
-            return "நல்ல பொருத்தம்"
-        elif percentage >= 45:
-            return "சராசரி பொருத்தம்"
-        else:
-            return "பொருத்தமில்லை"
-    
-    def _analyze_doshas(self, male_horoscope: HoroscopeResult, female_horoscope: HoroscopeResult) -> Dict:
-        """Analyze doshas in both horoscopes"""
-        return {
-            "male_doshas": [],  # TODO: Implement dosha detection
-            "female_doshas": [],
-            "combined_effects": [],
-            "remedies": []
+
+    # ----- Compatibility scaffolding (placeholders, same as before) -----
+
+    def _calculate_compatibility_factor(self, factor: str, male_horoscope: HoroscopeResult,
+                                        female_horoscope: HoroscopeResult) -> float:
+        # TODO: real logic
+        mapping = {
+            'varna': 1.0, 'vashya': 1.5, 'tara': 2.0, 'yoni': 3.0,
+            'graha_maitri': 4.0, 'gana': 5.0, 'bhakoot': 6.0, 'nadi': 7.0
         }
-    
+        return mapping.get(factor, 0.0)
+
+    def _get_factor_value(self, factor: str, horoscope: HoroscopeResult) -> str:
+        if factor == 'varna':
+            return "Brahmin"
+        elif factor == 'gana':
+            return "Deva"
+        return "TBD"
+
+    def _get_status_from_points(self, points: float, max_points: float) -> str:
+        p = (points / max_points) * 100.0
+        if p >= 80: return "excellent"
+        if p >= 60: return "good"
+        if p >= 40: return "average"
+        return "poor"
+
+    def _get_status_tamil(self, points: float, max_points: float) -> str:
+        p = (points / max_points) * 100.0
+        if p >= 80: return "மிகச்சிறந்த"
+        if p >= 60: return "நல்ல"
+        if p >= 40: return "சராசரி"
+        return "குறைவு"
+
+    def _get_overall_rating(self, percentage: float) -> str:
+        if percentage >= 75: return "excellent"
+        if percentage >= 60: return "good"
+        if percentage >= 45: return "average"
+        return "poor"
+
+    def _get_overall_rating_tamil(self, percentage: float) -> str:
+        if percentage >= 75: return "மிகச்சிறந்த பொருத்தம்"
+        if percentage >= 60: return "நல்ல பொருத்தம்"
+        if percentage >= 45: return "சராசரி பொருத்தம்"
+        return "பொருத்தமில்லை"
+
+    def _analyze_doshas(self, male_horoscope: HoroscopeResult, female_horoscope: HoroscopeResult) -> Dict:
+        return {"male_doshas": [], "female_doshas": [], "combined_effects": [], "remedies": []}
+
     def _generate_recommendation(self, percentage: float, dosha_analysis: Dict, language: str) -> str:
-        """Generate compatibility recommendation"""
-        if percentage >= 75:
-            return "Highly compatible match. Proceed with confidence."
-        elif percentage >= 60:
-            return "Good compatibility. Minor adjustments may be needed."
-        elif percentage >= 45:
-            return "Average compatibility. Consider consulting an astrologer."
-        else:
-            return "Low compatibility. Careful consideration recommended."
-    
+        if percentage >= 75: return "Highly compatible match. Proceed with confidence."
+        if percentage >= 60: return "Good compatibility. Minor adjustments may be needed."
+        if percentage >= 45: return "Average compatibility. Consider consulting an astrologer."
+        return "Low compatibility. Careful consideration recommended."
+
     def _generate_recommendation_tamil(self, percentage: float, dosha_analysis: Dict) -> str:
-        """Generate Tamil compatibility recommendation"""
-        if percentage >= 75:
-            return "மிகச்சிறந்த பொருத்தம். நம்பிக்கையுடன் முன்னேறலாம்."
-        elif percentage >= 60:
-            return "நல்ல பொருத்தம். சிறிய மாற்றங்கள் தேவைப்படலாம்."
-        elif percentage >= 45:
-            return "சராசரி பொருத்தம். ஜோதிடரை ஆலோசிக்கவும்."
-        else:
-            return "குறைவான பொருத்தம். கவனமாக பரிசீலிக்கவும்."
+        if percentage >= 75: return "மிகச்சிறந்த பொருத்தம். நம்பிக்கையுடன் முன்னேறலாம்."
+        if percentage >= 60: return "நல்ல பொருத்தம். சிறிய மாற்றங்கள் தேவைப்படலாம்."
+        if percentage >= 45: return "சராசரி பொருத்தம். ஜோதிடரை ஆலோசிக்கவும்."
+        return "குறைவான பொருத்தம். கவனமாக பரிசீலிக்கவும்."
