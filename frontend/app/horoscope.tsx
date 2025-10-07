@@ -747,6 +747,22 @@ const styles = StyleSheet.create({
   systemButtonTextActive: {
     color: '#4A90E2',
   },
+  systemButtonDisabled: {
+    borderColor: '#D5D8DC',
+    backgroundColor: '#F2F3F4',
+    opacity: 0.7,
+  },
+  systemButtonTextDisabled: {
+    color: '#95A5A6',
+  },
+  comingSoonText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#E67E22',
+    marginTop: 4,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   formSection: {
     backgroundColor: '#FFFFFF',
     padding: 20,
