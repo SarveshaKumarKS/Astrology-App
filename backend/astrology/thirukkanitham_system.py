@@ -94,8 +94,10 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             hh, mm = s[1:].split(':', 1)
             return sign * (int(hh) + int(mm)/60.0)
         try:
-            if s.startswith('+'): return float(s[1:])
-            if s.startswith('-'): return -float(s[1:])
+            if s.startswith('+'):
+                return float(s[1:])
+            if s.startswith('-'):
+                return -float(s[1:])
             return float(s)
         except ValueError:
             return 0.0
