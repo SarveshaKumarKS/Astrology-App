@@ -1,7 +1,8 @@
 import math
-from datetime import datetime, date, time, timedelta
-from typing import Dict, List, Tuple
+from datetime import datetime, date, time, timedelta, timezone
+from typing import Dict, List
 import ephem
+
 from astrology.constants import (
     PLANETS, SIGNS, NAKSHATRAS, HOUSES,
     PLANETS_TAMIL, SIGNS_TAMIL, NAKSHATRAS_TAMIL
@@ -9,8 +10,9 @@ from astrology.constants import (
 
 class AstronomicalCalculations:
     """Base class for astronomical calculations used by both systems"""
-    
+
     def __init__(self):
+        # PyEphem planet objects for geocentric calculations
         self.planets = {
             'Sun': ephem.Sun(),
             'Moon': ephem.Moon(),
@@ -19,208 +21,186 @@ class AstronomicalCalculations:
             'Mars': ephem.Mars(),
             'Jupiter': ephem.Jupiter(),
             'Saturn': ephem.Saturn(),
-            'Rahu': None,  # Calculated separately
-            'Ketu': None   # Calculated separately
+            'Rahu': None,  # Calculated separately (mean node)
+            'Ketu': None   # Calculated separately (mean node + 180°)
         }
-    
+
+    # ---------- Time & JD helpers ----------
+
     def get_julian_day(self, birth_date: date, birth_time: time, timezone_offset: float) -> float:
-        """Calculate Julian Day Number"""
-        dt = datetime.combine(birth_date, birth_time)
-        # Adjust for timezone
-        dt = dt - timedelta(hours=timezone_offset)
-        
-        # Convert to Julian Day
-        a = (14 - dt.month) // 12
-        y = dt.year + 4800 - a
-        m = dt.month + 12 * a - 3
-        
-        jdn = dt.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
-        
-        # Add time fraction
-        time_fraction = (dt.hour + dt.minute / 60.0 + dt.second / 3600.0) / 24.0
-        
+        """Calculate (UTC) Julian Day Number from local date/time and tz offset (hours)."""
+        # Local datetime
+        dt_local = datetime.combine(birth_date, birth_time)
+        # convert to UTC by subtracting the local offset
+        dt_utc = dt_local - timedelta(hours=timezone_offset)
+        # Astronomical JD: days since -4713-11-24 12:00 TT approx; good enough to treat UTC as proxy here
+        a = (14 - dt_utc.month) // 12
+        y = dt_utc.year + 4800 - a
+        m = dt_utc.month + 12 * a - 3
+        jdn = dt_utc.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+        time_fraction = (dt_utc.hour + dt_utc.minute / 60.0 + dt_utc.second / 3600.0) / 24.0
+        # JD starts at noon; subtract 0.5 to pivot day boundary at 00:00
         return jdn + time_fraction - 0.5
-    
+
+    def _ephem_date_from_jd(self, jd: float) -> ephem.Date:
+        """Convert JD (UTC) to ephem.Date."""
+        # JD 2451545.0 == 2000-01-01 12:00:00 UTC
+        days = jd - 2451545.0
+        dt_utc = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc) + timedelta(days=days)
+        return ephem.Date(dt_utc)
+
+    # ---------- Sidereal helpers ----------
+
     def get_sidereal_time(self, jd: float, longitude: float) -> float:
-        """Calculate Local Sidereal Time"""
-        # Greenwich Sidereal Time at 0h UT
+        """Greenwich sidereal time + longitude (east positive), in degrees 0..360."""
         t = (jd - 2451545.0) / 36525.0
         gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * t * t - t * t * t / 38710000.0
-        
-        # Normalize to 0-360
         gst = gst % 360.0
-        
-        # Local Sidereal Time
-        lst = gst + longitude
-        return lst % 360.0
-    
+        lst = (gst + longitude) % 360.0
+        return lst
+
+    def calculate_lahiri_ayanamsa(self, jd: float) -> float:
+        """
+        Approximate Lahiri ayanamsa (degrees) around J2000 with correct units.
+        For high-precision, swap to Swiss Ephemeris.
+        """
+        t = (jd - 2451545.0) / 36525.0  # Julian centuries since J2000
+        base = 23.852_583_333  # 23°51'9.3" at J2000
+        drift_deg_per_century = 5029.0966 / 3600.0  # arcsec/century -> deg/century
+        ayanamsa = (base + drift_deg_per_century * t) % 360.0
+        return ayanamsa
+
+    # ---------- Longitudes, signs, nakshatras ----------
+
+    def get_sign_from_longitude(self, longitude: float) -> int:
+        """Zodiac sign index (1..12) from a sidereal ecliptic longitude (deg)."""
+        return int(longitude // 30) + 1
+
+    def get_nakshatra_from_longitude(self, longitude: float) -> int:
+        """Nakshatra index (1..27) from sidereal ecliptic longitude (deg)."""
+        span = 360.0 / 27.0  # 13°20'
+        return int((longitude % 360.0) // span) + 1
+
+    # ---------- Planetary positions ----------
+
     def calculate_planetary_positions(self, jd: float) -> Dict[str, Dict]:
-        """Calculate positions of all planets"""
+        """
+        Return per-planet dict with sidereal ecliptic longitude, latitude, sign, nakshatra.
+        Uses geocentric ecliptic of date via ephem.Ecliptic(body).
+        """
         observer = ephem.Observer()
-        # Fix the Julian Day conversion for ephem
-        observer.date = ephem.Date(jd - 2415020.0)
-        
-        # Calculate ayanamsa for this date
+        observer.date = self._ephem_date_from_jd(jd)
+        # If you want true topocentric Moon, set observer.lat/lon; for now geocentric is sufficient.
+
         ayanamsa = self.calculate_lahiri_ayanamsa(jd)
-        
-        positions = {}
-        
+        positions: Dict[str, Dict] = {}
+
         for planet_name, planet_obj in self.planets.items():
-            if planet_obj is None:  # Rahu/Ketu calculated separately
+            if planet_obj is None:
                 continue
-                
             planet_obj.compute(observer)
-            # Get tropical longitude from ephem
-            tropical_longitude = math.degrees(planet_obj.hlong)
-            latitude = math.degrees(planet_obj.hlat)
-            
-            # Convert to sidereal longitude by subtracting ayanamsa
+            # Geocentric ecliptic of date
+            ecl = ephem.Ecliptic(planet_obj)
+            tropical_longitude = math.degrees(ecl.lon) % 360.0
+            latitude = math.degrees(ecl.lat)
+            # Convert to sidereal
             sidereal_longitude = (tropical_longitude - ayanamsa) % 360.0
-            
+
             positions[planet_name] = {
                 'longitude': sidereal_longitude,
                 'latitude': latitude,
                 'sign': self.get_sign_from_longitude(sidereal_longitude),
                 'nakshatra': self.get_nakshatra_from_longitude(sidereal_longitude)
             }
-        
-        # Calculate Rahu and Ketu (Lunar Nodes) - these are already sidereal
-        rahu_longitude = self.get_rahu_longitude(jd)
-        # Apply ayanamsa correction to Rahu as well
-        rahu_sidereal = (rahu_longitude - ayanamsa) % 360.0
-        ketu_sidereal = (rahu_sidereal + 180) % 360.0
-        
+
+        # Mean node (Rahu/Ketu) from mean ascending node (tropical)
+        t = (jd - 2451545.0) / 36525.0
+        omega = (125.04452 - 1934.136261 * t + 0.0020708 * t * t + (t ** 3) / 450000.0) % 360.0
+        rahu_sidereal = (omega - ayanamsa) % 360.0
+        ketu_sidereal = (rahu_sidereal + 180.0) % 360.0
+
         positions['Rahu'] = {
             'longitude': rahu_sidereal,
-            'latitude': 0,
+            'latitude': 0.0,
             'sign': self.get_sign_from_longitude(rahu_sidereal),
             'nakshatra': self.get_nakshatra_from_longitude(rahu_sidereal)
         }
-        
         positions['Ketu'] = {
             'longitude': ketu_sidereal,
-            'latitude': 0,
+            'latitude': 0.0,
             'sign': self.get_sign_from_longitude(ketu_sidereal),
             'nakshatra': self.get_nakshatra_from_longitude(ketu_sidereal)
         }
-        
+
         return positions
-    
-    def get_sign_from_longitude(self, longitude: float) -> int:
-        """Get zodiac sign (1-12) from longitude"""
-        return int(longitude // 30) + 1
-    
-    def get_nakshatra_from_longitude(self, longitude: float) -> int:
-        """Get nakshatra (1-27) from longitude"""
-        nakshatra_length = 360.0 / 27.0  # 13.333 degrees per nakshatra
-        return int(longitude / nakshatra_length) + 1
-    
-    def get_moon_mean_longitude(self, jd: float) -> float:
-        """Calculate Moon's mean longitude"""
-        t = (jd - 2451545.0) / 36525.0
-        longitude = 218.3164477 + 481267.88123421 * t - 0.0015786 * t * t + t * t * t / 538841.0 - t * t * t * t / 65194000.0
-        return longitude % 360.0
-    
-    def get_rahu_longitude(self, jd: float) -> float:
-        """Calculate Rahu's (North Node) longitude"""
-        t = (jd - 2451545.0) / 36525.0
-        omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000.0
-        return (360.0 - omega) % 360.0
-    
-    def calculate_lahiri_ayanamsa(self, jd: float) -> float:
-        """Calculate Lahiri Ayanamsa for given Julian Day"""
-        # Lahiri Ayanamsa calculation based on Spica at 0° Libra
-        # Reference epoch: J2000.0 (JD 2451545.0)
-        t = (jd - 2451545.0) / 36525.0
-        
-        # Nutation in longitude
-        omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000.0
-        nutation = -17.20 * math.sin(math.radians(omega)) / 3600.0
-        
-        # Lahiri ayanamsa formula
-        # At J2000.0, ayanamsa was approximately 23.85°
-        ayanamsa = 23.85 + 50.27 * t + 0.000464 * t * t
-        
-        # Apply nutation correction
-        ayanamsa += nutation
-        
-        return ayanamsa % 360.0
-    
+
+    # ---------- Ascendant / Houses ----------
+
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
-        """Calculate Ascendant (Lagna)"""
-        lst = self.get_sidereal_time(jd, longitude)
-        
-        # Convert to radians
-        lst_rad = math.radians(lst)
-        lat_rad = math.radians(latitude)
-        
-        # Calculate ascendant
-        asc = math.atan2(math.cos(lst_rad), -math.sin(lst_rad) * math.cos(lat_rad))
-        asc_deg = math.degrees(asc)
-        
-        if asc_deg < 0:
-            asc_deg += 360
-            
-        return asc_deg
-    
-    def calculate_houses(self, ascendant: float, system: str = "placidus") -> List[float]:
-        """Calculate house cusps"""
+        """
+        Ascendant (Lagna) sidereal ecliptic longitude using standard quick formula.
+        """
+        # Obliquity (can compute true obliquity for jd; J2000 fixed is acceptable here)
+        eps = math.radians(23.439291111)
+        theta = math.radians(self.get_sidereal_time(jd, longitude))  # LST in radians
+        phi = math.radians(latitude)
+
+        y = -math.cos(theta)
+        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
+        lam = math.degrees(math.atan2(y, x)) % 360.0
+
+        # Convert to sidereal ecliptic by subtracting ayanamsa (LST was tropical)
+        lam_sidereal = (lam - self.calculate_lahiri_ayanamsa(jd)) % 360.0
+        return lam_sidereal
+
+    def calculate_houses(self, ascendant: float, system: str = "equal") -> List[float]:
+        """Equal-house cusps from ascendant; return 12 cusp longitudes."""
         houses = []
-        
-        if system == "equal":
-            # Equal house system - 30 degrees per house
-            for i in range(12):
-                house_cusp = (ascendant + i * 30) % 360
-                houses.append(house_cusp)
-        else:
-            # For now, use equal house system for both
-            # TODO: Implement Placidus system
-            for i in range(12):
-                house_cusp = (ascendant + i * 30) % 360
-                houses.append(house_cusp)
-        
+        for i in range(12):
+            house_cusp = (ascendant + i * 30.0) % 360.0
+            houses.append(house_cusp)
         return houses
-    
+
     def get_planet_house(self, planet_longitude: float, house_cusps: List[float]) -> int:
-        """Determine which house a planet is in"""
+        """Determine which house a planet is in given cusp longitudes (ascending order)."""
         for i in range(12):
             start = house_cusps[i]
             end = house_cusps[(i + 1) % 12]
-            
             if start <= end:
                 if start <= planet_longitude < end:
                     return i + 1
-            else:  # House crosses 0 degrees
+            else:
+                # crosses 0°
                 if planet_longitude >= start or planet_longitude < end:
                     return i + 1
-        
-        return 1  # Default to first house
-    
+        return 1
+
+    # ---------- Divisional charts ----------
+
     def calculate_navamsa(self, rasi_positions: Dict[str, Dict]) -> Dict[str, Dict]:
-        """Calculate Navamsa (D9) chart positions"""
-        navamsa_positions = {}
-        
+        """Calculate Navamsa (D9) positions by sign mapping."""
+        navamsa_positions: Dict[str, Dict] = {}
         for planet, position in rasi_positions.items():
-            longitude = position['longitude']
-            
-            # Each rasi is divided into 9 navamsas of 3°20' each
-            navamsa_within_sign = int((longitude % 30) / (30/9))
-            rasi_number = self.get_sign_from_longitude(longitude)
-            
-            # Calculate navamsa sign based on rasi and navamsa number
-            if rasi_number in [1, 5, 9]:  # Aries, Leo, Sagittarius (Fire signs)
-                navamsa_sign = ((navamsa_within_sign) % 12) + 1
-            elif rasi_number in [2, 6, 10]:  # Taurus, Virgo, Capricorn (Earth signs)  
-                navamsa_sign = ((navamsa_within_sign + 3) % 12) + 1
-            elif rasi_number in [3, 7, 11]:  # Gemini, Libra, Aquarius (Air signs)
-                navamsa_sign = ((navamsa_within_sign + 6) % 12) + 1
-            else:  # Cancer, Scorpio, Pisces (Water signs)
-                navamsa_sign = ((navamsa_within_sign + 9) % 12) + 1
-            
+            lon = position['longitude'] % 360.0
+            sign = self.get_sign_from_longitude(lon)  # 1..12
+            within = (lon % 30.0) / (30.0 / 9.0)      # 0..9
+            nav_index = int(within)                   # 0..8
+
+            # Fire signs start at same sign; Earth +3, Air +6, Water +9 (mod 12)
+            if sign in [1, 5, 9]:       # Aries, Leo, Sagittarius
+                base = 0
+            elif sign in [2, 6, 10]:    # Taurus, Virgo, Capricorn
+                base = 3
+            elif sign in [3, 7, 11]:    # Gemini, Libra, Aquarius
+                base = 6
+            else:                       # Cancer, Scorpio, Pisces
+                base = 9
+
+            nav_sign = ((base + nav_index) % 12) + 1
+
             navamsa_positions[planet] = {
-                'longitude': longitude,  # Keep original longitude for reference
-                'sign': navamsa_sign,
+                'longitude': lon,  # keep rasi longitude for reference
+                'sign': nav_sign,
                 'nakshatra': position['nakshatra']
             }
-        
         return navamsa_positions
