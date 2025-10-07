@@ -84,57 +84,6 @@ export default function HomePage() {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* System Selection */}
-        <View style={styles.systemSection}>
-          <Text style={styles.sectionTitle}>
-            {getText('அமைப்பு தேர்வு', 'System Selection')}
-          </Text>
-          
-          <View style={styles.systemButtons}>
-            <TouchableOpacity
-              style={[
-                styles.systemButton,
-                system === 'vakkiam' && styles.systemButtonActive
-              ]}
-              onPress={() => setSystem('vakkiam')}
-            >
-              <Text style={[
-                styles.systemButtonText,
-                system === 'vakkiam' && styles.systemButtonTextActive
-              ]}>
-                {getText('வாக்கிய பஞ்சாங்கம்', 'Vakkiam Panchangam')}
-              </Text>
-              <Text style={[
-                styles.systemButtonSubtext,
-                system === 'vakkiam' && styles.systemButtonSubtextActive
-              ]}>
-                {getText('பாரம்பரிய கணக்கீடு', 'Traditional Calculation')}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.systemButton,
-                system === 'thirukkanitham' && styles.systemButtonActive
-              ]}
-              onPress={() => setSystem('thirukkanitham')}
-            >
-              <Text style={[
-                styles.systemButtonText,
-                system === 'thirukkanitham' && styles.systemButtonTextActive
-              ]}>
-                {getText('திருக்கணித பஞ்சாங்கம்', 'Thirukkanitham Panchangam')}
-              </Text>
-              <Text style={[
-                styles.systemButtonSubtext,
-                system === 'thirukkanitham' && styles.systemButtonSubtextActive
-              ]}>
-                {getText('திருக்கணித கணக்கீடு', 'Thirukkanitham Calculation')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Navigation Options */}
         <View style={styles.navigationSection}>
           <Text style={styles.sectionTitle}>
