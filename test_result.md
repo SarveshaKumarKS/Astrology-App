@@ -194,6 +194,8 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "MVP completed successfully with comprehensive Tamil astrology calculations and beautiful mobile UI. Backend fully tested and working. Ready for user acceptance testing."
+  - agent: "main"
+    message: "Fixed Thirukkanitham horoscope generation issue. Problem: Missing return statement in calculate_navamsa() and missing _calculate_dasa_periods() in base class. Both Vakkiam and Thirukkanitham systems now working correctly on backend."
 
 user_problem_statement: "Please test the Tamil Astrology API that I've built. Test all endpoints including health check, horoscope generation, marriage compatibility, user profiles, and panchangam with both Vakkiam and Thirukkanitham systems."
 
