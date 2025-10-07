@@ -724,6 +724,7 @@ const styles = StyleSheet.create({
   },
   systemButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   systemButton: {
