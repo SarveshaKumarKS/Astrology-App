@@ -14,14 +14,9 @@ import { router } from 'expo-router';
 
 export default function HomePage() {
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
-  const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
 
   const toggleLanguage = () => {
     setLanguage(language === 'tamil' ? 'english' : 'tamil');
-  };
-
-  const toggleSystem = () => {
-    setSystem(system === 'vakkiam' ? 'thirukkanitham' : 'vakkiam');
   };
 
   const getText = (tamil: string, english: string) => {
