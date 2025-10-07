@@ -330,6 +330,24 @@ export default function HoroscopePage() {
                   {getText('திருக்கணித பஞ்சாங்கம்', 'Thirukkanitham Panchangam')}
                 </Text>
               </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.systemButton,
+                  styles.systemButtonDisabled
+                ]}
+                disabled={true}
+              >
+                <Text style={[
+                  styles.systemButtonText,
+                  styles.systemButtonTextDisabled
+                ]}>
+                  {getText('NKV அமைப்பு', 'NKV System')}
+                </Text>
+                <Text style={styles.comingSoonText}>
+                  {getText('விரைவில்', 'Coming Soon')}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
