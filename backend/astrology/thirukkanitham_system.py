@@ -131,22 +131,28 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
 
     # Compatibility reuses Vakkiam placeholders for now
     def check_compatibility(self, male_details: BirthDetails, female_details: BirthDetails, language: str = "tamil") -> CompatibilityResult:
-        male = self.generate_horoscope(male_details, language)
-        female = self.generate_horoscope(female_details, language)
         # Simple reuse of Vakkiam's scoring placeholders
         factors: List[CompatibilityFactor] = []
         total = 0.0
         max_total = 36.0
         for k, info in COMPATIBILITY_FACTORS.items():
             pts = 0.0
-            if k == 'varna': pts = 1.0
-            elif k == 'vashya': pts = 1.5
-            elif k == 'tara': pts = 2.0
-            elif k == 'yoni': pts = 3.0
-            elif k == 'graha_maitri': pts = 4.0
-            elif k == 'gana': pts = 5.0
-            elif k == 'bhakoot': pts = 6.0
-            elif k == 'nadi': pts = 7.0
+            if k == 'varna':
+                pts = 1.0
+            elif k == 'vashya':
+                pts = 1.5
+            elif k == 'tara':
+                pts = 2.0
+            elif k == 'yoni':
+                pts = 3.0
+            elif k == 'graha_maitri':
+                pts = 4.0
+            elif k == 'gana':
+                pts = 5.0
+            elif k == 'bhakoot':
+                pts = 6.0
+            elif k == 'nadi':
+                pts = 7.0
             factors.append(CompatibilityFactor(
                 factor_name=info['name'],
                 factor_name_tamil=info['tamil'],
