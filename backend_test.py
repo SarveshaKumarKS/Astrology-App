@@ -83,62 +83,33 @@ class TamilAstrologyTester:
             self.log_test("Health endpoint", False, f"Error: {str(e)}")
     
     def test_horoscope_generation(self):
-        """Test horoscope generation with realistic Tamil data"""
-        print("\n🌟 Testing Horoscope Generation")
-        print("-" * 35)
+        """Test horoscope generation - Focus on Thirukkanitham fix"""
+        print("\n🌟 Testing Horoscope Generation (Focus: Thirukkanitham Fix)")
+        print("-" * 55)
         
-        # Test data for a person born in Chennai
+        # Test data as specified in review request - exact same data for both systems
+        base_test_data = {
+            "birth_details": {
+                "name": "Test User",
+                "date_of_birth": "1990-01-15",
+                "time_of_birth": "14:30:00",
+                "place_of_birth": "Chennai",
+                "latitude": 13.0827,
+                "longitude": 80.2707,
+                "timezone": "IST",
+                "time_correction": 0
+            },
+            "language": "tamil"
+        }
+        
         test_cases = [
             {
-                "name": "Vakkiam System - Tamil",
-                "data": {
-                    "birth_details": {
-                        "name": "ராமன்",
-                        "date_of_birth": "1990-01-15",
-                        "time_of_birth": "10:30:00",
-                        "place_of_birth": "Chennai, Tamil Nadu, India",
-                        "latitude": 13.0827,
-                        "longitude": 80.2707,
-                        "timezone": "IST",
-                        "time_correction": 0
-                    },
-                    "system": "vakkiam",
-                    "language": "tamil"
-                }
+                "name": "Vakkiam System - Regression Test",
+                "data": {**base_test_data, "system": "vakkiam"}
             },
             {
-                "name": "Thirukkanitham System - Tamil",
-                "data": {
-                    "birth_details": {
-                        "name": "கமலா",
-                        "date_of_birth": "1992-05-20",
-                        "time_of_birth": "14:15:00",
-                        "place_of_birth": "Madurai, Tamil Nadu, India",
-                        "latitude": 9.9252,
-                        "longitude": 78.1198,
-                        "timezone": "IST",
-                        "time_correction": 0
-                    },
-                    "system": "thirukkanitham",
-                    "language": "tamil"
-                }
-            },
-            {
-                "name": "Vakkiam System - English",
-                "data": {
-                    "birth_details": {
-                        "name": "Arjun",
-                        "date_of_birth": "1988-12-03",
-                        "time_of_birth": "06:45:00",
-                        "place_of_birth": "Coimbatore, Tamil Nadu, India",
-                        "latitude": 11.0168,
-                        "longitude": 76.9558,
-                        "timezone": "IST",
-                        "time_correction": 0
-                    },
-                    "system": "vakkiam",
-                    "language": "english"
-                }
+                "name": "Thirukkanitham System - Fixed Issue",
+                "data": {**base_test_data, "system": "thirukkanitham"}
             }
         ]
         
