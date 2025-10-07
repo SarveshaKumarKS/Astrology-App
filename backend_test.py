@@ -126,36 +126,60 @@ class TamilAstrologyTester:
                     
                     # Validate response structure
                     required_fields = [
-                        'birth_details', 'system', 'language', 'ascendant',
-                        'moon_sign', 'nakshatra', 'planetary_positions',
-                        'rasi_chart', 'navamsa_chart', 'dasa_periods', 'current_dasa'
+                        'birth_details', 'system', 'language', 'ascendant', 'ascendant_tamil',
+                        'moon_sign', 'moon_sign_tamil', 'nakshatra', 'nakshatra_tamil', 
+                        'planetary_positions', 'rasi_chart', 'navamsa_chart', 'dasa_periods', 'current_dasa'
                     ]
                     
                     missing_fields = [field for field in required_fields if field not in data]
                     
                     if not missing_fields:
-                        # Check if Tamil text is present for Tamil language
-                        if test_case["data"]["language"] == "tamil":
-                            has_tamil = any([
-                                data.get('ascendant_tamil'),
-                                data.get('moon_sign_tamil'),
-                                data.get('nakshatra_tamil')
-                            ])
-                            if has_tamil:
-                                self.log_test(f"Horoscope - {test_case['name']}", True, 
-                                            f"Generated with {len(data['planetary_positions'])} planets")
-                            else:
-                                self.log_test(f"Horoscope - {test_case['name']}", False, 
-                                            "Missing Tamil translations")
+                        # Specific validation for the fixed issues
+                        planets = data.get('planetary_positions', [])
+                        dasa_periods = data.get('dasa_periods', [])
+                        current_dasa = data.get('current_dasa')
+                        navamsa_chart = data.get('navamsa_chart', {})
+                        
+                        # Check system matches request
+                        if data.get('system') != test_case['data']['system']:
+                            self.log_test(f"Horoscope - {test_case['name']}", False, 
+                                        f"System mismatch: expected {test_case['data']['system']}, got {data.get('system')}")
+                        # Check we have 9 planets
+                        elif len(planets) != 9:
+                            self.log_test(f"Horoscope - {test_case['name']}", False, 
+                                        f"Expected 9 planets, got {len(planets)}")
+                        # Check dasa periods exist (fix for _calculate_dasa_periods)
+                        elif not dasa_periods:
+                            self.log_test(f"Horoscope - {test_case['name']}", False, 
+                                        "No dasa periods found - _calculate_dasa_periods issue")
+                        # Check current dasa exists (fix for _get_current_dasa)
+                        elif not current_dasa:
+                            self.log_test(f"Horoscope - {test_case['name']}", False, 
+                                        "No current dasa found - _get_current_dasa issue")
+                        # Check navamsa chart populated (fix for calculate_navamsa return statement)
+                        elif not navamsa_chart.get('houses'):
+                            self.log_test(f"Horoscope - {test_case['name']}", False, 
+                                        "Navamsa chart empty - calculate_navamsa return issue")
                         else:
-                            self.log_test(f"Horoscope - {test_case['name']}", True, 
-                                        f"Generated with {len(data['planetary_positions'])} planets")
+                            # All checks passed
+                            details = f"✅ System: {data['system']}, Planets: {len(planets)}, Dasa periods: {len(dasa_periods)}"
+                            if test_case['data']['system'] == 'thirukkanitham':
+                                details += " - THIRUKKANITHAM FIX VERIFIED"
+                            self.log_test(f"Horoscope - {test_case['name']}", True, details)
                     else:
                         self.log_test(f"Horoscope - {test_case['name']}", False, 
                                     f"Missing fields: {missing_fields}")
                 else:
-                    self.log_test(f"Horoscope - {test_case['name']}", False, 
-                                f"Status: {response.status_code}, Response: {response.text[:200]}")
+                    error_msg = f"Status: {response.status_code}"
+                    if test_case['data']['system'] == 'thirukkanitham' and response.status_code == 500:
+                        error_msg += " - THIRUKKANITHAM STILL FAILING (Expected fix not working)"
+                    try:
+                        error_data = response.json()
+                        error_msg += f", Error: {error_data.get('detail', 'Unknown')}"
+                    except:
+                        error_msg += f", Response: {response.text[:200]}"
+                    
+                    self.log_test(f"Horoscope - {test_case['name']}", False, error_msg)
                     
             except Exception as e:
                 self.log_test(f"Horoscope - {test_case['name']}", False, f"Error: {str(e)}")
