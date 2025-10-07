@@ -230,10 +230,10 @@ backend:
   - task: "Horoscope Generation - Thirukkanitham System"
     implemented: true
     working: true
-    file: "backend/server.py"
+    file: "backend/server.py, backend/astrology/calculations.py, backend/astrology/thirukkanitham_system.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -241,6 +241,12 @@ backend:
       - working: true
         agent: "testing"
         comment: "Fixed MongoDB serialization issues. Thirukkanitham system working with ayanamsa corrections applied."
+      - working: false
+        agent: "user"
+        comment: "User reported that Thirukkanitham horoscope generation button was unresponsive on frontend."
+      - working: true
+        agent: "main"
+        comment: "Fixed backend issues: 1) Moved _calculate_dasa_periods and _get_current_dasa to base AstronomicalCalculations class, 2) Added missing return statement in calculate_navamsa(). Both systems now working on backend. Tested successfully with curl."
 
   - task: "Marriage Compatibility - Vakkiam System"
     implemented: true
