@@ -204,6 +204,7 @@ class AstronomicalCalculations:
                 'sign': nav_sign,
                 'nakshatra': position['nakshatra']
             }
+        return navamsa_positions
 
     # ---------- Dasa Period Calculations ----------
     
