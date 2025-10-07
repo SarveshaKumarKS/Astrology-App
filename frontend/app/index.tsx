@@ -122,34 +122,6 @@ export default function HomePage() {
           ))}
         </View>
 
-        {/* Current System Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>
-              {getText('தற்போதைய அமைப்பு', 'Current System')}
-            </Text>
-            <Text style={styles.infoContent}>
-              {system === 'vakkiam' 
-                ? getText('வாக்கிய பஞ்சாங்கம்', 'Vakkiam Panchangam')
-                : getText('திருக்கணித பஞ்சாங்கம்', 'Thirukkanitham Panchangam')
-              }
-            </Text>
-            
-            <Text style={styles.infoDescription}>
-              {system === 'vakkiam'
-                ? getText(
-                    'பாரம்பரிய வாக்கிய முறையில் கணிக்கப்படும் ஜோதிட சேவை',
-                    'Traditional Vakkiam method astrology calculations'
-                  )
-                : getText(
-                    'திருக்கணித முறையில் கணிக்கப்படும் ஜோதிட சேவை மற்றும் தினசரி பஞ்சாங்கம்',
-                    'Thirukkanitham method astrology calculations with daily Panchangam'
-                  )
-              }
-            </Text>
-          </View>
-        </View>
-
         {/* About Section */}
         <View style={styles.aboutSection}>
           <Text style={styles.aboutTitle}>
