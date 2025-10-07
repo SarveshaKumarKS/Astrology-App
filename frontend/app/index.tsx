@@ -50,40 +50,11 @@ export default function HomePage() {
       subtitle: getText('இன்றைய பஞ்சாங்க விவரங்கள்', "Today's Panchangam Details"),
       icon: 'calendar-outline',
       color: '#F39C12',
-      route: '/panchangam',
-      systemRestriction: 'thirukkanitham'
+      route: '/panchangam'
     }
   ];
 
-  const handleNavigation = (route: string, systemRestriction?: string) => {
-    if (systemRestriction && system !== systemRestriction) {
-      Alert.alert(
-        getText('அமைப்பு தேவை', 'System Required'),
-        getText(
-          'இந்த அம்சம் திருக்கணித அமைப்பில் மட்டுமே கிடைக்கும்',
-          'This feature is only available in Thirukkanitham system'
-        ),
-        [
-          {
-            text: getText('ரத்து செய்', 'Cancel'),
-            style: 'cancel'
-          },
-          {
-            text: getText('மாற்று', 'Switch'),
-            onPress: () => {
-              setSystem('thirukkanitham');
-              // Navigate after switching
-              setTimeout(() => {
-                router.push(route);
-              }, 100);
-            }
-          }
-        ]
-      );
-      return;
-    }
-    
-    // Navigate to the route
+  const handleNavigation = (route: string) => {
     router.push(route);
   };
 
