@@ -358,9 +358,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All backend endpoints tested and working"
+    - "Thirukkanitham horoscope generation fix verified"
+    - "Both Vakkiam and Thirukkanitham systems working correctly"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
