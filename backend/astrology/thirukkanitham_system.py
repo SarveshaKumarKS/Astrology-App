@@ -105,7 +105,8 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
     def _create_rasi_chart(self, positions: Dict, ascendant: float) -> Chart:
         houses = {i: [] for i in range(1, 13)}
         houses_tamil = {i: [] for i in range(1, 13)}
-        houses[1].append("Asc"); houses_tamil[1].append("லக்")
+        houses[1].append("Asc")
+        houses_tamil[1].append("லக்")
         cusps = self.calculate_houses(ascendant)
         for planet, pos in positions.items():
             h = self.get_planet_house(pos['longitude'], cusps)
