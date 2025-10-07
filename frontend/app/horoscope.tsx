@@ -729,11 +729,13 @@ const styles = StyleSheet.create({
   },
   systemButton: {
     flex: 1,
+    minWidth: 140,
     borderWidth: 2,
     borderColor: '#E8E8E8',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   systemButtonActive: {
     borderColor: '#4A90E2',
