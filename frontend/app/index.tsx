@@ -90,55 +90,36 @@ export default function HomePage() {
             {getText('சேவைகள்', 'Services')}
           </Text>
           
-          {navigationOptions.map((option, index) => {
-            const isDisabled = option.systemRestriction && system !== option.systemRestriction;
-            
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.navigationCard,
-                  isDisabled && styles.navigationCardDisabled
-                ]}
-                onPress={() => handleNavigation(option.route, option.systemRestriction)}
-                disabled={isDisabled}
-              >
-                <View style={[styles.navigationIcon, { backgroundColor: `${option.color}20` }]}>
-                  <Ionicons 
-                    name={option.icon as any} 
-                    size={28} 
-                    color={isDisabled ? '#95A5A6' : option.color} 
-                  />
-                </View>
-                
-                <View style={styles.navigationContent}>
-                  <Text style={[
-                    styles.navigationTitle,
-                    isDisabled && styles.navigationTitleDisabled
-                  ]}>
-                    {option.title}
-                  </Text>
-                  <Text style={[
-                    styles.navigationSubtitle,
-                    isDisabled && styles.navigationSubtitleDisabled
-                  ]}>
-                    {option.subtitle}
-                  </Text>
-                  {option.systemRestriction && (
-                    <Text style={styles.systemRestriction}>
-                      {getText('திருக்கணித மட்டும்', 'Thirukkanitham Only')}
-                    </Text>
-                  )}
-                </View>
-                
+          {navigationOptions.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.navigationCard}
+              onPress={() => handleNavigation(option.route)}
+            >
+              <View style={[styles.navigationIcon, { backgroundColor: `${option.color}20` }]}>
                 <Ionicons 
-                  name="chevron-forward" 
-                  size={20} 
-                  color={isDisabled ? '#95A5A6' : '#7F8C8D'} 
+                  name={option.icon as any} 
+                  size={28} 
+                  color={option.color} 
                 />
-              </TouchableOpacity>
-            );
-          })}
+              </View>
+              
+              <View style={styles.navigationContent}>
+                <Text style={styles.navigationTitle}>
+                  {option.title}
+                </Text>
+                <Text style={styles.navigationSubtitle}>
+                  {option.subtitle}
+                </Text>
+              </View>
+              
+              <Ionicons 
+                name="chevron-forward" 
+                size={20} 
+                color='#7F8C8D' 
+              />
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Current System Info */}
