@@ -23,8 +23,11 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         tz = self._parse_timezone(birth_details.timezone)
         jd = self.get_julian_day(birth_details.date_of_birth, birth_details.time_of_birth, tz)
 
-        positions = self.calculate_planetary_positions(jd)
-        ascendant = self.calculate_ascendant(jd, birth_details.latitude, birth_details.longitude)
+        # Drik / Thirukkanitham differences:
+        # Use topocentric positions (true node included)
+        positions = self.calculate_planetary_positions_topocentric(jd, birth_details.latitude, birth_details.longitude)
+        # Use true obliquity for ascendant
+        ascendant = self.calculate_ascendant_true_obliquity(jd, birth_details.latitude, birth_details.longitude)
         cusps = self.calculate_houses(ascendant)
 
         # Retrograde status via day-1 delta
