@@ -219,7 +219,7 @@ class VakkiamCalculator(AstronomicalCalculations):
         houses_ta = {i: [] for i in range(1, 13)}
 
         houses[1].append("Asc")
-        houses_ta[1].append("లక్")
+        houses_ta[1].append("லக்")
 
         cusps = self.calculate_houses(ascendant_sidereal_lon)
         for planet, pos in positions.items():
