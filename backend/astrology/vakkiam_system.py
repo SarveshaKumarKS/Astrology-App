@@ -191,27 +191,47 @@ class VakkiamCalculator(AstronomicalCalculations):
         except ValueError:
             return 0.0
 
-    def _create_rasi_chart(self, positions: Dict, ascendant: float) -> Chart:
-        """Create Rasi chart: planets placed by houses from ascendant."""
-        houses = {i: [] for i in range(1, 13)}
-        houses_tamil = {i: [] for i in range(1, 13)}
+    def _create_rasi_chart(self, positions: Dict, ascendant_sidereal_lon: float) -> Chart:
+        """Rāsi chart: planets bucketed by sidereal SIGN (not by house)."""
+        signs = {i: [] for i in range(1, 13)}
+        signs_ta = {i: [] for i in range(1, 13)}
 
-        # Ascendant marker
-        asc_house = 1
-        houses[asc_house].append("Asc")
-        houses_tamil[asc_house].append("லக்")
+        # Ascendant SIGN marker
+        asc_sign = self.get_sign_from_longitude(ascendant_sidereal_lon)
+        signs[asc_sign].append("Asc")
+        signs_ta[asc_sign].append("லக்")
 
-        cusps = self.calculate_houses(ascendant)
-        for planet, position in positions.items():
-            house = self.get_planet_house(position['longitude'], cusps)
-            houses[house].append(planet)
-            houses_tamil[house].append(PLANET_NAMES.get(planet, planet))
+        for planet, pos in positions.items():
+            s = self.get_sign_from_longitude(pos['longitude'])
+            signs[s].append(planet)
+            signs_ta[s].append(PLANET_NAMES.get(planet, planet))
 
         return Chart(
             chart_type="rasi",
+            houses=signs,             # here 'houses' means 12 rāsi cells
+            houses_tamil=signs_ta,
+            ascendant_house=asc_sign  # ascendant SIGN index 1..12
+        )
+
+    def _create_bhava_chart(self, positions: Dict, ascendant_sidereal_lon: float) -> Chart:
+        """Optional: Bhāva chart (equal-house from ascendant)."""
+        houses = {i: [] for i in range(1, 13)}
+        houses_ta = {i: [] for i in range(1, 13)}
+
+        houses[1].append("Asc")
+        houses_ta[1].append("లక్")
+
+        cusps = self.calculate_houses(ascendant_sidereal_lon)
+        for planet, pos in positions.items():
+            h = self.get_planet_house(pos['longitude'], cusps)
+            houses[h].append(planet)
+            houses_ta[h].append(PLANET_NAMES.get(planet, planet))
+
+        return Chart(
+            chart_type="bhava",
             houses=houses,
-            houses_tamil=houses_tamil,
-            ascendant_house=asc_house
+            houses_tamil=houses_ta,
+            ascendant_house=1
         )
 
     def _create_navamsa_chart(self, navamsa_positions: Dict) -> Chart:
