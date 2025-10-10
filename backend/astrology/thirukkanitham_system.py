@@ -166,7 +166,22 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         for planet, pos in nav.items():
             houses[pos['sign']].append(planet)
             houses_tamil[pos['sign']].append(PLANET_NAMES.get(planet, planet))
-        return Chart(chart_type="navamsa", houses=houses, houses_tamil=houses_tamil, ascendant_house=1)
+        
+        # Generate South Indian chart image for Navamsa
+        chart_image_bytes = render_south_indian_chart(
+            houses=houses_tamil,  # Use Tamil labels for the chart
+            title="நவாம்சம்",
+            tamil=True
+        )
+        chart_image_base64 = base64.b64encode(chart_image_bytes).decode('utf-8')
+        
+        return Chart(
+            chart_type="navamsa",
+            houses=houses,
+            houses_tamil=houses_tamil,
+            ascendant_house=1,
+            image_base64=chart_image_base64
+        )
 
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float) -> List[DasaPeriod]:
         # delegate to Vakkiam implementation (identical logic)
