@@ -105,17 +105,49 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         except ValueError:
             return 0.0
 
-    def _create_rasi_chart(self, positions: Dict, ascendant: float) -> Chart:
-        houses = {i: [] for i in range(1, 13)}
-        houses_tamil = {i: [] for i in range(1, 13)}
-        houses[1].append("Asc")
-        houses_tamil[1].append("லக்")
-        cusps = self.calculate_houses(ascendant)
+    def _create_rasi_chart(self, positions: Dict, ascendant_sidereal_lon: float) -> Chart:
+        """Rāsi chart: planets bucketed by sidereal SIGN (not by house)."""
+        signs = {i: [] for i in range(1, 13)}
+        signs_ta = {i: [] for i in range(1, 13)}
+
+        # Ascendant SIGN marker
+        asc_sign = self.get_sign_from_longitude(ascendant_sidereal_lon)
+        signs[asc_sign].append("Asc")
+        signs_ta[asc_sign].append("லக்")
+
         for planet, pos in positions.items():
-            h = self.get_planet_house(pos['longitude'], cusps)
-            houses[h].append(planet)
-            houses_tamil[h].append(PLANET_NAMES.get(planet, planet))
-        return Chart(chart_type="rasi", houses=houses, houses_tamil=houses_tamil, ascendant_house=1)
+            s = self.get_sign_from_longitude(pos['longitude'])
+            signs[s].append(planet)
+            signs_ta[s].append(PLANET_NAMES.get(planet, planet))
+
+        return Chart(
+            chart_type="rasi",
+            houses=signs,             # here 'houses' means 12 rāsi cells
+            houses_tamil=signs_ta,
+            ascendant_house=asc_sign  # ascendant SIGN index 1..12
+        )
+
+    def _create_whole_sign_bhava_chart(self, positions: Dict, ascendant_sidereal_lon: float) -> Chart:
+        """Whole-sign houses for Thirukkanitham bhava view."""
+        asc_sign = self.get_sign_from_longitude(ascendant_sidereal_lon)
+        houses = {i: [] for i in range(1, 13)}
+        houses_ta = {i: [] for i in range(1, 13)}
+        houses[1].append("Asc")
+        houses_ta[1].append("லக்")
+
+        for planet, pos in positions.items():
+            s = self.get_sign_from_longitude(pos['longitude'])
+            # House index relative to ascendant sign
+            idx = ((s - asc_sign) % 12) + 1
+            houses[idx].append(planet)
+            houses_ta[idx].append(PLANET_NAMES.get(planet, planet))
+
+        return Chart(
+            chart_type="bhava_whole_sign",
+            houses=houses,
+            houses_tamil=houses_ta,
+            ascendant_house=1
+        )
 
     def _create_navamsa_chart(self, nav: Dict) -> Chart:
         houses = {i: [] for i in range(1, 13)}
