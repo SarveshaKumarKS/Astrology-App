@@ -30,8 +30,8 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         ascendant = self.calculate_ascendant_true_obliquity(jd, birth_details.latitude, birth_details.longitude)
         cusps = self.calculate_houses(ascendant)
 
-        # Retrograde status via day-1 delta
-        prev_positions = self.calculate_planetary_positions(jd - 1.0)
+        # Retrograde status via day-1 delta (also topocentric for consistency)
+        prev_positions = self.calculate_planetary_positions_topocentric(jd - 1.0, birth_details.latitude, birth_details.longitude)
         planet_list: List[PlanetaryPosition] = []
         for name, pos in positions.items():
             if name in ("Rahu", "Ketu"):
