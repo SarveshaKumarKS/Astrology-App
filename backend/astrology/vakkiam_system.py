@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from typing import Dict, List
+import base64
 from astrology.calculations import AstronomicalCalculations
 from astrology.models import (
     BirthDetails, HoroscopeResult, CompatibilityResult, PlanetaryPosition,
@@ -9,6 +10,7 @@ from astrology.constants import (
     PLANETS, SIGNS, NAKSHATRAS, PLANET_NAMES, SIGNS_TAMIL, NAKSHATRAS_TAMIL,
     DASA_ORDER, DASA_YEARS, COMPATIBILITY_FACTORS
 )
+from astrology.utils_chart import render_south_indian_chart
 
 class VakkiamCalculator(AstronomicalCalculations):
     """Vakkiam system astrology calculations"""
