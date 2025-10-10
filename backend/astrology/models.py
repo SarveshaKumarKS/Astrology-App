@@ -40,6 +40,7 @@ class Chart(BaseModel):
     houses: Dict[int, List[str]]  # house_number -> list of planets
     houses_tamil: Dict[int, List[str]]  # house_number -> list of planets in Tamil
     ascendant_house: int
+    image_base64: Optional[str] = None  # South Indian chart image as base64
     
 class HoroscopeResult(BaseModel):
     birth_details: BirthDetails
