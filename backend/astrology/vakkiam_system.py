@@ -208,11 +208,20 @@ class VakkiamCalculator(AstronomicalCalculations):
             signs[s].append(planet)
             signs_ta[s].append(PLANET_NAMES.get(planet, planet))
 
+        # Generate South Indian chart image
+        chart_image_bytes = render_south_indian_chart(
+            houses=signs_ta,  # Use Tamil labels for the chart
+            title="ராசி",
+            tamil=True
+        )
+        chart_image_base64 = base64.b64encode(chart_image_bytes).decode('utf-8')
+
         return Chart(
             chart_type="rasi",
             houses=signs,             # here 'houses' means 12 rāsi cells
             houses_tamil=signs_ta,
-            ascendant_house=asc_sign  # ascendant SIGN index 1..12
+            ascendant_house=asc_sign,  # ascendant SIGN index 1..12
+            image_base64=chart_image_base64
         )
 
     def _create_bhava_chart(self, positions: Dict, ascendant_sidereal_lon: float) -> Chart:
