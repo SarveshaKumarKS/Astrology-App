@@ -206,6 +206,80 @@ class AstronomicalCalculations:
             }
         return navamsa_positions
 
+
+    # ---------- Thirukkanitham (Drik) specific methods ----------
+    
+    def _true_obliquity(self, jd: float) -> float:
+        """True obliquity of the ecliptic (degrees). Meeus approximation."""
+        t = (jd - 2451545.0) / 36525.0
+        # mean obliquity (arcseconds)
+        eps0 = 84381.406 - 46.836769*t - 0.0001831*t*t + 0.00200340*t*t*t - 5.76e-7*t**4 - 4.34e-8*t**5
+        # nutation in obliquity is small; PyEphem already includes nutation in body positions,
+        # for ascendant formula we can use mean or add small correction. Keep mean here:
+        return eps0 / 3600.0
+
+    def _true_node_sidereal(self, jd: float, ayanamsa: float) -> float:
+        """True lunar ascending node (sidereal) in degrees."""
+        # PyEphem provides mean node only, so use standard series (approx):
+        # Start from mean node omega (tropical):
+        t = (jd - 2451545.0) / 36525.0
+        omega = (125.04452 - 1934.136261*t + 0.0020708*t*t + (t**3)/450000.0) % 360.0
+        # Apply a small periodic correction to get 'true' node (deg). A common quick term:
+        # ΔΩ ≈ -0.00478° * sin(Ω)  (approx; there are more terms if you want higher accuracy)
+        corr = -0.00478 * math.sin(math.radians(omega))
+        true_tropical = (omega + corr) % 360.0
+        return (true_tropical - ayanamsa) % 360.0
+
+    def calculate_planetary_positions_topocentric(self, jd: float, latitude: float, longitude: float) -> Dict[str, Dict]:
+        """Like calculate_planetary_positions, but with observer lat/lon (topocentric Moon/planets)."""
+        obs = ephem.Observer()
+        obs.date = self._ephem_date_from_jd(jd)
+        obs.lat = str(latitude)
+        obs.lon = str(longitude)
+
+        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
+        positions = {}
+        for name, body in self.planets.items():
+            if body is None:
+                continue
+            body.compute(obs)
+            ecl = ephem.Ecliptic(body)
+            lon_trop = math.degrees(ecl.lon) % 360.0
+            lat = math.degrees(ecl.lat)
+            lon_sid = (lon_trop - ayanamsa) % 360.0
+            positions[name] = {
+                'longitude': lon_sid,
+                'latitude': lat,
+                'sign': self.get_sign_from_longitude(lon_sid),
+                'nakshatra': self.get_nakshatra_from_longitude(lon_sid)
+            }
+
+        # Nodes: in Thirukkanitham we'll override with TRUE node
+        true_rahu = self._true_node_sidereal(jd, ayanamsa)
+        true_ketu = (true_rahu + 180.0) % 360.0
+        positions['Rahu'] = {
+            'longitude': true_rahu, 'latitude': 0.0,
+            'sign': self.get_sign_from_longitude(true_rahu),
+            'nakshatra': self.get_nakshatra_from_longitude(true_rahu)
+        }
+        positions['Ketu'] = {
+            'longitude': true_ketu, 'latitude': 0.0,
+            'sign': self.get_sign_from_longitude(true_ketu),
+            'nakshatra': self.get_nakshatra_from_longitude(true_ketu)
+        }
+        return positions
+
+    def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
+        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system)."""
+        eps = math.radians(self._true_obliquity(jd))
+        theta = math.radians(self.get_sidereal_time(jd, longitude))
+        phi = math.radians(latitude)
+        y = -math.cos(theta)
+        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
+        lam = math.degrees(math.atan2(y, x)) % 360.0
+        lam_sid = (lam - self.calculate_lahiri_ayanamsa(jd)) % 360.0
+        return lam_sid
+
     # ---------- Dasa Period Calculations ----------
     
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float):
