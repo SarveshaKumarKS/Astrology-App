@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import SouthIndianChart from '../components/SouthIndianChart';
 
 interface PlanetaryPosition {
   planet: string;
