@@ -140,18 +140,20 @@ class AstronomicalCalculations:
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """
         Ascendant (Lagna) sidereal ecliptic longitude using standard quick formula.
+        NOTE: y = cos(theta) gives ASC; y = -cos(theta) gives DESC (180° flipped).
         """
-        # Obliquity (can compute true obliquity for jd; J2000 fixed is acceptable here)
+        # Obliquity (J2000 mean obliquity is sufficient for Vakkiam)
         eps = math.radians(23.439291111)
         theta = math.radians(self.get_sidereal_time(jd, longitude))  # LST in radians
         phi = math.radians(latitude)
 
-        y = -math.cos(theta)
+        # CRITICAL FIX: y = cos(theta) for ASCENDANT (not -cos for descendant)
+        y = math.cos(theta)
         x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
-        lam = math.degrees(math.atan2(y, x)) % 360.0
+        lam_trop = math.degrees(math.atan2(y, x)) % 360.0
 
-        # Convert to sidereal ecliptic by subtracting ayanamsa (LST was tropical)
-        lam_sidereal = (lam - self.calculate_lahiri_ayanamsa(jd)) % 360.0
+        # Convert to sidereal ecliptic by subtracting ayanamsa
+        lam_sidereal = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
         return lam_sidereal
 
     def calculate_houses(self, ascendant: float, system: str = "equal") -> List[float]:
