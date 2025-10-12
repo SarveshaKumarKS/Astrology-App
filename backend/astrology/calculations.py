@@ -272,14 +272,17 @@ class AstronomicalCalculations:
         return positions
 
     def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
-        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system)."""
+        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system).
+        NOTE: y = cos(theta) gives ASC; y = -cos(theta) gives DESC (180° flipped).
+        """
         eps = math.radians(self._true_obliquity(jd))
         theta = math.radians(self.get_sidereal_time(jd, longitude))
         phi = math.radians(latitude)
-        y = -math.cos(theta)
+        # CRITICAL FIX: y = cos(theta) for ASCENDANT (not -cos for descendant)
+        y = math.cos(theta)
         x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
-        lam = math.degrees(math.atan2(y, x)) % 360.0
-        lam_sid = (lam - self.calculate_lahiri_ayanamsa(jd)) % 360.0
+        lam_trop = math.degrees(math.atan2(y, x)) % 360.0
+        lam_sid = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
         return lam_sid
 
     # ---------- Dasa Period Calculations ----------
