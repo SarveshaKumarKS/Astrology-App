@@ -188,6 +188,14 @@ export default function HoroscopeResultPage() {
   };
 
   const renderChart = (chart: Chart, title: string, titleTamil: string) => {
+    // Convert houses object to use Tamil labels
+    const housesForChart: { [key: number]: string[] } = {};
+    for (let i = 1; i <= 12; i++) {
+      housesForChart[i] = language === 'tamil' 
+        ? (chart.houses_tamil[i.toString()] || [])
+        : (chart.houses[i.toString()] || []);
+    }
+
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
@@ -195,26 +203,10 @@ export default function HoroscopeResultPage() {
         </Text>
         
         <View style={styles.chartContainer}>
-          <View style={styles.chartGrid}>
-            {[...Array(12)].map((_, index) => {
-              const houseNumber = index + 1;
-              const planets = chart.houses[houseNumber.toString()] || [];
-              const planetsTamil = chart.houses_tamil[houseNumber.toString()] || [];
-              
-              return (
-                <View key={houseNumber} style={styles.chartHouse}>
-                  <Text style={styles.houseNumber}>{houseNumber}</Text>
-                  <View style={styles.planetsContainer}>
-                    {planets.map((planet, planetIndex) => (
-                      <Text key={planetIndex} style={styles.planetInHouse}>
-                        {getText(planetsTamil[planetIndex] || planet, planet)}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
+          <SouthIndianChart 
+            houses={housesForChart}
+            title={getText(titleTamil, title).toUpperCase()}
+          />
         </View>
       </View>
     );
