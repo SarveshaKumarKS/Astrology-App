@@ -67,29 +67,33 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
   );
 };
 
+const CHART_SIZE = 360;
+const GAP = 2;
+const CELL_SIZE = (CHART_SIZE - GAP * 5) / 4; // 4 cells + 5 gaps
+
 const styles = StyleSheet.create({
   chart: {
-    width: 360,
-    height: 360,
+    width: CHART_SIZE,
+    height: CHART_SIZE,
     backgroundColor: '#FFFBEA',
     borderWidth: 2,
     borderColor: '#333',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 2,
-    gap: 2,
+    padding: GAP,
+    gap: GAP,
   },
   cell: {
-    width: 'calc(25% - 2px)',
-    height: 'calc(25% - 2px)',
+    width: CELL_SIZE,
+    height: CELL_SIZE,
     borderWidth: 1,
     borderColor: '#333',
     padding: 6,
     position: 'relative',
   },
   center: {
-    width: 'calc(50% - 2px)',
-    height: 'calc(50% - 2px)',
+    width: CELL_SIZE * 2 + GAP,
+    height: CELL_SIZE * 2 + GAP,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0,
