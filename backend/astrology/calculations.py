@@ -139,34 +139,22 @@ class AstronomicalCalculations:
 
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """
-        Ascendant (Lagna) sidereal ecliptic longitude using PyEphem.
+        Ascendant (Lagna) sidereal ecliptic longitude.
+        Uses the correct formula: y = cos(theta), x = sin(theta)*cos(eps) + tan(lat)*sin(eps)
         """
-        # Create an observer at the given location and time
-        observer = ephem.Observer()
-        observer.date = self._ephem_date_from_jd(jd)
-        observer.lat = str(latitude)
-        observer.lon = str(longitude)
-        
-        # Get the local sidereal time in radians
-        lst_radians = float(observer.sidereal_time())
-        lst_degrees = math.degrees(lst_radians)
-        
-        # Use the standard ascendant formula
         eps = math.radians(23.439291111)  # J2000 mean obliquity
-        theta = lst_radians
+        lst = self.get_sidereal_time(jd, longitude)
+        theta = math.radians(lst)
         phi = math.radians(latitude)
         
-        # Correct ascendant formula
-        y = -math.cos(theta)
-        x = math.sin(theta) * math.cos(eps) - math.tan(phi) * math.sin(eps)
-        asc_radians = math.atan2(y, x) + theta
-        asc_tropical = math.degrees(asc_radians) % 360.0
+        # CORRECT formula for ascendant (NOT descendant)
+        y = math.cos(theta)
+        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
+        lam_trop = math.degrees(math.atan2(y, x)) % 360.0
         
         # Convert to sidereal
-        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
-        asc_sidereal = (asc_tropical - ayanamsa) % 360.0
-        
-        return asc_sidereal
+        lam_sidereal = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
+        return lam_sidereal
 
     def calculate_houses(self, ascendant: float, system: str = "equal") -> List[float]:
         """Equal-house cusps from ascendant; return 12 cusp longitudes."""
