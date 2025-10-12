@@ -139,18 +139,23 @@ class AstronomicalCalculations:
 
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """
-        Ascendant (Lagna) sidereal ecliptic longitude using standard quick formula.
-        NOTE: y = cos(theta) gives ASC; y = -cos(theta) gives DESC (180° flipped).
+        Ascendant (Lagna) sidereal ecliptic longitude.
+        Formula: tan(ASC - LST) = -cos(LST) / (sin(LST)*cos(eps) - tan(lat)*sin(eps))
+        Which simplifies to: ASC = atan2(-cos(LST), sin(LST)*cos(eps) - tan(lat)*sin(eps)) + LST
         """
         # Obliquity (J2000 mean obliquity is sufficient for Vakkiam)
         eps = math.radians(23.439291111)
-        theta = math.radians(self.get_sidereal_time(jd, longitude))  # LST in radians
+        lst = self.get_sidereal_time(jd, longitude)  # Local Sidereal Time in degrees
+        theta = math.radians(lst)
         phi = math.radians(latitude)
 
-        # CRITICAL FIX: y = cos(theta) for ASCENDANT (not -cos for descendant)
-        y = math.cos(theta)
-        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
-        lam_trop = math.degrees(math.atan2(y, x)) % 360.0
+        # Calculate ascendant using the correct formula
+        y = -math.cos(theta)
+        x = math.sin(theta) * math.cos(eps) - math.tan(phi) * math.sin(eps)
+        asc_minus_lst = math.degrees(math.atan2(y, x))
+        
+        # Ascendant in tropical coordinates
+        lam_trop = (lst + asc_minus_lst) % 360.0
 
         # Convert to sidereal ecliptic by subtracting ayanamsa
         lam_sidereal = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
