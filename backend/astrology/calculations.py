@@ -273,12 +273,14 @@ class AstronomicalCalculations:
 
     def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
         """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system).
-        NOTE: y = cos(theta) gives ASC; y = -cos(theta) gives DESC (180° flipped).
+        Uses the correct formula: y = cos(theta), x = sin(theta)*cos(eps) + tan(lat)*sin(eps)
         """
         eps = math.radians(self._true_obliquity(jd))
-        theta = math.radians(self.get_sidereal_time(jd, longitude))
+        lst = self.get_sidereal_time(jd, longitude)
+        theta = math.radians(lst)
         phi = math.radians(latitude)
-        # CRITICAL FIX: y = cos(theta) for ASCENDANT (not -cos for descendant)
+        
+        # CORRECT formula for ascendant (NOT descendant)
         y = math.cos(theta)
         x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
         lam_trop = math.degrees(math.atan2(y, x)) % 360.0
