@@ -139,27 +139,34 @@ class AstronomicalCalculations:
 
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """
-        Ascendant (Lagna) sidereal ecliptic longitude.
-        Formula: tan(ASC - LST) = -cos(LST) / (sin(LST)*cos(eps) - tan(lat)*sin(eps))
-        Which simplifies to: ASC = atan2(-cos(LST), sin(LST)*cos(eps) - tan(lat)*sin(eps)) + LST
+        Ascendant (Lagna) sidereal ecliptic longitude using PyEphem.
         """
-        # Obliquity (J2000 mean obliquity is sufficient for Vakkiam)
-        eps = math.radians(23.439291111)
-        lst = self.get_sidereal_time(jd, longitude)  # Local Sidereal Time in degrees
-        theta = math.radians(lst)
+        # Create an observer at the given location and time
+        observer = ephem.Observer()
+        observer.date = self._ephem_date_from_jd(jd)
+        observer.lat = str(latitude)
+        observer.lon = str(longitude)
+        
+        # Get the local sidereal time in radians
+        lst_radians = float(observer.sidereal_time())
+        lst_degrees = math.degrees(lst_radians)
+        
+        # Use the standard ascendant formula
+        eps = math.radians(23.439291111)  # J2000 mean obliquity
+        theta = lst_radians
         phi = math.radians(latitude)
-
-        # Calculate ascendant using the correct formula
+        
+        # Correct ascendant formula
         y = -math.cos(theta)
         x = math.sin(theta) * math.cos(eps) - math.tan(phi) * math.sin(eps)
-        asc_minus_lst = math.degrees(math.atan2(y, x))
+        asc_radians = math.atan2(y, x) + theta
+        asc_tropical = math.degrees(asc_radians) % 360.0
         
-        # Ascendant in tropical coordinates
-        lam_trop = (lst + asc_minus_lst) % 360.0
-
-        # Convert to sidereal ecliptic by subtracting ayanamsa
-        lam_sidereal = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
-        return lam_sidereal
+        # Convert to sidereal
+        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
+        asc_sidereal = (asc_tropical - ayanamsa) % 360.0
+        
+        return asc_sidereal
 
     def calculate_houses(self, ascendant: float, system: str = "equal") -> List[float]:
         """Equal-house cusps from ascendant; return 12 cusp longitudes."""
