@@ -7,7 +7,15 @@ interface ChartProps {
 }
 
 const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
-  const renderCell = (sign: number) => {
+  const renderCell = (sign: number, isCenter: boolean = false) => {
+    if (isCenter) {
+      return (
+        <View style={[styles.cell, styles.centerCell]}>
+          <Text style={styles.centerText}>{title}</Text>
+        </View>
+      );
+    }
+
     const labels = houses[sign] || [];
     
     // Find Ascendant/Lagna
@@ -24,7 +32,7 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
     }
 
     return (
-      <View key={sign} style={styles.cell}>
+      <View style={styles.cell}>
         <Text style={styles.signNumber}>{sign}</Text>
         <Text style={styles.planetStack}>
           {planetLabels.join('\n')}
@@ -39,73 +47,80 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
   return (
     <View style={styles.chart}>
       {/* Row 1 */}
-      {renderCell(1)}
-      {renderCell(2)}
-      {renderCell(3)}
-      {renderCell(4)}
+      <View style={styles.row}>
+        {renderCell(1)}
+        {renderCell(2)}
+        {renderCell(3)}
+        {renderCell(4)}
+      </View>
       
       {/* Row 2 */}
-      {renderCell(12)}
-      <View style={[styles.cell, styles.center]}>
-        <Text style={styles.centerText}>{title}</Text>
+      <View style={styles.row}>
+        {renderCell(12)}
+        {renderCell(0, true)}
+        {renderCell(5)}
       </View>
-      <View style={[styles.cell, styles.centerHidden]} />
-      {renderCell(5)}
       
       {/* Row 3 */}
-      {renderCell(11)}
-      <View style={[styles.cell, styles.centerHidden]} />
-      <View style={[styles.cell, styles.centerHidden]} />
-      {renderCell(6)}
+      <View style={styles.row}>
+        {renderCell(11)}
+        <View style={styles.centerSpacer} />
+        {renderCell(6)}
+      </View>
       
       {/* Row 4 */}
-      {renderCell(10)}
-      {renderCell(9)}
-      {renderCell(8)}
-      {renderCell(7)}
+      <View style={styles.row}>
+        {renderCell(10)}
+        {renderCell(9)}
+        {renderCell(8)}
+        {renderCell(7)}
+      </View>
     </View>
   );
 };
 
 const CHART_SIZE = 360;
-const GAP = 2;
-const CELL_SIZE = (CHART_SIZE - GAP * 5) / 4; // 4 cells + 5 gaps
+const BORDER = 2;
+const CELL_BORDER = 1;
+const CELL_SIZE = (CHART_SIZE - BORDER * 2 - CELL_BORDER * 3) / 4;
 
 const styles = StyleSheet.create({
   chart: {
     width: CHART_SIZE,
     height: CHART_SIZE,
     backgroundColor: '#FFFBEA',
-    borderWidth: 2,
+    borderWidth: BORDER,
     borderColor: '#333',
+  },
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: GAP,
-    gap: GAP,
+    height: CELL_SIZE,
   },
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    borderWidth: 1,
+    borderWidth: CELL_BORDER,
     borderColor: '#333',
     padding: 6,
-    position: 'relative',
+    backgroundColor: '#FFFBEA',
   },
-  center: {
-    width: CELL_SIZE * 2 + GAP,
-    height: CELL_SIZE * 2 + GAP,
+  centerCell: {
+    width: CELL_SIZE * 2 + CELL_BORDER * 2,
+    height: CELL_SIZE * 2 + CELL_BORDER * 2,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0,
   },
-  centerHidden: {
+  centerSpacer: {
+    width: CELL_SIZE * 2 + CELL_BORDER * 2,
+    height: CELL_SIZE,
     borderWidth: 0,
-    backgroundColor: 'transparent',
   },
   centerText: {
     fontWeight: '700',
     fontSize: 16,
     textAlign: 'center',
+    color: '#333',
   },
   signNumber: {
     position: 'absolute',
@@ -113,6 +128,7 @@ const styles = StyleSheet.create({
     top: 4,
     opacity: 0.55,
     fontSize: 10,
+    color: '#333',
   },
   lagna: {
     position: 'absolute',
@@ -121,10 +137,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-30deg' }],
     fontSize: 10,
     fontStyle: 'italic',
+    color: '#333',
   },
   planetStack: {
     fontSize: 12,
     lineHeight: 16,
+    color: '#333',
   },
 });
 
