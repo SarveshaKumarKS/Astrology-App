@@ -256,29 +256,16 @@ class AstronomicalCalculations:
 
     # ---------- Navamsa (D9) ----------
 
-    def calculate_navamsa(self, planetary_positions: Dict[str, Dict]) -> Dict[str, Dict]:
-        """Calculate Navamsa (D9) chart positions."""
+    def calculate_navamsa(self, planetary_positions: Dict[str, Dict], ascendant_longitude: float = None) -> Dict[str, Dict]:
+        """Calculate Navamsa (D9) chart positions.
+        If ascendant_longitude is provided, it will also calculate navamsa ascendant.
+        """
         navamsa_positions = {}
         
+        # Calculate navamsa for all planets
         for planet, position in planetary_positions.items():
             lon = position['longitude']
-            sign = self.get_sign_from_longitude(lon)
-            lon_in_sign = lon % 30.0
-            
-            # D9 formula
-            navamsa_part = int(lon_in_sign / 3.333333333333333)
-            
-            # Base calculation
-            if sign in [1, 5, 9]:  # Fire signs
-                base = 1
-            elif sign in [2, 6, 10]:  # Earth signs
-                base = 10
-            elif sign in [3, 7, 11]:  # Air signs
-                base = 7
-            else:  # Water signs [4, 8, 12]
-                base = 4
-            
-            nav_sign = ((base - 1 + navamsa_part) % 12) + 1
+            nav_sign = self._calculate_navamsa_sign(lon)
             
             navamsa_positions[planet] = {
                 'longitude': lon,
@@ -286,7 +273,37 @@ class AstronomicalCalculations:
                 'nakshatra': position['nakshatra']
             }
         
+        # Calculate navamsa ascendant if provided
+        if ascendant_longitude is not None:
+            nav_asc_sign = self._calculate_navamsa_sign(ascendant_longitude)
+            navamsa_positions['Ascendant'] = {
+                'longitude': ascendant_longitude,
+                'sign': nav_asc_sign,
+                'nakshatra': self.get_nakshatra_from_longitude(ascendant_longitude)
+            }
+        
         return navamsa_positions
+    
+    def _calculate_navamsa_sign(self, longitude: float) -> int:
+        """Helper to calculate navamsa sign from any longitude."""
+        sign = self.get_sign_from_longitude(longitude)
+        lon_in_sign = longitude % 30.0
+        
+        # D9 formula: divide sign into 9 parts of 3°20' each
+        navamsa_part = int(lon_in_sign / 3.333333333333333)
+        
+        # Base calculation based on sign element
+        if sign in [1, 5, 9]:  # Fire signs (Aries, Leo, Sagittarius)
+            base = 1
+        elif sign in [2, 6, 10]:  # Earth signs (Taurus, Virgo, Capricorn)
+            base = 10
+        elif sign in [3, 7, 11]:  # Air signs (Gemini, Libra, Aquarius)
+            base = 7
+        else:  # Water signs [4, 8, 12] (Cancer, Scorpio, Pisces)
+            base = 4
+        
+        nav_sign = ((base - 1 + navamsa_part) % 12) + 1
+        return nav_sign
 
     # ---------- Dasa Period Calculations ----------
 
