@@ -117,8 +117,10 @@ class AstronomicalCalculations:
 
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
         """Calculate ascendant using Swiss Ephemeris houses."""
-        # Get houses using Placidus system (or you can use 'W' for whole sign)
-        houses, ascmc = swe.houses_ex(jd, latitude, longitude, b'P')
+        # Get houses using Placidus system
+        # houses_ex returns (cusps, ascmc, cusps_speed, ascmc_speed) tuple
+        result = swe.houses_ex(jd, latitude, longitude, b'P')
+        ascmc = result[1]  # ascmc is the second element
         # ascmc[0] is the ascendant in tropical
         asc_tropical = ascmc[0]
         
