@@ -76,8 +76,8 @@ class VakkiamCalculator(AstronomicalCalculations):
 
         # Charts
         rasi_chart = self._create_rasi_chart(planetary_positions_raw, ascendant_longitude)
-        navamsa_positions = self.calculate_navamsa(planetary_positions_raw)
-        navamsa_chart = self._create_navamsa_chart(navamsa_positions)
+        navamsa_positions = self.calculate_navamsa(planetary_positions_raw, ascendant_longitude)
+        navamsa_chart = self._create_navamsa_chart(navamsa_positions, ascendant_longitude)
 
         # Dasa periods (with first-balance using Moon longitude)
         moon_position = planetary_positions_raw['Moon']
