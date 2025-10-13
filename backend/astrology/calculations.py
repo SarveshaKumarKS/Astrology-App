@@ -223,9 +223,26 @@ class AstronomicalCalculations:
         return positions
 
     def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
-        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system)."""
-        # Swiss Ephemeris handles this automatically in houses_ex
-        return self.calculate_ascendant(jd, latitude, longitude)
+        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system).
+        Uses true obliquity instead of fixed J2000 value.
+        """
+        eps = math.radians(self._true_obliquity(jd))  # TRUE obliquity
+        lst = self.get_sidereal_time(jd, longitude)
+        theta = math.radians(lst)
+        phi = math.radians(latitude)
+        
+        # Correct formula for ASCENDANT (eastern point)
+        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
+        y = -math.cos(theta)
+        
+        # Add 180° to get the eastern (rising) point
+        lam_tropical = (math.degrees(math.atan2(y, x)) + 180.0) % 360.0
+        
+        # Convert to sidereal
+        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
+        asc_sidereal = (lam_tropical - ayanamsa) % 360.0
+        
+        return asc_sidereal
 
     # ---------- Sign & Nakshatra helpers ----------
 
