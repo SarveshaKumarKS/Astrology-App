@@ -234,21 +234,29 @@ class VakkiamCalculator(AstronomicalCalculations):
             ascendant_house=1
         )
 
-    def _create_navamsa_chart(self, navamsa_positions: Dict) -> Chart:
-        """Create Navamsa chart: planets grouped by D9 sign."""
+    def _create_navamsa_chart(self, navamsa_positions: Dict, ascendant_longitude: float = None) -> Chart:
+        """Create Navamsa chart: planets grouped by D9 sign, including navamsa ascendant."""
         houses = {i: [] for i in range(1, 13)}
         houses_tamil = {i: [] for i in range(1, 13)}
+        
+        navamsa_asc_sign = 1  # default
 
         for planet, position in navamsa_positions.items():
             house = position['sign']
-            houses[house].append(planet)
-            houses_tamil[house].append(PLANET_NAMES.get(planet, planet))
+            if planet == 'Ascendant':
+                # Mark navamsa ascendant
+                houses[house].append("Asc")
+                houses_tamil[house].append("லக்")
+                navamsa_asc_sign = house
+            else:
+                houses[house].append(planet)
+                houses_tamil[house].append(PLANET_NAMES.get(planet, planet))
 
         return Chart(
             chart_type="navamsa",
             houses=houses,
             houses_tamil=houses_tamil,
-            ascendant_house=1  # TODO: compute D9 ascendant if needed
+            ascendant_house=navamsa_asc_sign
         )
 
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float) -> List[DasaPeriod]:
