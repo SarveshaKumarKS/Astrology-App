@@ -1,13 +1,26 @@
 import math
 from datetime import datetime, date, time, timedelta, timezone
 from typing import Dict, List
-import ephem
+import swisseph as swe
 
 from astrology.constants import (
     PLANETS, SIGNS, NAKSHATRAS, HOUSES,
     PLANETS_TAMIL, SIGNS_TAMIL, NAKSHATRAS_TAMIL,
     DASA_ORDER, DASA_YEARS, PLANET_NAMES
 )
+
+# Swiss Ephemeris planet constants
+SWE_PLANETS = {
+    'Sun': swe.SUN,
+    'Moon': swe.MOON,
+    'Mars': swe.MARS,
+    'Mercury': swe.MERCURY,
+    'Jupiter': swe.JUPITER,
+    'Venus': swe.VENUS,
+    'Saturn': swe.SATURN,
+    'Rahu': swe.MEAN_NODE,  # Mean node for Vakkiam
+    'Ketu': swe.MEAN_NODE   # Ketu is 180° opposite of Rahu
+}
 
 class AstronomicalCalculations:
     """Base class for astronomical calculations used by both systems"""
