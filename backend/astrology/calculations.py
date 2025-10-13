@@ -117,17 +117,25 @@ class AstronomicalCalculations:
         return positions
 
     def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
-        """Calculate ascendant using Swiss Ephemeris houses."""
-        # Get houses using Placidus system
-        # houses_ex returns (cusps, ascmc, cusps_speed, ascmc_speed) tuple
-        result = swe.houses_ex(jd, latitude, longitude, b'P')
-        ascmc = result[1]  # ascmc is the second element
-        # ascmc[0] is the ascendant in tropical
-        asc_tropical = ascmc[0]
+        """Calculate ascendant (eastern horizon point) with correct formula.
+        Uses: x = sin(LST)*cos(ε) + tan(lat)*sin(ε), y = -cos(LST)
+        Then: ascendant = (atan2(y,x) + 180°) % 360° - ayanamsa
+        """
+        eps = math.radians(23.439291111)  # J2000 mean obliquity
+        lst = self.get_sidereal_time(jd, longitude)
+        theta = math.radians(lst)
+        phi = math.radians(latitude)
+        
+        # Correct formula for ASCENDANT (eastern point, not descendant)
+        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
+        y = -math.cos(theta)
+        
+        # Add 180° to get the eastern (rising) point
+        lam_tropical = (math.degrees(math.atan2(y, x)) + 180.0) % 360.0
         
         # Convert to sidereal
         ayanamsa = self.calculate_lahiri_ayanamsa(jd)
-        asc_sidereal = (asc_tropical - ayanamsa) % 360.0
+        asc_sidereal = (lam_tropical - ayanamsa) % 360.0
         
         return asc_sidereal
 
