@@ -186,8 +186,9 @@ class AstronomicalCalculations:
             else:
                 result = swe.calc_ut(jd, planet_id, iflag)
             
-            longitude_val = result[0]
-            latitude_val = result[1]
+            pos_data = result[0]  # First element is the position tuple
+            longitude_val = pos_data[0]
+            latitude_val = pos_data[1]
             
             if planet_name == 'Rahu':
                 positions['Rahu'] = {
