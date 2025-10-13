@@ -57,8 +57,8 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             ))
 
         rasi_chart = self._create_rasi_chart(positions, ascendant)
-        nav_positions = self.calculate_navamsa(positions)
-        nav_chart = self._create_navamsa_chart(nav_positions)
+        nav_positions = self.calculate_navamsa(positions, ascendant)
+        nav_chart = self._create_navamsa_chart(nav_positions, ascendant)
 
         moon = positions['Moon']
         dasa = self._calculate_dasa_periods(moon['nakshatra'], birth_details.date_of_birth, moon['longitude'])
