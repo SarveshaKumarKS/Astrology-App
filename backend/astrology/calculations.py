@@ -1,7 +1,7 @@
 import math
 from datetime import datetime, date, time, timedelta, timezone
 import ephem
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from astrology.constants import (
     PLANETS, SIGNS, NAKSHATRAS, HOUSES,
     PLANETS_TAMIL, SIGNS_TAMIL, NAKSHATRAS_TAMIL,
