@@ -84,10 +84,11 @@ class AstronomicalCalculations:
             if planet_name == 'Ketu':
                 continue  # Handle after Rahu
             
-            # Calculate position
+            # Calculate position - swe.calc_ut returns ((lon, lat, dist, ...), flag)
             result = swe.calc_ut(jd, planet_id, iflag)
-            longitude = result[0]  # Already in sidereal coordinates
-            latitude = result[1]
+            pos_data = result[0]  # First element is the position tuple
+            longitude = pos_data[0]  # Already in sidereal coordinates
+            latitude = pos_data[1]
             
             # Handle Rahu
             if planet_name == 'Rahu':
