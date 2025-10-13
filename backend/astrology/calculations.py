@@ -349,5 +349,3 @@ class AstronomicalCalculations:
             if d.start_date <= today <= d.end_date:
                 return d
         return dasa_periods[0] if dasa_periods else None
-
-        return navamsa_positions
