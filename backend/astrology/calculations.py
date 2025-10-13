@@ -23,21 +23,11 @@ SWE_PLANETS = {
 }
 
 class AstronomicalCalculations:
-    """Base class for astronomical calculations used by both systems"""
+    """Base class for astronomical calculations using Swiss Ephemeris"""
 
     def __init__(self):
-        # PyEphem planet objects for geocentric calculations
-        self.planets = {
-            'Sun': ephem.Sun(),
-            'Moon': ephem.Moon(),
-            'Mercury': ephem.Mercury(),
-            'Venus': ephem.Venus(),
-            'Mars': ephem.Mars(),
-            'Jupiter': ephem.Jupiter(),
-            'Saturn': ephem.Saturn(),
-            'Rahu': None,  # Calculated separately (mean node)
-            'Ketu': None   # Calculated separately (mean node + 180°)
-        }
+        # Set Swiss Ephemeris to use sidereal mode with Lahiri ayanamsa
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
 
     # ---------- Time & JD helpers ----------
 
