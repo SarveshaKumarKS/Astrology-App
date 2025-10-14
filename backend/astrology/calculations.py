@@ -118,20 +118,37 @@ class AstronomicalCalculations:
 
     # ---------- Core calculations ----------
 
-    def calculate_planetary_positions(self, jd: float) -> Dict[str, Dict]:
-        """Calculate geocentric sidereal planetary positions using Swiss Ephemeris."""
+    def calculate_planetary_positions(self, jd: float, use_traditional_ayanamsa: bool = False) -> Dict[str, Dict]:
+        """Calculate geocentric sidereal planetary positions using Swiss Ephemeris.
+        If use_traditional_ayanamsa=True, manually applies Traditional Vakkiam ayanamsa to tropical positions.
+        Otherwise uses Swiss Ephemeris built-in sidereal mode (Lahiri).
+        """
         positions = {}
-        iflag = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+        
+        if use_traditional_ayanamsa:
+            # Calculate tropical positions and manually apply traditional ayanamsa
+            iflag = swe.FLG_SWIEPH  # Tropical
+            ayanamsa = self.calculate_traditional_ayanamsa(jd)
+        else:
+            # Use Swiss Ephemeris sidereal mode (Lahiri)
+            iflag = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+            ayanamsa = 0.0  # Not needed, already sidereal
 
         for planet_name, planet_id in SWE_PLANETS.items():
             if planet_name == 'Ketu':
                 continue  # Handle after Rahu
             
-            # Calculate position - swe.calc_ut returns ((lon, lat, dist, ...), flag)
+            # Calculate position
             result = swe.calc_ut(jd, planet_id, iflag)
-            pos_data = result[0]  # First element is the position tuple
-            longitude = pos_data[0]  # Already in sidereal coordinates
+            pos_data = result[0]
+            longitude_calc = pos_data[0]
             latitude = pos_data[1]
+            
+            # Apply traditional ayanamsa if needed
+            if use_traditional_ayanamsa:
+                longitude = (longitude_calc - ayanamsa) % 360.0
+            else:
+                longitude = longitude_calc
             
             # Handle Rahu
             if planet_name == 'Rahu':
