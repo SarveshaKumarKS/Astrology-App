@@ -59,6 +59,30 @@ class AstronomicalCalculations:
             utc_datetime.hour + utc_datetime.minute / 60.0 + utc_datetime.second / 3600.0
         )
         return jd
+    
+    def get_julian_day_lmt(self, birth_date: date, birth_time: time, timezone_offset: float, longitude: float) -> float:
+        """Calculate Julian Day with Local Mean Time (LMT) correction for Traditional Vakkiam.
+        LMT correction: (longitude - 82.5) * 4 minutes
+        82.5° E is the Indian Standard Time meridian.
+        """
+        # LMT correction in minutes
+        lmt_correction_minutes = (longitude - 82.5) * 4.0
+        
+        # Apply LMT correction to birth time
+        local_datetime = datetime.combine(birth_date, birth_time)
+        lmt_datetime = local_datetime - timedelta(minutes=lmt_correction_minutes)
+        
+        # Convert to UTC
+        utc_datetime = lmt_datetime - timedelta(hours=timezone_offset)
+        
+        # Calculate JD
+        jd = swe.julday(
+            utc_datetime.year,
+            utc_datetime.month,
+            utc_datetime.day,
+            utc_datetime.hour + utc_datetime.minute / 60.0 + utc_datetime.second / 3600.0
+        )
+        return jd
 
     def get_sidereal_time(self, jd: float, longitude: float) -> float:
         """Calculate local sidereal time in degrees using Swiss Ephemeris."""
