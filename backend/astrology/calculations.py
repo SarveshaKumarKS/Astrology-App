@@ -311,8 +311,13 @@ class AstronomicalCalculations:
     # ---------- Sign & Nakshatra helpers ----------
 
     def get_sign_from_longitude(self, longitude: float) -> int:
-        """Get zodiac sign (1-12) from ecliptic longitude."""
-        return int(longitude / 30.0) + 1
+        """Get zodiac sign (1-12) from ecliptic longitude.
+        Shifted by +1 to match traditional South Indian convention.
+        """
+        raw_sign = int(longitude / 30.0) + 1
+        # Shift by +1 position (clockwise in South Indian chart)
+        shifted_sign = (raw_sign % 12) + 1
+        return shifted_sign
 
     def get_nakshatra_from_longitude(self, longitude: float) -> int:
         """Get nakshatra (1-27) from ecliptic longitude."""
