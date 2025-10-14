@@ -46,34 +46,34 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
 
   return (
     <View style={styles.chart}>
-      {/* Row 1 */}
+      {/* Row 1 - Shifted clockwise */}
       <View style={styles.row}>
+        {renderCell(12)}
         {renderCell(1)}
         {renderCell(2)}
         {renderCell(3)}
+      </View>
+      
+      {/* Row 2 - Shifted clockwise */}
+      <View style={styles.row}>
+        {renderCell(11)}
+        {renderCell(0, true)}
         {renderCell(4)}
       </View>
       
-      {/* Row 2 */}
+      {/* Row 3 - Shifted clockwise */}
       <View style={styles.row}>
-        {renderCell(12)}
-        {renderCell(0, true)}
+        {renderCell(10)}
+        <View style={styles.centerSpacer} />
         {renderCell(5)}
       </View>
       
-      {/* Row 3 */}
+      {/* Row 4 - Shifted clockwise */}
       <View style={styles.row}>
-        {renderCell(11)}
-        <View style={styles.centerSpacer} />
-        {renderCell(6)}
-      </View>
-      
-      {/* Row 4 */}
-      <View style={styles.row}>
-        {renderCell(10)}
         {renderCell(9)}
         {renderCell(8)}
         {renderCell(7)}
+        {renderCell(6)}
       </View>
     </View>
   );
