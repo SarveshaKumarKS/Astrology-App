@@ -72,6 +72,25 @@ class AstronomicalCalculations:
     def calculate_lahiri_ayanamsa(self, jd: float) -> float:
         """Calculate Lahiri ayanamsa using Swiss Ephemeris."""
         return swe.get_ayanamsa_ut(jd)
+    
+    def calculate_traditional_ayanamsa(self, jd: float) -> float:
+        """Calculate Traditional Vakkiam ayanamsa.
+        Formula: Base 23.5° + drift of 50 arcseconds per century from epoch.
+        """
+        # Epoch: J2000.0 = JD 2451545.0
+        epoch_jd = 2451545.0
+        centuries_from_epoch = (jd - epoch_jd) / 36525.0
+        
+        # Base ayanamsa at epoch
+        base_ayanamsa = 23.5  # degrees
+        
+        # Drift: 50 arcseconds per century = 50/3600 degrees per century
+        drift_per_century = 50.0 / 3600.0
+        
+        # Calculate ayanamsa
+        ayanamsa = base_ayanamsa + (drift_per_century * centuries_from_epoch)
+        
+        return ayanamsa
 
     # ---------- Core calculations ----------
 
