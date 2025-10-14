@@ -176,7 +176,7 @@ class AstronomicalCalculations:
 
         return positions
 
-    def calculate_ascendant(self, jd: float, latitude: float, longitude: float) -> float:
+    def calculate_ascendant(self, jd: float, latitude: float, longitude: float, use_traditional_ayanamsa: bool = False) -> float:
         """Calculate ascendant (eastern horizon point) with correct formula.
         Uses: x = sin(LST)*cos(ε) + tan(lat)*sin(ε), y = -cos(LST)
         Then: ascendant = (atan2(y,x) + 180°) % 360° - ayanamsa
@@ -194,7 +194,11 @@ class AstronomicalCalculations:
         lam_tropical = (math.degrees(math.atan2(y, x)) + 180.0) % 360.0
         
         # Convert to sidereal
-        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
+        if use_traditional_ayanamsa:
+            ayanamsa = self.calculate_traditional_ayanamsa(jd)
+        else:
+            ayanamsa = self.calculate_lahiri_ayanamsa(jd)
+        
         asc_sidereal = (lam_tropical - ayanamsa) % 360.0
         
         return asc_sidereal
