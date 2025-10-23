@@ -26,7 +26,7 @@ class AstronomicalCalculations:
 
     def __init__(self):
         # Set Swiss Ephemeris to use Lahiri ayanamsa (sidereal mode)
-        swe.set_sid_mode(swe.SE_SIDM_LAHIRI)
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
 
     # ---------- Time & JD helpers ----------
 
