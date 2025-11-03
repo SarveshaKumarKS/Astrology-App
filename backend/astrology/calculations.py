@@ -9,6 +9,7 @@ from astrology.constants import (
 )
 
 # Swiss Ephemeris planet constants
+# Using TRUE_NODE for Rahu/Ketu as per traditional Indian astrology practice
 SWE_PLANETS = {
     'Sun': swe.SUN,
     'Moon': swe.MOON,
@@ -17,8 +18,8 @@ SWE_PLANETS = {
     'Jupiter': swe.JUPITER,
     'Venus': swe.VENUS,
     'Saturn': swe.SATURN,
-    'Rahu': swe.MEAN_NODE,
-    'Ketu': swe.MEAN_NODE  # Ketu = Rahu + 180°
+    'Rahu': swe.TRUE_NODE,  # True Node (not Mean Node) for traditional accuracy
+    'Ketu': swe.TRUE_NODE   # Ketu = Rahu + 180°
 }
 
 class AstronomicalCalculations:
