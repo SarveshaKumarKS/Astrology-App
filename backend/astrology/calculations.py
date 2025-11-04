@@ -321,15 +321,28 @@ class AstronomicalCalculations:
 
     # ---------- Navamsa (D9) ----------
 
-    def calculate_navamsa(self, planetary_positions: Dict[str, Dict], ascendant_longitude: float = None) -> Dict[str, Dict]:
+    def calculate_navamsa(self, planetary_positions: Dict[str, Dict], ascendant_longitude: float = None, jd: float = None) -> Dict[str, Dict]:
         """Calculate Navamsa (D9) chart positions.
         If ascendant_longitude is provided, it will also calculate navamsa ascendant.
+        For Rahu/Ketu, uses Mean Node for Navamsa calculation (to match traditional software like ICS).
         """
         navamsa_positions = {}
         
         # Calculate navamsa for all planets
         for planet, position in planetary_positions.items():
             lon = position['longitude']
+            
+            # Special handling for Rahu/Ketu: Use Mean Node longitude for Navamsa
+            if planet in ['Rahu', 'Ketu'] and jd is not None:
+                # Get Mean Node position for Navamsa calculation only
+                mean_node_result = swe.calc_ut(jd, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_SIDEREAL)
+                mean_rahu_lon = mean_node_result[0][0]
+                
+                if planet == 'Rahu':
+                    lon = mean_rahu_lon
+                else:  # Ketu
+                    lon = (mean_rahu_lon + 180.0) % 360.0
+            
             nav_sign = self._calculate_navamsa_sign(lon)
             
             navamsa_positions[planet] = {
