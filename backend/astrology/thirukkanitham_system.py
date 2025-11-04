@@ -57,7 +57,7 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             ))
 
         rasi_chart = self._create_rasi_chart(positions, ascendant)
-        nav_positions = self.calculate_navamsa(positions, ascendant)
+        nav_positions = self.calculate_navamsa(positions, ascendant, jd)
         nav_chart = self._create_navamsa_chart(nav_positions, ascendant)
 
         moon = positions['Moon']
