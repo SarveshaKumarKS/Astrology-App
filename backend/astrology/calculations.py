@@ -350,19 +350,24 @@ class AstronomicalCalculations:
         return navamsa_positions
     
     def _calculate_navamsa_sign(self, longitude: float) -> int:
-        """Helper to calculate navamsa sign from any longitude.
-        Navamsa always starts from the sign itself for all signs.
-        Each sign is divided into 9 parts of 3°20' each.
-        """
+        """Helper to calculate navamsa sign from any longitude."""
         sign = self.get_sign_from_longitude(longitude)
         lon_in_sign = longitude % 30.0
         
         # D9 formula: divide sign into 9 parts of 3°20' each
         navamsa_part = int(lon_in_sign / 3.333333333333333)
         
-        # Navamsa starts from the sign itself
-        # Formula: (sign - 1 + navamsa_part) mod 12 + 1
-        nav_sign = ((sign - 1 + navamsa_part) % 12) + 1
+        # Base calculation based on sign element
+        if sign in [1, 5, 9]:  # Fire signs (Aries, Leo, Sagittarius)
+            base = 1
+        elif sign in [2, 6, 10]:  # Earth signs (Taurus, Virgo, Capricorn)
+            base = 10
+        elif sign in [3, 7, 11]:  # Air signs (Gemini, Libra, Aquarius)
+            base = 7
+        else:  # Water signs [4, 8, 12] (Cancer, Scorpio, Pisces)
+            base = 4
+        
+        nav_sign = ((base - 1 + navamsa_part) % 12) + 1
         return nav_sign
 
     # ---------- Dasa Period Calculations ----------
