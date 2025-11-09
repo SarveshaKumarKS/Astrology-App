@@ -1,5 +1,7 @@
 from datetime import date
 from typing import Dict, List
+import math
+import swisseph as swe
 from astrology.calculations import AstronomicalCalculations
 from astrology.models import (
     BirthDetails, HoroscopeResult, CompatibilityResult, PlanetaryPosition,
@@ -10,37 +12,119 @@ from astrology.constants import (
     DASA_ORDER, DASA_YEARS, COMPATIBILITY_FACTORS
 )
 
+# Swiss Ephemeris flags for sidereal calculations
+_SWE_FLAGS = swe.FLG_SWIEPH | swe.FLG_SIDEREAL | swe.FLG_SPEED
+
 class ThirukkanithamCalculator(AstronomicalCalculations):
-    """Thirukkanitham system astrology calculations (shares astronomy core)."""
+    """
+    Thirukkanitham (Drik-ganita) system astrology calculations using modern astronomical methods.
+    
+    The Thirukkanitham system uses modern astronomical calculations with spherical trigonometry
+    and contemporary ephemerides (such as NASA's JPL data) to compute planetary positions
+    with high precision, rather than the old Surya Siddhānta mean-planet formulae.
+    
+    This implementation uses Swiss Ephemeris (pyswisseph) to match PyJHora's accuracy.
+    All calculations are done in sidereal mode with Lahiri ayanamsa.
+    """
 
     def __init__(self):
         super().__init__()
         self.system_name = "thirukkanitham"
 
-    # At present we mirror Vakkiam's pipeline but keep hooks to diverge later.
+    # ---------- Modern Drik-ganita Calculation Methods ----------
+    
+    def calculate_lahiri_ayanamsa(self, jd: float) -> float:
+        """Match PyJHora: set sidereal mode to Lahiri and read Swiss Ephemeris ayanamsa"""
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        return float(swe.get_ayanamsa(jd)) % 360.0
+    
+    def calculate_planetary_positions_thirukkanitham(self, jd: float, latitude: float, longitude: float) -> Dict[str, Dict]:
+        """
+        PyJHora-style: Swiss Ephemeris geocentric, sidereal (Lahiri), mean node.
+        The returned longitudes are already sidereal; DO NOT subtract ayanamsa.
+        """
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        positions: Dict[str, Dict] = {}
+
+        # Map our planet names to Swiss Ephemeris IDs
+        body_map = {
+            'Sun': swe.SUN,
+            'Moon': swe.MOON,
+            'Mars': swe.MARS,
+            'Mercury': swe.MERCURY,
+            'Jupiter': swe.JUPITER,
+            'Venus': swe.VENUS,
+            'Saturn': swe.SATURN,
+            # Rahu via MEAN_NODE below
+        }
+
+        # Planets (geocentric, sidereal)
+        for name, body in body_map.items():
+            lonlatspd, _ = swe.calc_ut(jd, body, _SWE_FLAGS)
+            # lonlatspd: [lon, lat, dist, lon_speed, lat_speed, dist_speed]
+            lon = lonlatspd[0] % 360.0
+            lat = lonlatspd[1]
+            positions[name] = {
+                'longitude': lon,
+                'latitude': lat,
+                'sign': self.get_sign_from_longitude(lon),
+                'nakshatra': self.get_nakshatra_from_longitude(lon),
+                # store speed for later retro logic:
+                'speed': lonlatspd[3],
+            }
+
+        # Rahu (mean node) and Ketu
+        rahu_ll, _ = swe.calc_ut(jd, swe.MEAN_NODE, _SWE_FLAGS)
+        rahu_lon = rahu_ll[0] % 360.0
+        ketu_lon = (rahu_lon + 180.0) % 360.0
+
+        positions['Rahu'] = {
+            'longitude': rahu_lon,
+            'latitude': 0.0,
+            'sign': self.get_sign_from_longitude(rahu_lon),
+            'nakshatra': self.get_nakshatra_from_longitude(rahu_lon),
+            'speed': rahu_ll[3],
+        }
+        positions['Ketu'] = {
+            'longitude': ketu_lon,
+            'latitude': 0.0,
+            'sign': self.get_sign_from_longitude(ketu_lon),
+            'nakshatra': self.get_nakshatra_from_longitude(ketu_lon),
+            'speed': -rahu_ll[3],  # opposite
+        }
+
+        return positions
+
+    def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
+        """
+        Match PyJHora: sidereal ascendant directly from Swiss Ephemeris houses_ex.
+        No manual ayanamsa math; Swiss returns sidereal cusps when FLG_SIDEREAL is set.
+        """
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        # Returns (cusps, ascmc); ascmc[0] is Asc in degrees
+        cusps, ascmc = swe.houses_ex(jd, latitude, longitude, flags=swe.FLG_SIDEREAL)
+        asc_sid = ascmc[0] % 360.0
+        return asc_sid
 
     def generate_horoscope(self, birth_details: BirthDetails, language: str = "tamil") -> HoroscopeResult:
         tz = self._parse_timezone(birth_details.timezone)
         jd = self.get_julian_day(birth_details.date_of_birth, birth_details.time_of_birth, tz)
 
-        # Drik / Thirukkanitham differences:
-        # Use topocentric positions (true node included)
-        positions = self.calculate_planetary_positions_topocentric(jd, birth_details.latitude, birth_details.longitude)
-        # Use true obliquity for ascendant
+        # Modern Drik-ganita calculations for Thirukkanitham
+        positions = self.calculate_planetary_positions_thirukkanitham(jd, birth_details.latitude, birth_details.longitude)
+        # Use Swiss Ephemeris for ascendant
         ascendant = self.calculate_ascendant_true_obliquity(jd, birth_details.latitude, birth_details.longitude)
+        
         cusps = self.calculate_houses(ascendant)
 
-        # Retrograde status via day-1 delta (also topocentric for consistency)
-        prev_positions = self.calculate_planetary_positions_topocentric(jd - 1.0, birth_details.latitude, birth_details.longitude)
+        # Retrograde status via speed field (PyJHora-style)
         planet_list: List[PlanetaryPosition] = []
         for name, pos in positions.items():
             if name in ("Rahu", "Ketu"):
                 retro = False
             else:
-                prev_lon = prev_positions[name]['longitude']
-                cur_lon = pos['longitude']
-                delta = (cur_lon - prev_lon + 540.0) % 360.0 - 180.0
-                retro = delta < 0
+                # If speed field is present (from Swiss), prefer that
+                retro = bool('speed' in pos and pos['speed'] < 0)
 
             planet_list.append(PlanetaryPosition(
                 planet=name,
@@ -57,8 +141,9 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             ))
 
         rasi_chart = self._create_rasi_chart(positions, ascendant)
-        nav_positions = self.calculate_navamsa(positions, ascendant, jd)
-        nav_chart = self._create_navamsa_chart(nav_positions, ascendant)
+        nav_positions = self.calculate_navamsa(positions, ascendant)
+        nav_lagna_sign = self._calculate_navamsa_sign(ascendant)
+        nav_chart = self._create_navamsa_chart(nav_positions, nav_lagna_sign)
 
         moon = positions['Moon']
         dasa = self._calculate_dasa_periods(moon['nakshatra'], birth_details.date_of_birth, moon['longitude'])
@@ -90,7 +175,7 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
 
     def _parse_timezone(self, s: str) -> float:
         s = s.strip().upper()
-        if s == 'IST':
+        if s == 'IST' or s == 'ASIA/KOLKATA':
             return 5.5
         if (s.startswith('+') or s.startswith('-')) and ':' in s:
             sign = 1 if s[0] == '+' else -1
@@ -149,28 +234,52 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             ascendant_house=1
         )
 
-    def _create_navamsa_chart(self, nav: Dict, ascendant_longitude: float = None) -> Chart:
-        """Create Navamsa chart: planets grouped by D9 sign, including navamsa ascendant."""
+    def _create_navamsa_chart(self, nav: Dict, nav_lagna_sign: int) -> Chart:
+        """
+        Navamsa squares by SIGN, with Asc placed in the Navamsa sign of the Rasi Lagna.
+        """
         houses = {i: [] for i in range(1, 13)}
         houses_tamil = {i: [] for i in range(1, 13)}
-        
-        navamsa_asc_sign = 1  # default
-        
+
+        # mark Navamsa Lagna
+        houses[nav_lagna_sign].append("Asc")
+        houses_tamil[nav_lagna_sign].append("லக்")
+
+        # place planets in their D9 signs
         for planet, pos in nav.items():
-            if planet == 'Ascendant':
-                # Mark navamsa ascendant
-                houses[pos['sign']].append("Asc")
-                houses_tamil[pos['sign']].append("லக்")
-                navamsa_asc_sign = pos['sign']
-            else:
-                houses[pos['sign']].append(planet)
-                houses_tamil[pos['sign']].append(PLANET_NAMES.get(planet, planet))
-        
+            if planet == 'Ascendant':  # Skip Ascendant, it's already marked
+                continue
+            s = pos['sign']
+            houses[s].append(planet)
+            houses_tamil[s].append(PLANET_NAMES.get(planet, planet))
+
         return Chart(
             chart_type="navamsa",
             houses=houses,
             houses_tamil=houses_tamil,
-            ascendant_house=navamsa_asc_sign
+            ascendant_house=nav_lagna_sign  # show correct Asc sign in D9
+        )
+
+    def _create_navamsa_whole_sign_bhava(self, nav: Dict, nav_lagna_sign: int) -> Chart:
+        """
+        Whole-sign houses in D9: house = (D9 sign - D9 lagna sign) mod 12 + 1
+        """
+        houses = {i: [] for i in range(1, 13)}
+        houses_tamil = {i: [] for i in range(1, 13)}
+        houses[1].append("Asc")
+        houses_tamil[1].append("லக்")
+
+        for planet, pos in nav.items():
+            s = pos['sign']                # D9 sign
+            house_idx = ((s - nav_lagna_sign) % 12) + 1
+            houses[house_idx].append(planet)
+            houses_tamil[house_idx].append(PLANET_NAMES.get(planet, planet))
+
+        return Chart(
+            chart_type="navamsa_bhava_whole_sign",
+            houses=houses,
+            houses_tamil=houses_tamil,
+            ascendant_house=1
         )
 
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float) -> List[DasaPeriod]:
