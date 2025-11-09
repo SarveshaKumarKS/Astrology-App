@@ -43,6 +43,7 @@ class Chart(BaseModel):
     image_base64: Optional[str] = None  # South Indian chart image as base64
     
 class HoroscopeResult(BaseModel):
+    system_type: str = "Modern"
     birth_details: BirthDetails
     system: str  # "vakkiam" or "thirukkanitham"
     language: str
