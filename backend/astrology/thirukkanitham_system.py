@@ -126,18 +126,33 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
                 # If speed field is present (from Swiss), prefer that
                 retro = bool('speed' in pos and pos['speed'] < 0)
 
+            # Calculate new fields
+            lon = pos['longitude']
+            lon_dms = self.deg_to_dms(lon)
+            lon_in_sign = lon % 30.0
+            lon_in_sign_dms = self.deg_to_dms(lon_in_sign)
+            nakshatra_pada = self.get_nakshatra_pada(lon)
+            nakshatra_lord = self.get_nakshatra_lord(pos['nakshatra'])
+            nakshatra_lord_tamil = PLANET_NAMES.get(nakshatra_lord, nakshatra_lord)
+
             planet_list.append(PlanetaryPosition(
                 planet=name,
                 planet_tamil=PLANET_NAMES.get(name, name),
-                longitude=pos['longitude'],
+                longitude=lon,
                 sign=pos['sign'],
                 sign_name=SIGNS[pos['sign']],
                 sign_name_tamil=SIGNS_TAMIL[pos['sign']],
                 nakshatra=pos['nakshatra'],
                 nakshatra_name=NAKSHATRAS[pos['nakshatra']],
                 nakshatra_name_tamil=NAKSHATRAS_TAMIL[pos['nakshatra']],
-                house=self.get_planet_house(pos['longitude'], cusps),
-                retrograde=retro
+                house=self.get_planet_house(lon, cusps),
+                retrograde=retro,
+                longitude_dms=lon_dms,
+                longitude_in_sign=lon_in_sign,
+                longitude_in_sign_dms=lon_in_sign_dms,
+                nakshatra_pada=nakshatra_pada,
+                nakshatra_lord=nakshatra_lord,
+                nakshatra_lord_tamil=nakshatra_lord_tamil
             ))
 
         rasi_chart = self._create_rasi_chart(positions, ascendant)

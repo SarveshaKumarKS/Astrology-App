@@ -288,10 +288,19 @@ class VakkiamCalculator(AstronomicalCalculations):
 
             house = self.get_planet_house(position['longitude'], house_cusps)
 
+            # Calculate new fields
+            lon = position['longitude']
+            lon_dms = self.deg_to_dms(lon)
+            lon_in_sign = lon % 30.0
+            lon_in_sign_dms = self.deg_to_dms(lon_in_sign)
+            nakshatra_pada = self.get_nakshatra_pada(lon)
+            nakshatra_lord = self.get_nakshatra_lord(position['nakshatra'])
+            nakshatra_lord_tamil = PLANET_NAMES.get(nakshatra_lord, nakshatra_lord)
+
             planet_pos = PlanetaryPosition(
                 planet=planet_name,
                 planet_tamil=PLANET_NAMES.get(planet_name, planet_name),
-                longitude=position['longitude'],
+                longitude=lon,
                 sign=position['sign'],
                 sign_name=SIGNS[position['sign']],
                 sign_name_tamil=SIGNS_TAMIL[position['sign']],
@@ -299,7 +308,13 @@ class VakkiamCalculator(AstronomicalCalculations):
                 nakshatra_name=NAKSHATRAS[position['nakshatra']],
                 nakshatra_name_tamil=NAKSHATRAS_TAMIL[position['nakshatra']],
                 house=house,
-                retrograde=retro
+                retrograde=retro,
+                longitude_dms=lon_dms,
+                longitude_in_sign=lon_in_sign,
+                longitude_in_sign_dms=lon_in_sign_dms,
+                nakshatra_pada=nakshatra_pada,
+                nakshatra_lord=nakshatra_lord,
+                nakshatra_lord_tamil=nakshatra_lord_tamil
             )
             planetary_positions.append(planet_pos)
 
@@ -491,55 +506,10 @@ class VakkiamCalculator(AstronomicalCalculations):
         )
 
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float) -> List[DasaPeriod]:
-        """Vimshottari Mahadasha periods with first-dasha balance from Moon's position."""
-        # Nakshatra lords (1..27)
-        nakshatra_lords = {
-            1: 'Ketu', 2: 'Venus', 3: 'Sun', 4: 'Moon', 5: 'Mars', 6: 'Rahu', 7: 'Jupiter', 8: 'Saturn', 9: 'Mercury',
-            10: 'Ketu', 11: 'Venus', 12: 'Sun', 13: 'Moon', 14: 'Mars', 15: 'Rahu', 16: 'Jupiter', 17: 'Saturn', 18: 'Mercury',
-            19: 'Ketu', 20: 'Venus', 21: 'Sun', 22: 'Moon', 23: 'Mars', 24: 'Rahu', 25: 'Jupiter', 26: 'Saturn', 27: 'Mercury'
-        }
-        span = 360.0 / 27.0  # 13°20'
-        nk_start = ((birth_nakshatra - 1) * span) % 360.0
-        f_elapsed = ((moon_longitude_deg - nk_start) % 360.0) / span  # 0..1
-        starting_lord = nakshatra_lords[birth_nakshatra]
-
-        # First (truncated) mahadasha
-        remaining_years = DASA_YEARS[starting_lord] * (1.0 - f_elapsed)
-
-        dasa_periods: List[DasaPeriod] = []
-        cur_start = birth_date
-        first_end = cur_start + timedelta(days=remaining_years * 365.2425)
-        dasa_periods.append(DasaPeriod(
-            planet=starting_lord,
-            planet_tamil=PLANET_NAMES[starting_lord],
-            start_date=cur_start,
-            end_date=first_end,
-            level="maha",
-            years=remaining_years,
-            months=int(round(remaining_years * 12)),
-            days=int(round(remaining_years * 365.2425))
-        ))
-        cur_start = first_end
-
-        # Continue cycles (~120 years total)
-        idx0 = DASA_ORDER.index(starting_lord)
-        for k in range(1, 18):  # 2 cycles minus the first partial already added
-            planet = DASA_ORDER[(idx0 + k) % 9]
-            yrs = DASA_YEARS[planet]
-            end = cur_start + timedelta(days=yrs * 365.2425)
-            dasa_periods.append(DasaPeriod(
-                planet=planet,
-                planet_tamil=PLANET_NAMES[planet],
-                start_date=cur_start,
-                end_date=end,
-                level="maha",
-                years=yrs,
-                months=int(yrs * 12),
-                days=int(yrs * 365.2425)
-            ))
-            cur_start = end
-
-        return dasa_periods
+        """Vimshottari Mahadasha periods with first-dasha balance from Moon's position.
+        Delegates to base class implementation which uses date arithmetic.
+        """
+        return super()._calculate_dasa_periods(birth_nakshatra, birth_date, moon_longitude_deg)
 
     def _get_current_dasa(self, dasa_periods: List[DasaPeriod]) -> DasaPeriod:
         """Get current running mahadasha (by today's date)."""

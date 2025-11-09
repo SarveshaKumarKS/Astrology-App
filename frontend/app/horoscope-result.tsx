@@ -26,6 +26,12 @@ interface PlanetaryPosition {
   nakshatra_name_tamil: string;
   house: number;
   retrograde: boolean;
+  longitude_dms?: string;
+  longitude_in_sign?: number;
+  longitude_in_sign_dms?: string;
+  nakshatra_pada?: number;
+  nakshatra_lord?: string;
+  nakshatra_lord_tamil?: string;
 }
 
 interface Chart {
@@ -150,39 +156,59 @@ export default function HoroscopeResultPage() {
           {getText('கிரக நிலைகள்', 'Planetary Positions')}
         </Text>
         
-        <View style={styles.planetaryTable}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>
-              {getText('கிரகம்', 'Planet')}
-            </Text>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>
-              {getText('ராசி', 'Sign')}
-            </Text>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>
-              {getText('நட்சத்திரம்', 'Nakshatra')}
-            </Text>
-            <Text style={[styles.tableHeaderText, { flex: 1 }]}>
-              {getText('வீடு', 'House')}
-            </Text>
-          </View>
-          
-          {horoscopeData.planetary_positions.map((planet, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCellText, { flex: 2 }]}>
-                {getText(planet.planet_tamil, planet.planet)}
+        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+          <View style={styles.planetaryTable}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderText, { width: 80 }]}>
+                {getText('கிரகம்', 'Planet')}
               </Text>
-              <Text style={[styles.tableCellText, { flex: 2 }]}>
-                {getText(planet.sign_name_tamil, planet.sign_name)}
+              <Text style={[styles.tableHeaderText, { width: 90 }]}>
+                {getText('பாகை', 'Degree')}
               </Text>
-              <Text style={[styles.tableCellText, { flex: 2 }]}>
-                {getText(planet.nakshatra_name_tamil, planet.nakshatra_name)}
+              <Text style={[styles.tableHeaderText, { width: 100 }]}>
+                {getText('நட்சத்திரம்', 'Nakshatra')}
               </Text>
-              <Text style={[styles.tableCellText, { flex: 1 }]}>
-                {planet.house}
+              <Text style={[styles.tableHeaderText, { width: 60 }]}>
+                {getText('பாதம்', 'Pada')}
+              </Text>
+              <Text style={[styles.tableHeaderText, { width: 80 }]}>
+                {getText('தலைவன்', 'Lord')}
+              </Text>
+              <Text style={[styles.tableHeaderText, { width: 90 }]}>
+                {getText('ராசி பாகை', 'Sign Degree')}
+              </Text>
+              <Text style={[styles.tableHeaderText, { width: 90 }]}>
+                {getText('ராசி', 'Sign')}
               </Text>
             </View>
-          ))}
-        </View>
+            
+            {horoscopeData.planetary_positions.map((planet, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={[styles.tableCellText, { width: 80 }]}>
+                  {getText(planet.planet_tamil, planet.planet)}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 90 }]}>
+                  {planet.longitude_dms || 'N/A'}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 100 }]}>
+                  {getText(planet.nakshatra_name_tamil, planet.nakshatra_name)}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 60 }]}>
+                  {planet.nakshatra_pada || 'N/A'}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 80 }]}>
+                  {getText(planet.nakshatra_lord_tamil || '', planet.nakshatra_lord || 'N/A')}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 90 }]}>
+                  {planet.longitude_in_sign_dms || 'N/A'}
+                </Text>
+                <Text style={[styles.tableCellText, { width: 90 }]}>
+                  {getText(planet.sign_name_tamil, planet.sign_name)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   };
@@ -236,7 +262,8 @@ export default function HoroscopeResultPage() {
           
           <View style={styles.dasaDetails}>
             <Text style={styles.dasaDetailText}>
-              {getText('காலம்:', 'Period:')} {horoscopeData.current_dasa.years} {getText('ஆண்டுகள்', 'years')}
+              {getText('காலம்:', 'Period:')} {horoscopeData.current_dasa.years.toFixed(2)} {getText('ஆண்டுகள்', 'years')} 
+              {' '}({horoscopeData.current_dasa.months} {getText('மாதங்கள்', 'months')}, {horoscopeData.current_dasa.days} {getText('நாட்கள்', 'days')})
             </Text>
             <Text style={styles.dasaDetailText}>
               {getText('தொடக்கம்:', 'Start:')} {new Date(horoscopeData.current_dasa.start_date).toLocaleDateString()}
@@ -448,7 +475,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -460,7 +487,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   tableCellText: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#2C3E50',
     textAlign: 'center',
   },

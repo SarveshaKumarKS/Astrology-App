@@ -24,6 +24,12 @@ class PlanetaryPosition(BaseModel):
     nakshatra_name_tamil: str
     house: int  # 1-12
     retrograde: bool = False
+    longitude_dms: Optional[str] = None  # DMS-formatted sidereal longitude
+    longitude_in_sign: Optional[float] = None  # Longitude within its zodiac sign
+    longitude_in_sign_dms: Optional[str] = None  # DMS-formatted longitude within the sign
+    nakshatra_pada: Optional[int] = None  # 1-4 depending on which quarter of the nakshatra
+    nakshatra_lord: Optional[str] = None  # Ruling planet of the nakshatra
+    nakshatra_lord_tamil: Optional[str] = None  # Ruling planet of the nakshatra (Tamil name)
 
 class DasaPeriod(BaseModel):
     planet: str

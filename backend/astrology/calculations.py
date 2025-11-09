@@ -2,6 +2,7 @@ import math
 from datetime import datetime, date, time, timedelta, timezone
 from typing import Dict, List
 import ephem
+from dateutil.relativedelta import relativedelta
 
 from astrology.constants import (
     PLANETS, SIGNS, NAKSHATRAS, HOUSES,
@@ -81,6 +82,28 @@ class AstronomicalCalculations:
         """Nakshatra index (1..27) from sidereal ecliptic longitude (deg)."""
         span = 360.0 / 27.0  # 13°20'
         return int((longitude % 360.0) // span) + 1
+
+    def deg_to_dms(self, deg: float) -> str:
+        """Convert degrees to DMS format (degrees:minutes:seconds)."""
+        d = int(deg)
+        m = int((deg - d) * 60)
+        s = int(round(((deg - d) * 60 - m) * 60))
+        return f"{d}:{m:02d}:{s:02d}"
+
+    def get_nakshatra_pada(self, lon: float) -> int:
+        """Get nakshatra pada (1-4) from longitude."""
+        span = 360.0 / 27.0  # 13°20'
+        part = ((lon % span) / (span / 4))
+        return int(part) + 1
+
+    def get_nakshatra_lord(self, nakshatra: int) -> str:
+        """Get nakshatra lord from nakshatra number (1-27)."""
+        nakshatra_lords = {
+            1: 'Ketu', 2: 'Venus', 3: 'Sun', 4: 'Moon', 5: 'Mars', 6: 'Rahu', 7: 'Jupiter', 8: 'Saturn', 9: 'Mercury',
+            10: 'Ketu', 11: 'Venus', 12: 'Sun', 13: 'Moon', 14: 'Mars', 15: 'Rahu', 16: 'Jupiter', 17: 'Saturn', 18: 'Mercury',
+            19: 'Ketu', 20: 'Venus', 21: 'Sun', 22: 'Moon', 23: 'Mars', 24: 'Rahu', 25: 'Jupiter', 26: 'Saturn', 27: 'Mercury'
+        }
+        return nakshatra_lords.get(nakshatra, 'Sun')
 
     # ---------- Planetary positions ----------
 
@@ -319,7 +342,9 @@ class AstronomicalCalculations:
     # ---------- Dasa Period Calculations ----------
     
     def _calculate_dasa_periods(self, birth_nakshatra: int, birth_date: date, moon_longitude_deg: float):
-        """Vimshottari Mahadasha periods with first-dasha balance from Moon's position."""
+        """Vimshottari Mahadasha periods with first-dasha balance from Moon's position.
+        Uses date arithmetic with relativedelta for accurate date calculations.
+        """
         from astrology.models import DasaPeriod
         
         # Nakshatra lords (1..27)
@@ -334,20 +359,48 @@ class AstronomicalCalculations:
         starting_lord = nakshatra_lords[birth_nakshatra]
 
         # First (truncated) mahadasha
-        remaining_years = DASA_YEARS[starting_lord] * (1.0 - f_elapsed)
-
+        total_years = DASA_YEARS[starting_lord]
+        remaining_years = total_years * (1.0 - f_elapsed)
+        
+        # Convert remaining_years to years, months, days
+        years_int = int(remaining_years)
+        months_float = (remaining_years - years_int) * 12
+        months_int = int(months_float)
+        days_float = (months_float - months_int) * 30.44  # Average days per month
+        days_int = int(round(days_float))
+        
+        # Subtract approximately 9 months (gestation period) from first mahadasha
+        gestation_months = 9
+        if months_int >= gestation_months:
+            months_int -= gestation_months
+        else:
+            # Need to borrow from years
+            months_to_borrow = gestation_months - months_int
+            years_int -= 1
+            months_int = 12 - months_to_borrow
+        
         dasa_periods = []
         cur_start = birth_date
-        first_end = cur_start + timedelta(days=remaining_years * 365.2425)
+        
+        # Calculate first period end date using relativedelta
+        first_end = cur_start + relativedelta(years=years_int, months=months_int, days=days_int)
+        first_end_date = first_end - timedelta(days=1)  # End date is one day before next starts
+        
+        # Calculate actual duration in years, months, days from actual end_date
+        delta = relativedelta(first_end_date, cur_start)
+        actual_years = delta.years
+        actual_months = delta.months
+        actual_days = delta.days
+        
         dasa_periods.append(DasaPeriod(
             planet=starting_lord,
             planet_tamil=PLANET_NAMES[starting_lord],
             start_date=cur_start,
-            end_date=first_end,
+            end_date=first_end_date,
             level="maha",
-            years=remaining_years,
-            months=int(round(remaining_years * 12)),
-            days=int(round(remaining_years * 365.2425))
+            years=actual_years + actual_months/12.0 + actual_days/365.2425,
+            months=actual_years * 12 + actual_months,
+            days=actual_days
         ))
         cur_start = first_end
 
@@ -356,16 +409,33 @@ class AstronomicalCalculations:
         for k in range(1, 18):  # 2 cycles minus the first partial already added
             planet = DASA_ORDER[(idx0 + k) % 9]
             yrs = DASA_YEARS[planet]
-            end = cur_start + timedelta(days=yrs * 365.2425)
+            
+            # Convert years to years, months, days
+            yrs_int = int(yrs)
+            mths_float = (yrs - yrs_int) * 12
+            mths_int = int(mths_float)
+            dys_float = (mths_float - mths_int) * 30.44
+            dys_int = int(round(dys_float))
+            
+            # Calculate end date using relativedelta
+            end = cur_start + relativedelta(years=yrs_int, months=mths_int, days=dys_int)
+            end_date = end - timedelta(days=1)  # End date is one day before next starts
+            
+            # Calculate actual duration from actual end_date
+            delta = relativedelta(end_date, cur_start)
+            actual_years = delta.years
+            actual_months = delta.months
+            actual_days = delta.days
+            
             dasa_periods.append(DasaPeriod(
                 planet=planet,
                 planet_tamil=PLANET_NAMES[planet],
                 start_date=cur_start,
-                end_date=end,
+                end_date=end_date,
                 level="maha",
-                years=yrs,
-                months=int(yrs * 12),
-                days=int(yrs * 365.2425)
+                years=actual_years + actual_months/12.0 + actual_days/365.2425,
+                months=actual_years * 12 + actual_months,
+                days=actual_days
             ))
             cur_start = end
 
