@@ -171,9 +171,6 @@ export default function HoroscopeResultPage() {
               <Text style={[styles.tableHeaderText, { width: 60 }]}>
                 {getText('பாதம்', 'Pada')}
               </Text>
-              <Text style={[styles.tableHeaderText, { width: 80 }]}>
-                {getText('தலைவன்', 'Lord')}
-              </Text>
               <Text style={[styles.tableHeaderText, { width: 90 }]}>
                 {getText('ராசி பாகை', 'Sign Degree')}
               </Text>
@@ -195,9 +192,6 @@ export default function HoroscopeResultPage() {
                 </Text>
                 <Text style={[styles.tableCellText, { width: 60 }]}>
                   {planet.nakshatra_pada || 'N/A'}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 80 }]}>
-                  {getText(planet.nakshatra_lord_tamil || '', planet.nakshatra_lord || 'N/A')}
                 </Text>
                 <Text style={[styles.tableCellText, { width: 90 }]}>
                   {planet.longitude_in_sign_dms || 'N/A'}
