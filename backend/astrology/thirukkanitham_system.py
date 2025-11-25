@@ -155,6 +155,35 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
                 nakshatra_lord_tamil=nakshatra_lord_tamil
             ))
 
+        # Add Ascendant as first entry in planetary positions
+        asc_sign = self.get_sign_from_longitude(ascendant)
+        asc_nakshatra = self.get_nakshatra_from_longitude(ascendant)
+        asc_nakshatra_pada = self.get_nakshatra_pada(ascendant)
+        asc_nakshatra_lord = self.get_nakshatra_lord(asc_nakshatra)
+        
+        asc_pos = PlanetaryPosition(
+            planet="Ascendant",
+            planet_tamil="லக்னம்",
+            longitude=ascendant,
+            sign=asc_sign,
+            sign_name=SIGNS[asc_sign],
+            sign_name_tamil=SIGNS_TAMIL[asc_sign],
+            nakshatra=asc_nakshatra,
+            nakshatra_name=NAKSHATRAS[asc_nakshatra],
+            nakshatra_name_tamil=NAKSHATRAS_TAMIL[asc_nakshatra],
+            house=1,
+            retrograde=False,
+            longitude_dms=self.deg_to_dms(ascendant),
+            longitude_in_sign=ascendant % 30.0,
+            longitude_in_sign_dms=self.deg_to_dms(ascendant % 30.0),
+            nakshatra_pada=asc_nakshatra_pada,
+            nakshatra_lord=asc_nakshatra_lord,
+            nakshatra_lord_tamil=PLANET_NAMES.get(asc_nakshatra_lord, asc_nakshatra_lord)
+        )
+        
+        # Prepend Ascendant to the list
+        planet_list.insert(0, asc_pos)
+
         rasi_chart = self._create_rasi_chart(positions, ascendant)
         nav_positions = self.calculate_navamsa(positions, ascendant)
         nav_lagna_sign = self._calculate_navamsa_sign(ascendant)
