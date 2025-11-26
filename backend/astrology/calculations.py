@@ -449,3 +449,101 @@ class AstronomicalCalculations:
             if d.start_date <= today <= d.end_date:
                 return d
         return dasa_periods[0] if dasa_periods else None
+    
+    def _calculate_sub_dasha_periods(self, maha_dasa):
+        """Calculate bhukti (antar dasha) periods within a mahadasha.
+        Divides the mahadasha into 9 sub-periods proportionally.
+        """
+        from astrology.models import DasaPeriod
+        
+        # Get the mahadasha planet and its position in DASA_ORDER
+        maha_planet = maha_dasa.planet
+        maha_idx = DASA_ORDER.index(maha_planet)
+        
+        # Total duration of mahadasha in days
+        maha_duration_days = (maha_dasa.end_date - maha_dasa.start_date).days + 1
+        
+        # Total proportional years for all 9 bhuktis
+        total_proportional = sum(DASA_YEARS[DASA_ORDER[(maha_idx + i) % 9]] for i in range(9))
+        
+        bhukti_periods = []
+        cur_start = maha_dasa.start_date
+        
+        for i in range(9):
+            bhukti_planet = DASA_ORDER[(maha_idx + i) % 9]
+            bhukti_years = DASA_YEARS[bhukti_planet]
+            
+            # Calculate proportional duration
+            bhukti_fraction = bhukti_years / total_proportional
+            bhukti_duration_days = int(maha_duration_days * bhukti_fraction)
+            
+            # Calculate end date
+            end_date = cur_start + timedelta(days=bhukti_duration_days - 1)
+            
+            # Make sure last bhukti ends exactly at mahadasha end
+            if i == 8:
+                end_date = maha_dasa.end_date
+            
+            # Calculate years, months, days
+            delta = relativedelta(end_date, cur_start)
+            
+            bhukti_periods.append(DasaPeriod(
+                planet=bhukti_planet,
+                planet_tamil=PLANET_NAMES[bhukti_planet],
+                start_date=cur_start,
+                end_date=end_date,
+                level="antar",
+                years=delta.years + delta.months/12.0 + delta.days/365.2425,
+                months=delta.years * 12 + delta.months,
+                days=delta.days
+            ))
+            
+            cur_start = end_date + timedelta(days=1)
+        
+        return bhukti_periods
+    
+    def _enhance_current_dasa(self, current_dasa, dasa_periods):
+        """Enhance current dasa with balance, next dasa, and bhukti information."""
+        from astrology.models import DasaPeriod
+        today = date.today()
+        
+        # Calculate remaining balance
+        if current_dasa and current_dasa.end_date >= today:
+            delta = relativedelta(current_dasa.end_date, today)
+            current_dasa.balance_years = delta.years
+            current_dasa.balance_months = delta.months
+            current_dasa.balance_days = delta.days
+        
+        # Find next mahadasha
+        current_idx = None
+        for idx, d in enumerate(dasa_periods):
+            if d.planet == current_dasa.planet and d.start_date == current_dasa.start_date:
+                current_idx = idx
+                break
+        
+        if current_idx is not None and current_idx < len(dasa_periods) - 1:
+            next_dasa = dasa_periods[current_idx + 1]
+            current_dasa.next_dasa_planet = next_dasa.planet
+            current_dasa.next_dasa_planet_tamil = next_dasa.planet_tamil
+            current_dasa.next_dasa_end_date = next_dasa.end_date
+        
+        # Calculate bhuktis and find current/next
+        bhuktis = self._calculate_sub_dasha_periods(current_dasa)
+        
+        current_bhukti = None
+        for idx, bhukti in enumerate(bhuktis):
+            if bhukti.start_date <= today <= bhukti.end_date:
+                current_bhukti = bhukti
+                current_dasa.current_bhukti_planet = bhukti.planet
+                current_dasa.current_bhukti_planet_tamil = bhukti.planet_tamil
+                current_dasa.current_bhukti_end_date = bhukti.end_date
+                
+                # Set next bhukti
+                if idx < len(bhuktis) - 1:
+                    next_bhukti = bhuktis[idx + 1]
+                    current_dasa.next_bhukti_planet = next_bhukti.planet
+                    current_dasa.next_bhukti_planet_tamil = next_bhukti.planet_tamil
+                    current_dasa.next_bhukti_end_date = next_bhukti.end_date
+                break
+        
+        return current_dasa
