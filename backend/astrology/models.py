@@ -56,13 +56,13 @@ class DasaPeriod(BaseModel):
     balance_days: Optional[int] = None
     next_dasa_planet: Optional[str] = None
     next_dasa_planet_tamil: Optional[str] = None
-    next_dasa_end_date: Optional[date] = None
+    next_dasa_end_date: Optional[str] = None  # Store as string
     current_bhukti_planet: Optional[str] = None
     current_bhukti_planet_tamil: Optional[str] = None
-    current_bhukti_end_date: Optional[date] = None
+    current_bhukti_end_date: Optional[str] = None  # Store as string
     next_bhukti_planet: Optional[str] = None
     next_bhukti_planet_tamil: Optional[str] = None
-    next_bhukti_end_date: Optional[date] = None
+    next_bhukti_end_date: Optional[str] = None  # Store as string
     
     @field_serializer('next_dasa_end_date', 'current_bhukti_end_date', 'next_bhukti_end_date', 'start_date', 'end_date', when_used='json')
     def serialize_dates(self, value):
