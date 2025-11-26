@@ -192,10 +192,27 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         moon = positions['Moon']
         dasa = self._calculate_dasa_periods(moon['nakshatra'], birth_details.date_of_birth, moon['longitude'])
         current = self._get_current_dasa(dasa)
+        
+        # Enhance current dasa with balance, next dasa, and bhukti information
+        current = self._enhance_current_dasa(current, dasa)
 
         asc_sign = self.get_sign_from_longitude(ascendant)
         moon_sign = moon['sign']
         moon_nk = moon['nakshatra']
+        
+        # Calculate retrograde planets
+        retrograde_planets = [p.planet for p in planet_list if p.retrograde and p.planet != "Ascendant"]
+        retrograde_planets_tamil = [p.planet_tamil for p in planet_list if p.retrograde and p.planet != "Ascendant"]
+        
+        # Calculate Bhava Maruthal for Sun, Rahu, Ketu
+        bhava_maruthal = {}
+        bhava_maruthal_tamil = {}
+        for planet in ["Sun", "Rahu", "Ketu"]:
+            for p in planet_list:
+                if p.planet == planet:
+                    bhava_maruthal[planet] = p.house
+                    bhava_maruthal_tamil[p.planet_tamil] = p.house
+                    break
 
         return HoroscopeResult(
             birth_details=birth_details,
@@ -212,7 +229,12 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             navamsa_chart=nav_chart,
             dasa_periods=dasa,
             current_dasa=current,
-            special_yogas=[], special_yogas_tamil=[]
+            special_yogas=[], 
+            special_yogas_tamil=[],
+            retrograde_planets=retrograde_planets,
+            retrograde_planets_tamil=retrograde_planets_tamil,
+            bhava_maruthal=bhava_maruthal,
+            bhava_maruthal_tamil=bhava_maruthal_tamil
         )
 
     # These helpers mirror Vakkiam; override later if Thirukkanitham has distinct rules.
