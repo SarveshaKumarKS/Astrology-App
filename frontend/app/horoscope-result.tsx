@@ -50,6 +50,19 @@ interface DasaPeriod {
   years: number;
   months: number;
   days: number;
+  // Extended fields
+  balance_years?: number;
+  balance_months?: number;
+  balance_days?: number;
+  next_dasa_planet?: string;
+  next_dasa_planet_tamil?: string;
+  next_dasa_end_date?: string;
+  current_bhukti_planet?: string;
+  current_bhukti_planet_tamil?: string;
+  current_bhukti_end_date?: string;
+  next_bhukti_planet?: string;
+  next_bhukti_planet_tamil?: string;
+  next_bhukti_end_date?: string;
 }
 
 interface HoroscopeData {
