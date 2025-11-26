@@ -85,6 +85,11 @@ interface HoroscopeData {
   navamsa_chart: Chart;
   dasa_periods: DasaPeriod[];
   current_dasa: DasaPeriod;
+  // Extended fields
+  retrograde_planets?: string[];
+  retrograde_planets_tamil?: string[];
+  bhava_maruthal?: { [key: string]: number };
+  bhava_maruthal_tamil?: { [key: string]: number };
 }
 
 export default function HoroscopeResultPage() {
