@@ -537,14 +537,16 @@ class AstronomicalCalculations:
                 current_bhukti = bhukti
                 current_dasa.current_bhukti_planet = bhukti.planet
                 current_dasa.current_bhukti_planet_tamil = bhukti.planet_tamil
-                current_dasa.current_bhukti_end_date = bhukti.end_date
+                # Store as string to avoid serialization issues
+                current_dasa.current_bhukti_end_date = str(bhukti.end_date) if bhukti.end_date else None
                 
                 # Set next bhukti
                 if idx < len(bhuktis) - 1:
                     next_bhukti = bhuktis[idx + 1]
                     current_dasa.next_bhukti_planet = next_bhukti.planet
                     current_dasa.next_bhukti_planet_tamil = next_bhukti.planet_tamil
-                    current_dasa.next_bhukti_end_date = next_bhukti.end_date
+                    # Store as string to avoid serialization issues
+                    current_dasa.next_bhukti_end_date = str(next_bhukti.end_date) if next_bhukti.end_date else None
                 break
         
         return current_dasa
