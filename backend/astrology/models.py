@@ -32,7 +32,7 @@ class PlanetaryPosition(BaseModel):
     nakshatra_lord_tamil: Optional[str] = None  # Ruling planet of the nakshatra (Tamil name)
 
 class DasaPeriod(BaseModel):
-    model_config = {"json_encoders": {date: lambda v: v.isoformat() if v else None}}
+    model_config = ConfigDict(json_encoders={date: lambda v: v.isoformat() if v else None})
     
     planet: str
     planet_tamil: str
