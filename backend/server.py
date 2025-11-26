@@ -121,6 +121,13 @@ async def generate_horoscope(request: HoroscopeRequest):
                 horoscope_dict['current_dasa']['start_date'] = str(horoscope_dict['current_dasa']['start_date'])
             if 'end_date' in horoscope_dict['current_dasa']:
                 horoscope_dict['current_dasa']['end_date'] = str(horoscope_dict['current_dasa']['end_date'])
+            # Convert new date fields
+            if 'next_dasa_end_date' in horoscope_dict['current_dasa'] and horoscope_dict['current_dasa']['next_dasa_end_date']:
+                horoscope_dict['current_dasa']['next_dasa_end_date'] = str(horoscope_dict['current_dasa']['next_dasa_end_date'])
+            if 'current_bhukti_end_date' in horoscope_dict['current_dasa'] and horoscope_dict['current_dasa']['current_bhukti_end_date']:
+                horoscope_dict['current_dasa']['current_bhukti_end_date'] = str(horoscope_dict['current_dasa']['current_bhukti_end_date'])
+            if 'next_bhukti_end_date' in horoscope_dict['current_dasa'] and horoscope_dict['current_dasa']['next_bhukti_end_date']:
+                horoscope_dict['current_dasa']['next_bhukti_end_date'] = str(horoscope_dict['current_dasa']['next_bhukti_end_date'])
         
         # Convert chart house keys from integers to strings for MongoDB
         if 'rasi_chart' in horoscope_dict and 'houses' in horoscope_dict['rasi_chart']:
