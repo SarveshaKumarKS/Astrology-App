@@ -361,11 +361,28 @@ class VakkiamCalculator(AstronomicalCalculations):
             moon_position['longitude']
         )
         current_dasa = self._get_current_dasa(dasa_periods)
+        
+        # Enhance current dasa with balance, next dasa, and bhukti information
+        current_dasa = self._enhance_current_dasa(current_dasa, dasa_periods)
 
         # Asc/Moon/Nakshatra names
         ascendant_sign = self.get_sign_from_longitude(ascendant_longitude)
         moon_sign = moon_position['sign']
         moon_nakshatra = moon_position['nakshatra']
+        
+        # Calculate retrograde planets
+        retrograde_planets = [p.planet for p in planetary_positions if p.retrograde and p.planet != "Ascendant"]
+        retrograde_planets_tamil = [p.planet_tamil for p in planetary_positions if p.retrograde and p.planet != "Ascendant"]
+        
+        # Calculate Bhava Maruthal for Sun, Rahu, Ketu
+        bhava_maruthal = {}
+        bhava_maruthal_tamil = {}
+        for planet in ["Sun", "Rahu", "Ketu"]:
+            for p in planetary_positions:
+                if p.planet == planet:
+                    bhava_maruthal[planet] = p.house
+                    bhava_maruthal_tamil[p.planet_tamil] = p.house
+                    break
 
         horoscope = HoroscopeResult(
             birth_details=birth_details,
@@ -383,7 +400,11 @@ class VakkiamCalculator(AstronomicalCalculations):
             dasa_periods=dasa_periods,
             current_dasa=current_dasa,
             special_yogas=[],  # TODO
-            special_yogas_tamil=[]
+            special_yogas_tamil=[],
+            retrograde_planets=retrograde_planets,
+            retrograde_planets_tamil=retrograde_planets_tamil,
+            bhava_maruthal=bhava_maruthal,
+            bhava_maruthal_tamil=bhava_maruthal_tamil
         )
 
         return horoscope
