@@ -63,10 +63,6 @@ class DasaPeriod(BaseModel):
     next_bhukti_planet: Optional[str] = None
     next_bhukti_planet_tamil: Optional[str] = None
     next_bhukti_end_date: Optional[str] = None  # Store as string
-    
-    @field_serializer('next_dasa_end_date', 'current_bhukti_end_date', 'next_bhukti_end_date', 'start_date', 'end_date', when_used='json')
-    def serialize_dates(self, value):
-        return value.isoformat() if value else None
 
 class Chart(BaseModel):
     chart_type: str  # "rasi", "navamsa"
