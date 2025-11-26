@@ -525,7 +525,8 @@ class AstronomicalCalculations:
             next_dasa = dasa_periods[current_idx + 1]
             current_dasa.next_dasa_planet = next_dasa.planet
             current_dasa.next_dasa_planet_tamil = next_dasa.planet_tamil
-            current_dasa.next_dasa_end_date = next_dasa.end_date
+            # Store as string to avoid serialization issues
+            current_dasa.next_dasa_end_date = str(next_dasa.end_date) if next_dasa.end_date else None
         
         # Calculate bhuktis and find current/next
         bhuktis = self._calculate_sub_dasha_periods(current_dasa)
