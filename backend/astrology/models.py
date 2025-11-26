@@ -40,6 +40,19 @@ class DasaPeriod(BaseModel):
     years: float
     months: int
     days: int
+    # Extended fields for current dasa
+    balance_years: Optional[int] = None
+    balance_months: Optional[int] = None
+    balance_days: Optional[int] = None
+    next_dasa_planet: Optional[str] = None
+    next_dasa_planet_tamil: Optional[str] = None
+    next_dasa_end_date: Optional[date] = None
+    current_bhukti_planet: Optional[str] = None
+    current_bhukti_planet_tamil: Optional[str] = None
+    current_bhukti_end_date: Optional[date] = None
+    next_bhukti_planet: Optional[str] = None
+    next_bhukti_planet_tamil: Optional[str] = None
+    next_bhukti_end_date: Optional[date] = None
 
 class Chart(BaseModel):
     chart_type: str  # "rasi", "navamsa"
