@@ -11,6 +11,14 @@ class BirthDetails(BaseModel):
     longitude: float
     timezone: str
     time_correction: int = 0  # in minutes
+    
+    @field_serializer('date_of_birth', when_used='json')
+    def serialize_date(self, value):
+        return value.isoformat() if value else None
+    
+    @field_serializer('time_of_birth', when_used='json')
+    def serialize_time(self, value):
+        return value.isoformat() if value else None
 
 class PlanetaryPosition(BaseModel):
     planet: str
