@@ -99,6 +99,10 @@ class HoroscopeResult(BaseModel):
     retrograde_planets_tamil: List[str] = []
     bhava_maruthal: Dict[str, int] = {}  # Planet -> House number
     bhava_maruthal_tamil: Dict[str, int] = {}  # Tamil planet name -> House number
+    
+    @field_serializer('generated_at', when_used='json')
+    def serialize_datetime(self, value):
+        return value.isoformat() if value else None
 
 class CompatibilityFactor(BaseModel):
     factor_name: str
