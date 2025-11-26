@@ -141,7 +141,8 @@ async def generate_horoscope(request: HoroscopeRequest):
         
         await db.horoscopes.insert_one(horoscope_dict)
         
-        return horoscope
+        # Return horoscope as JSON to properly serialize dates
+        return horoscope.model_dump(mode='json')
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
