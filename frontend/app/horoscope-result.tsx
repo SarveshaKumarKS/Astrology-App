@@ -283,6 +283,51 @@ export default function HoroscopeResultPage() {
             <Text style={styles.dasaDetailText}>
               {getText('முடிவு:', 'End:')} {new Date(horoscopeData.current_dasa.end_date).toLocaleDateString()}
             </Text>
+            
+            {/* Remaining Balance */}
+            {horoscopeData.current_dasa.balance_years !== undefined && (
+              <Text style={styles.dasaDetailText}>
+                {getText('திசை இருப்பு:', 'Remaining:')} {horoscopeData.current_dasa.balance_years} {getText('ஆண்டுகள்', 'years')}, {horoscopeData.current_dasa.balance_months} {getText('மாதங்கள்', 'months')}, {horoscopeData.current_dasa.balance_days} {getText('நாட்கள்', 'days')}
+              </Text>
+            )}
+            
+            {/* Next Dasa */}
+            {horoscopeData.current_dasa.next_dasa_planet && (
+              <Text style={styles.dasaDetailText}>
+                {getText('அடுத்த திசை:', 'Next Dasa:')} {getText(horoscopeData.current_dasa.next_dasa_planet_tamil || '', horoscopeData.current_dasa.next_dasa_planet)} {getText('வரை', 'until')} {new Date(horoscopeData.current_dasa.next_dasa_end_date || '').toLocaleDateString()}
+              </Text>
+            )}
+            
+            {/* Current Bhukti */}
+            {horoscopeData.current_dasa.current_bhukti_planet && (
+              <Text style={styles.dasaDetailText}>
+                {getText('தற்போதைய புக்தி:', 'Current Bhukti:')} {getText(horoscopeData.current_dasa.current_bhukti_planet_tamil || '', horoscopeData.current_dasa.current_bhukti_planet)} {getText('வரை', 'until')} {new Date(horoscopeData.current_dasa.current_bhukti_end_date || '').toLocaleDateString()}
+              </Text>
+            )}
+            
+            {/* Next Bhukti */}
+            {horoscopeData.current_dasa.next_bhukti_planet && (
+              <Text style={styles.dasaDetailText}>
+                {getText('அடுத்த புக்தி:', 'Next Bhukti:')} {getText(horoscopeData.current_dasa.next_bhukti_planet_tamil || '', horoscopeData.current_dasa.next_bhukti_planet)} {getText('வரை', 'until')} {new Date(horoscopeData.current_dasa.next_bhukti_end_date || '').toLocaleDateString()}
+              </Text>
+            )}
+            
+            {/* Retrograde Planets */}
+            {horoscopeData.retrograde_planets && horoscopeData.retrograde_planets.length > 0 && (
+              <Text style={styles.dasaDetailText}>
+                {getText('வக்கிர கிரகங்கள்:', 'Retrograde:')} {language === 'tamil' ? horoscopeData.retrograde_planets_tamil?.join(', ') : horoscopeData.retrograde_planets.join(', ')}
+              </Text>
+            )}
+            
+            {/* Bhava Maruthal */}
+            {horoscopeData.bhava_maruthal && Object.keys(horoscopeData.bhava_maruthal).length > 0 && (
+              <Text style={styles.dasaDetailText}>
+                {getText('பாவக மாற்றுதல்:', 'Bhava Maruthal:')} {' '}
+                {getText('சூரியன்', 'Sun')} {horoscopeData.bhava_maruthal['Sun'] || 'N/A'}, {' '}
+                {getText('ராகு', 'Rahu')} {horoscopeData.bhava_maruthal['Rahu'] || 'N/A'}, {' '}
+                {getText('கேது', 'Ketu')} {horoscopeData.bhava_maruthal['Ketu'] || 'N/A'}
+              </Text>
+            )}
           </View>
         </View>
       </View>
