@@ -80,6 +80,11 @@ class HoroscopeResult(BaseModel):
     special_yogas: List[str] = []
     special_yogas_tamil: List[str] = []
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+    # Extended fields
+    retrograde_planets: List[str] = []
+    retrograde_planets_tamil: List[str] = []
+    bhava_maruthal: Dict[str, int] = {}  # Planet -> House number
+    bhava_maruthal_tamil: Dict[str, int] = {}  # Tamil planet name -> House number
 
 class CompatibilityFactor(BaseModel):
     factor_name: str
