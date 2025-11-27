@@ -84,10 +84,18 @@ class AstronomicalCalculations:
         return int((longitude % 360.0) // span) + 1
 
     def deg_to_dms(self, deg: float) -> str:
-        """Convert degrees to DMS format (degrees:minutes:seconds)."""
+        """Convert degrees to DMS format (degrees:minutes:seconds) with proper carry-over."""
         d = int(deg)
-        m = int((deg - d) * 60)
-        s = int(round(((deg - d) * 60 - m) * 60))
+        m_float = (deg - d) * 60
+        m = int(m_float)
+        s = round((m_float - m) * 60)
+        # Handle carry-over
+        if s == 60:
+            s = 0
+            m += 1
+        if m == 60:
+            m = 0
+            d += 1
         return f"{d}:{m:02d}:{s:02d}"
 
     def get_nakshatra_pada(self, lon: float) -> int:
