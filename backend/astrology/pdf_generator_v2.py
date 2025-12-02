@@ -327,9 +327,9 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     navamsa_houses = {}
     
     for planet in horoscope_result.planetary_positions:
-        rasi_house = planet.get("rasi_house", 1)
-        navamsa_house = planet.get("navamsa_house", 1)
-        planet_abbr = planet["planet_tamil"]
+        rasi_house = getattr(planet, 'rasi_house', 1)
+        navamsa_house = getattr(planet, 'navamsa_house', 1)
+        planet_abbr = planet.planet_tamil
         
         if rasi_house not in rasi_houses:
             rasi_houses[rasi_house] = []
