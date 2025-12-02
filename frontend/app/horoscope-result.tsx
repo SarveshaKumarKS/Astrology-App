@@ -406,7 +406,7 @@ export default function HoroscopeResultPage() {
         const base64String = base64.encode(binary);
         
         // Write to file system
-        await FileSystem.writeAsStringAsync(fileUri, base64, {
+        await FileSystem.writeAsStringAsync(fileUri, base64String, {
           encoding: FileSystem.EncodingType.Base64,
         });
         
