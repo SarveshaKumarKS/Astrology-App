@@ -151,6 +151,80 @@ async def generate_horoscope(request: HoroscopeRequest):
         logging.error(f"Error generating horoscope: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating horoscope: {str(e)}")
 
+# Generate PDF
+@api_router.post("/generate-pdf")
+async def generate_pdf(request: HoroscopeRequest):
+    """
+    Generate a PDF horoscope report
+    """
+    from fastapi.responses import Response
+    from astrology.pdf_generator import generate_horoscope_pdf
+    
+    try:
+        # Convert request to internal format
+        birth_details = BirthDetails(
+            name=request.birth_details.name,
+            date_of_birth=request.birth_details.date_of_birth,
+            time_of_birth=request.birth_details.time_of_birth,
+            place_of_birth=request.birth_details.place_of_birth,
+            latitude=request.birth_details.latitude,
+            longitude=request.birth_details.longitude,
+            timezone=request.birth_details.timezone,
+            time_correction=request.birth_details.time_correction
+        )
+        
+        system = request.system.lower()
+        language = request.language.lower()
+        
+        # Validate system
+        if system not in ["vakkiam", "thirukkanitham"]:
+            raise HTTPException(status_code=400, detail="Invalid system. Use 'vakkiam' or 'thirukkanitham'")
+        
+        # Select calculator
+        if system == "vakkiam":
+            calculator = VakkiamCalculator()
+        else:
+            calculator = ThirukkanithamCalculator()
+        
+        # Generate horoscope
+        horoscope = calculator.generate_horoscope(birth_details, language)
+        
+        # Prepare personal details for PDF
+        personal_details = {
+            "name": birth_details.name,
+            "lagnam": horoscope.ascendant_tamil if language == "tamil" else horoscope.ascendant,
+            "star_pada": f"{horoscope.nakshatra_tamil}" if language == "tamil" else f"{horoscope.nakshatra}",
+            "rasi": horoscope.moon_sign_tamil if language == "tamil" else horoscope.moon_sign,
+            "date": birth_details.date_of_birth.strftime("%d/%m/%Y"),
+            "time": birth_details.time_of_birth.strftime("%H:%M:%S"),
+            "place": birth_details.place_of_birth,
+            "longitude": f"{birth_details.longitude}°",
+            "latitude": f"{birth_details.latitude}°",
+            "timezone": birth_details.timezone,
+            "time_correction": str(birth_details.time_correction),
+        }
+        
+        # Generate PDF
+        pdf_bytes = generate_horoscope_pdf(horoscope, personal_details, system)
+        
+        # Return PDF as response
+        filename = f"horoscope_{birth_details.name.replace(' ', '_')}_{system}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generating PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # Marriage Compatibility
 @api_router.post("/compatibility")
 async def check_compatibility(request: CompatibilityRequest):
