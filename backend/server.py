@@ -209,8 +209,14 @@ async def generate_pdf(request: HoroscopeRequest):
         
         # Return PDF as response - use ASCII-safe filename
         import re
-        safe_name = re.sub(r'[^\w\s-]', '', birth_details.name.replace(' ', '_'))
-        safe_name = re.sub(r'[-\s]+', '_', safe_name)
+        import unicodedata
+        # Remove non-ASCII characters and normalize
+        safe_name = unicodedata.normalize('NFKD', birth_details.name)
+        safe_name = re.sub(r'[^\x00-\x7F]+', '', safe_name)  # Remove non-ASCII
+        safe_name = re.sub(r'[^\w\s-]', '', safe_name)  # Remove special chars
+        safe_name = re.sub(r'[-\s]+', '_', safe_name.replace(' ', '_'))  # Replace spaces/dashes
+        if not safe_name:  # If name becomes empty, use default
+            safe_name = "user"
         filename = f"horoscope_{safe_name}_{system}.pdf"
         return Response(
             content=pdf_bytes,
