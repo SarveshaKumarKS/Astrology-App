@@ -158,7 +158,7 @@ async def generate_pdf(request: HoroscopeRequest):
     Generate a PDF horoscope report
     """
     from fastapi.responses import Response
-    from astrology.pdf_generator_v2 import generate_horoscope_pdf
+    from astrology.pdf_generator_v3 import generate_horoscope_pdf
     
     try:
         # Convert request to internal format
