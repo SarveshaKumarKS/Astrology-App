@@ -40,57 +40,66 @@ def choose_font(text: str) -> str:
 def draw_south_indian_chart(chart_data: Dict, chart_type: str, width: float = 200, height: float = 200):
     """
     Draw South Indian style chart with green borders and planet positions
-    chart_data: dictionary with houses (1-12) mapping to list of planet names
+    chart_data: dictionary with houses (1-12) mapping to list of planet names  
     chart_type: "ராசி" or "நவாம்சம்"
     """
     d = Drawing(width, height)
     
-    # Green border color
-    border_color = colors.HexColor('#008000')
-    planet_color = colors.HexColor('#0000FF')  # Blue for planets
-    label_color = colors.HexColor('#FF1493')   # Pink for center label
+    # Colors
+    border_color = colors.HexColor('#008000')  # Green
+    planet_color = colors.HexColor('#0000FF')  # Blue
+    label_color = colors.HexColor('#FF1493')   # Pink
     
-    # Draw outer rectangle
-    d.add(Rect(0, 0, width, height, strokeColor=border_color, fillColor=None, strokeWidth=2))
+    # Center coordinates
+    cx = width / 2
+    cy = height / 2
     
-    # Draw diagonal lines to create South Indian chart
-    # Top-left to bottom-right
-    d.add(Line(0, height, width, 0, strokeColor=border_color, strokeWidth=2))
-    # Top-right to bottom-left  
-    d.add(Line(0, 0, width, height, strokeColor=border_color, strokeWidth=2))
+    # Draw outer square
+    d.add(Rect(0, 0, width, height, strokeColor=border_color, fillColor=None, strokeWidth=1.5))
+    
+    # Draw the diagonals to create diamond pattern
+    d.add(Line(0, cy, cx, height, strokeColor=border_color, strokeWidth=1.5))  # Left to top
+    d.add(Line(cx, height, width, cy, strokeColor=border_color, strokeWidth=1.5))  # Top to right
+    d.add(Line(width, cy, cx, 0, strokeColor=border_color, strokeWidth=1.5))  # Right to bottom
+    d.add(Line(cx, 0, 0, cy, strokeColor=border_color, strokeWidth=1.5))  # Bottom to left
+    
+    # Draw inner square (rotated 45 degrees)
+    inner_size = width * 0.35
+    d.add(Line(cx, cy + inner_size/2, cx + inner_size/2, cy, strokeColor=border_color, strokeWidth=1.5))  # Top to right
+    d.add(Line(cx + inner_size/2, cy, cx, cy - inner_size/2, strokeColor=border_color, strokeWidth=1.5))  # Right to bottom
+    d.add(Line(cx, cy - inner_size/2, cx - inner_size/2, cy, strokeColor=border_color, strokeWidth=1.5))  # Bottom to left
+    d.add(Line(cx - inner_size/2, cy, cx, cy + inner_size/2, strokeColor=border_color, strokeWidth=1.5))  # Left to top
     
     # Add center label
-    center_x = width / 2
-    center_y = height / 2
-    d.add(String(center_x, center_y, chart_type, 
-                 fontName='Tamil', fontSize=10, fillColor=label_color,
+    d.add(String(cx, cy - 5, chart_type, 
+                 fontName='Tamil', fontSize=9, fillColor=label_color,
                  textAnchor='middle'))
     
-    # House positions in South Indian chart (clockwise from ascendant)
-    # Positions are relative to chart dimensions
+    # South Indian chart house positions (12 houses in specific locations)
+    # House 1 (Ascendant) is at the top
     house_positions = {
-        1: (center_x, height * 0.85),      # Top
-        2: (width * 0.75, height * 0.75),  # Top-right
-        3: (width * 0.85, center_y),       # Right
-        4: (width * 0.75, height * 0.25),  # Bottom-right
-        5: (center_x, height * 0.15),      # Bottom
-        6: (width * 0.25, height * 0.25),  # Bottom-left
-        7: (width * 0.15, center_y),       # Left
-        8: (width * 0.25, height * 0.75),  # Top-left
-        9: (width * 0.35, height * 0.65),  # Inner top-left
-        10: (width * 0.65, height * 0.65), # Inner top-right
-        11: (width * 0.65, height * 0.35), # Inner bottom-right
-        12: (width * 0.35, height * 0.35), # Inner bottom-left
+        1: (cx, cy + inner_size * 1.2),           # Top (between inner and outer)
+        2: (cx + inner_size * 0.85, cy + inner_size * 0.85),  # Top-right diagonal
+        3: (cx + inner_size * 1.2, cy),           # Right
+        4: (cx + inner_size * 0.85, cy - inner_size * 0.85),  # Bottom-right diagonal
+        5: (cx, cy - inner_size * 1.2),           # Bottom
+        6: (cx - inner_size * 0.85, cy - inner_size * 0.85),  # Bottom-left diagonal
+        7: (cx - inner_size * 1.2, cy),           # Left
+        8: (cx - inner_size * 0.85, cy + inner_size * 0.85),  # Top-left diagonal
+        9: (cx - inner_size * 0.25, cy + inner_size * 0.25),  # Inner top-left
+        10: (cx + inner_size * 0.25, cy + inner_size * 0.25), # Inner top-right
+        11: (cx + inner_size * 0.25, cy - inner_size * 0.25), # Inner bottom-right
+        12: (cx - inner_size * 0.25, cy - inner_size * 0.25), # Inner bottom-left
     }
     
     # Place planets in houses
     for house_num, planets in chart_data.items():
         if planets and house_num in house_positions:
             x, y = house_positions[house_num]
-            # Join planet names
-            planet_text = ", ".join(planets[:3])  # Limit to 3 planets per house
-            if len(planet_text) > 20:
-                planet_text = planet_text[:20] + "..."
+            # Get planet abbreviations or names
+            planet_text = ", ".join(planets[:2])  # Limit to 2 planets per house for space
+            if len(planet_text) > 15:
+                planet_text = planet_text[:15] + "."
             d.add(String(x, y, planet_text,
                         fontName='Tamil', fontSize=7, fillColor=planet_color,
                         textAnchor='middle'))
