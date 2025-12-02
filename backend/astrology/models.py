@@ -98,6 +98,26 @@ class HoroscopeResult(BaseModel):
     bhava_maruthal: Dict[str, int] = {}  # Planet -> House number
     bhava_maruthal_tamil: Dict[str, int] = {}  # Tamil planet name -> House number
     
+    # Panchangam details for PDF
+    sunrise_time: Optional[str] = None
+    sunset_time: Optional[str] = None
+    paksha: Optional[str] = None  # Krishna/Shukla
+    tithi: Optional[str] = None
+    tithi_tamil: Optional[str] = None
+    yoga: Optional[str] = None
+    yoga_tamil: Optional[str] = None
+    karana: Optional[str] = None
+    karana_tamil: Optional[str] = None
+    ayanamsa: Optional[str] = None
+    tamil_month: Optional[str] = None
+    tamil_day: Optional[int] = None
+    tamil_year: Optional[int] = None
+    udayadi_nazhigai: Optional[str] = None
+    yogi_planet: Optional[str] = None
+    yogi_planet_tamil: Optional[str] = None
+    avayogi_planet: Optional[str] = None
+    avayogi_planet_tamil: Optional[str] = None
+    
     @field_serializer('generated_at', when_used='json')
     def serialize_datetime(self, value):
         return value.isoformat() if value else None
