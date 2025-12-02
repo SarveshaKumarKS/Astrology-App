@@ -403,7 +403,7 @@ export default function HoroscopeResultPage() {
         for (let i = 0; i < bytes.byteLength; i++) {
           binary += String.fromCharCode(bytes[i]);
         }
-        const base64 = btoa(binary);
+        const base64String = base64.encode(binary);
         
         // Write to file system
         await FileSystem.writeAsStringAsync(fileUri, base64, {
