@@ -1,1 +1,0 @@
-# Tamil Astrology Calculation Package
