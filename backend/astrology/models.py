@@ -4,6 +4,8 @@ from datetime import datetime, date, time
 
 class BirthDetails(BaseModel):
     name: str
+    mother_name: Optional[str] = None  # தாய் பெயர்
+    father_name: Optional[str] = None  # தந்தை பெயர்
     date_of_birth: date
     time_of_birth: time
     place_of_birth: str
