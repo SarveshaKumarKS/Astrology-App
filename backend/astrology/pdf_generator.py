@@ -165,30 +165,47 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
                     "தமிழ் தேதி", "உதயாதி நாழிகை", "இடம்", "தீர்க்க ரேகை",
                     "அட்ச ரேகை", "பொது நேரம்", "நேர திருத்தம்", "யோகி-அவயோகி"]
     
+    # Build Paksha & Tithi string
+    paksha = horoscope_result.paksha or ""
+    tithi_tamil = horoscope_result.tithi_tamil or ""
+    paksha_tithi_str = f"{paksha} - {tithi_tamil}" if paksha and tithi_tamil else (tithi_tamil or paksha or "")
+    
+    # Build Tamil date string (if available)
+    tamil_date_str = ""
+    if horoscope_result.tamil_day and horoscope_result.tamil_month:
+        tamil_date_str = f"{horoscope_result.tamil_day} {horoscope_result.tamil_month}"
+        if horoscope_result.tamil_year:
+            tamil_date_str += f" {horoscope_result.tamil_year}"
+    
+    # Build Yogi-Avayogi string
+    yogi_avayogi_str = ""
+    if horoscope_result.yogi_planet_tamil and horoscope_result.avayogi_planet_tamil:
+        yogi_avayogi_str = f"{horoscope_result.yogi_planet_tamil} - {horoscope_result.avayogi_planet_tamil}"
+    
     left_vals = [
-        personal_details.get("name", ""),
-        personal_details.get("lagnam", horoscope_result.ascendant_tamil),
-        personal_details.get("star_pada", f"{horoscope_result.nakshatra_tamil}"),
-        personal_details.get("rasi", horoscope_result.moon_sign_tamil),
-        personal_details.get("paksha_tithi", ""),
-        personal_details.get("yoga", ""),
-        personal_details.get("karana", ""),
-        personal_details.get("ayanamsa", "23° 51'")
+        personal_details.get("name", horoscope_result.birth_details.name),
+        horoscope_result.ascendant_tamil,
+        f"{horoscope_result.nakshatra_tamil}",
+        horoscope_result.moon_sign_tamil,
+        paksha_tithi_str,
+        horoscope_result.yoga_tamil or "",
+        horoscope_result.karana_tamil or "",
+        horoscope_result.ayanamsa or "23° 51'"
     ]
     
     right_vals = [
-        personal_details.get("sunrise", ""),
-        personal_details.get("sunset", ""),
-        personal_details.get("date", horoscope_result.birth_details.date_of_birth.strftime("%d/%m/%Y")),
-        personal_details.get("time", horoscope_result.birth_details.time_of_birth.strftime("%H:%M:%S")),
-        personal_details.get("tamil_date", ""),
-        personal_details.get("udayadi_nazhigai", ""),
-        personal_details.get("place", horoscope_result.birth_details.place_of_birth),
-        personal_details.get("longitude", f"{horoscope_result.birth_details.longitude}°"),
-        personal_details.get("latitude", f"{horoscope_result.birth_details.latitude}°"),
-        personal_details.get("timezone", horoscope_result.birth_details.timezone),
-        personal_details.get("time_correction", str(horoscope_result.birth_details.time_correction)),
-        personal_details.get("yogi_avayogi", "")
+        horoscope_result.sunrise_time or "06:00",
+        horoscope_result.sunset_time or "18:00",
+        horoscope_result.birth_details.date_of_birth.strftime("%d/%m/%Y"),
+        horoscope_result.birth_details.time_of_birth.strftime("%H:%M:%S"),
+        tamil_date_str,
+        horoscope_result.udayadi_nazhigai or "",
+        horoscope_result.birth_details.place_of_birth,
+        f"{horoscope_result.birth_details.longitude}°",
+        f"{horoscope_result.birth_details.latitude}°",
+        horoscope_result.birth_details.timezone,
+        str(horoscope_result.birth_details.time_correction),
+        yogi_avayogi_str
     ]
     
     # Build personal details table
