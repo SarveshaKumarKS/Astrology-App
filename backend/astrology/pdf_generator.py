@@ -94,7 +94,7 @@ def draw_header():
                               textAnchor='middle'))
     
     # Sanskrit verse line 1
-    verse_line1 = "ஜனனீ ஜன்ம ஸௌக்யானாம் வர்த்தனீ குல ஸம்பதா ம்"
+    verse_line1 = "ஜனனீ ஜன்ம ஸௌக்யானாம் வர்த்தனீ குல ஸம்பதாம்"
     header_drawing.add(String(270, 32, verse_line1,
                               fontName=get_font_name('Tamil'), fontSize=9,
                               fillColor=colors.HexColor('#000080'),
