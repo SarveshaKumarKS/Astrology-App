@@ -37,72 +37,77 @@ def choose_font(text: str) -> str:
     return "English"
 
 
-def draw_south_indian_chart(chart_data: Dict, chart_type: str, width: float = 200, height: float = 200):
+def draw_south_indian_chart_square(chart_data: Dict, chart_type: str, width: float = 180, height: float = 180):
     """
-    Draw South Indian style chart with green borders and planet positions
+    Draw South Indian style chart with 4x4 SQUARE grid layout (not diamond)
+    Matches the SouthIndianChart.tsx component exactly
     chart_data: dictionary with houses (1-12) mapping to list of planet names  
     chart_type: "ராசி" or "நவாம்சம்"
     """
     d = Drawing(width, height)
     
-    # Colors
-    border_color = colors.HexColor('#008000')  # Green
-    planet_color = colors.HexColor('#0000FF')  # Blue
-    label_color = colors.HexColor('#FF1493')   # Pink
+    # Colors - matching bala.pdf
+    border_color = colors.HexColor('#008000')  # Green borders
+    planet_color = colors.HexColor('#0000FF')  # Blue planet text
+    label_color = colors.HexColor('#FF1493')   # Pink center label
     
-    # Center coordinates
-    cx = width / 2
-    cy = height / 2
+    # Cell dimensions for 4x4 grid
+    cell_width = width / 4
+    cell_height = height / 4
     
-    # Draw outer square
-    d.add(Rect(0, 0, width, height, strokeColor=border_color, fillColor=None, strokeWidth=1.5))
+    # Draw outer border (2px)
+    d.add(Rect(0, 0, width, height, strokeColor=border_color, fillColor=None, strokeWidth=2))
     
-    # Draw the diagonals to create diamond pattern
-    d.add(Line(0, cy, cx, height, strokeColor=border_color, strokeWidth=1.5))  # Left to top
-    d.add(Line(cx, height, width, cy, strokeColor=border_color, strokeWidth=1.5))  # Top to right
-    d.add(Line(width, cy, cx, 0, strokeColor=border_color, strokeWidth=1.5))  # Right to bottom
-    d.add(Line(cx, 0, 0, cy, strokeColor=border_color, strokeWidth=1.5))  # Bottom to left
+    # South Indian layout - same as SouthIndianChart.tsx
+    # Row 1: Houses 12, 1, 2, 3 (top row)
+    # Row 2: House 11, [center], House 4
+    # Row 3: House 10, [center], House 5
+    # Row 4: Houses 9, 8, 7, 6 (bottom row)
     
-    # Draw inner square (rotated 45 degrees)
-    inner_size = width * 0.35
-    d.add(Line(cx, cy + inner_size/2, cx + inner_size/2, cy, strokeColor=border_color, strokeWidth=1.5))  # Top to right
-    d.add(Line(cx + inner_size/2, cy, cx, cy - inner_size/2, strokeColor=border_color, strokeWidth=1.5))  # Right to bottom
-    d.add(Line(cx, cy - inner_size/2, cx - inner_size/2, cy, strokeColor=border_color, strokeWidth=1.5))  # Bottom to left
-    d.add(Line(cx - inner_size/2, cy, cx, cy + inner_size/2, strokeColor=border_color, strokeWidth=1.5))  # Left to top
+    layout = [
+        [12, 1, 2, 3],      # Top row
+        [11, 0, 0, 4],      # Second row (0 = center)
+        [10, 0, 0, 5],      # Third row
+        [9, 8, 7, 6]        # Bottom row
+    ]
     
-    # Add center label
-    d.add(String(cx, cy - 5, chart_type, 
-                 fontName='Tamil', fontSize=9, fillColor=label_color,
-                 textAnchor='middle'))
+    # Draw grid lines and cells
+    for row_idx, row in enumerate(layout):
+        for col_idx, house_num in enumerate(row):
+            x = col_idx * cell_width
+            y = row_idx * cell_height
+            
+            # Skip center cells
+            if house_num == 0:
+                continue
+            
+            # Draw cell border
+            d.add(Rect(x, y, cell_width, cell_height, 
+                      strokeColor=border_color, fillColor=None, strokeWidth=1))
+            
+            # Get planets for this house
+            planets = chart_data.get(house_num, [])
+            
+            if planets:
+                # Draw planet text in blue
+                planet_text = ", ".join(planets[:3])  # Max 3 planets per cell
+                if len(planet_text) > 12:
+                    planet_text = planet_text[:12] + "..."
+                
+                # Position text in center of cell
+                text_x = x + cell_width / 2
+                text_y = y + cell_height / 2 - 3
+                
+                d.add(String(text_x, text_y, planet_text,
+                           fontName='Tamil', fontSize=8, fillColor=planet_color,
+                           textAnchor='middle'))
     
-    # South Indian chart house positions (12 houses in specific locations)
-    # House 1 (Ascendant) is at the top
-    house_positions = {
-        1: (cx, cy + inner_size * 1.2),           # Top (between inner and outer)
-        2: (cx + inner_size * 0.85, cy + inner_size * 0.85),  # Top-right diagonal
-        3: (cx + inner_size * 1.2, cy),           # Right
-        4: (cx + inner_size * 0.85, cy - inner_size * 0.85),  # Bottom-right diagonal
-        5: (cx, cy - inner_size * 1.2),           # Bottom
-        6: (cx - inner_size * 0.85, cy - inner_size * 0.85),  # Bottom-left diagonal
-        7: (cx - inner_size * 1.2, cy),           # Left
-        8: (cx - inner_size * 0.85, cy + inner_size * 0.85),  # Top-left diagonal
-        9: (cx - inner_size * 0.25, cy + inner_size * 0.25),  # Inner top-left
-        10: (cx + inner_size * 0.25, cy + inner_size * 0.25), # Inner top-right
-        11: (cx + inner_size * 0.25, cy - inner_size * 0.25), # Inner bottom-right
-        12: (cx - inner_size * 0.25, cy - inner_size * 0.25), # Inner bottom-left
-    }
-    
-    # Place planets in houses
-    for house_num, planets in chart_data.items():
-        if planets and house_num in house_positions:
-            x, y = house_positions[house_num]
-            # Get planet abbreviations or names
-            planet_text = ", ".join(planets[:2])  # Limit to 2 planets per house for space
-            if len(planet_text) > 15:
-                planet_text = planet_text[:15] + "."
-            d.add(String(x, y, planet_text,
-                        fontName='Tamil', fontSize=7, fillColor=planet_color,
-                        textAnchor='middle'))
+    # Draw center label in pink
+    center_x = width / 2
+    center_y = height / 2 - 3
+    d.add(String(center_x, center_y, chart_type,
+                fontName='Tamil', fontSize=10, fillColor=label_color,
+                textAnchor='middle'))
     
     return d
 
