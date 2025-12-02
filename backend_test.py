@@ -83,16 +83,16 @@ class TamilAstrologyTester:
             self.log_test("Health endpoint", False, f"Error: {str(e)}")
     
     def test_horoscope_generation(self):
-        """Test horoscope generation - Focus on Thirukkanitham fix"""
-        print("\n🌟 Testing Horoscope Generation (Focus: Thirukkanitham Fix)")
-        print("-" * 55)
+        """Test horoscope generation with Panchangam integration"""
+        print("\n🌟 Testing Horoscope Generation with Panchangam Integration")
+        print("-" * 60)
         
         # Test data as specified in review request - exact same data for both systems
         base_test_data = {
             "birth_details": {
                 "name": "Test User",
                 "date_of_birth": "1990-01-15",
-                "time_of_birth": "14:30:00",
+                "time_of_birth": "10:30:00",
                 "place_of_birth": "Chennai",
                 "latitude": 13.0827,
                 "longitude": 80.2707,
