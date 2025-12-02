@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Base64 } from 'js-base64';
 import SouthIndianChart from '../components/SouthIndianChart';
 
 interface PlanetaryPosition {
