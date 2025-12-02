@@ -295,9 +295,9 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     for house_num, planets in horoscope_result.navamsa_chart.houses_tamil.items():
         navamsa_houses[house_num] = planets
     
-    # Create chart drawings
-    rasi_drawing = draw_south_indian_chart(rasi_houses, "ராசி", width=180, height=180)
-    navamsa_drawing = draw_south_indian_chart(navamsa_houses, "நவாம்சம்", width=180, height=180)
+    # Create chart drawings - using square layout like bala.pdf
+    rasi_drawing = draw_south_indian_chart_square(rasi_houses, "ராசி", width=180, height=180)
+    navamsa_drawing = draw_south_indian_chart_square(navamsa_houses, "நவாம்சம்", width=180, height=180)
     
     # Create table to place charts side by side
     charts_data = [[rasi_drawing, navamsa_drawing]]
