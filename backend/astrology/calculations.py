@@ -673,6 +673,23 @@ class AstronomicalCalculations:
         ayanamsa_deg = swe.get_ayanamsa_ut(jd)
         ayanamsa = f"{int(ayanamsa_deg)}° {int((ayanamsa_deg % 1) * 60)}'"
         
+        # Calculate Tamil date (approximate conversion)
+        # Tamil months based on solar transit
+        tamil_months = [
+            "தை", "மாசி", "பங்குனி", "சித்திரை", "வைகாசி", "ஆனி",
+            "ஆடி", "ஆவணி", "புரட்டாசி", "ஐப்பசி", "கார்த்திகை", "மார்கழி"
+        ]
+        
+        # Simple approximation: Tamil month roughly corresponds to solar month
+        # Chithirai (April-May) is month 1 of Tamil calendar
+        gregorian_month = birth_date.month
+        tamil_month_idx = (gregorian_month + 8) % 12  # Rough approximation
+        tamil_month = tamil_months[tamil_month_idx]
+        
+        # Tamil year calculation (Kali year - approximate)
+        tamil_year = birth_date.year + 3101 - 1970  # Approximate Kali era year
+        tamil_day = birth_date.day
+        
         return {
             'sunrise_time': sunrise_time,
             'sunset_time': sunset_time,
@@ -684,5 +701,8 @@ class AstronomicalCalculations:
             'karana': karana,
             'karana_tamil': karana_tamil,
             'ayanamsa': ayanamsa,
-            'udayadi_nazhigai': udayadi_nazhigai
+            'udayadi_nazhigai': udayadi_nazhigai,
+            'tamil_month': tamil_month,
+            'tamil_day': tamil_day,
+            'tamil_year': tamil_year
         }
