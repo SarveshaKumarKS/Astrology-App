@@ -54,6 +54,8 @@ export default function HoroscopePage() {
   
   const [birthDetails, setBirthDetails] = useState<BirthDetails>({
     name: '',
+    mother_name: '',
+    father_name: '',
     date_of_birth: new Date().toISOString().split('T')[0],
     time_of_birth: '12:00',
     place_of_birth: '',
