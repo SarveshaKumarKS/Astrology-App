@@ -368,7 +368,14 @@ export default function HoroscopeResultPage() {
           getText('PDF பதிவிறக்கம் தொடங்கியது', 'PDF download started')
         );
       } else {
-        // Mobile platform - use fetch first then save with FileSystem
+        // Mobile platform - create a temporary endpoint URL for download
+        // We need to create a unique request and download it
+        const fileUri = FileSystem.documentDirectory + fileName;
+        
+        // Use downloadAsync but we need to work around POST limitation
+        // Solution: Send data as query params or use a different approach
+        
+        // Alternative: Fetch the PDF and write it manually
         const response = await fetch(`${backendUrl}/api/generate-pdf`, {
           method: 'POST',
           headers: {
@@ -381,44 +388,40 @@ export default function HoroscopeResultPage() {
           throw new Error('Failed to generate PDF');
         }
         
-        // Convert response to base64
-        const blob = await response.blob();
-        const reader = new FileReader();
+        // Get the PDF as array buffer
+        const arrayBuffer = await response.arrayBuffer();
         
-        reader.onloadend = async () => {
-          const base64data = reader.result as string;
-          const base64 = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
-          
-          const fileUri = FileSystem.documentDirectory + fileName;
-          
-          // Write base64 to file
-          await FileSystem.writeAsStringAsync(fileUri, base64, {
-            encoding: FileSystem.EncodingType.Base64,
+        // Convert ArrayBuffer to base64
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        
+        // Write to file system
+        await FileSystem.writeAsStringAsync(fileUri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        console.log('PDF saved to:', fileUri);
+        
+        // Try to share the PDF
+        const canShare = await Sharing.isAvailableAsync();
+        
+        if (canShare) {
+          await Sharing.shareAsync(fileUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: getText('ஜாதக PDF', 'Horoscope PDF'),
+            UTI: 'com.adobe.pdf'
           });
-          
-          // Check if sharing is available
-          const canShare = await Sharing.isAvailableAsync();
-          
-          if (canShare) {
-            await Sharing.shareAsync(fileUri, {
-              mimeType: 'application/pdf',
-              dialogTitle: getText('ஜாதக PDF', 'Horoscope PDF'),
-              UTI: 'com.adobe.pdf'
-            });
-            
-            Alert.alert(
-              getText('வெற்றி', 'Success'),
-              getText('PDF பகிரப்பட்டது', 'PDF shared successfully')
-            );
-          } else {
-            Alert.alert(
-              getText('வெற்றி', 'Success'),
-              getText('PDF சேமிக்கப்பட்டது', 'PDF saved successfully')
-            );
-          }
-        };
-        
-        reader.readAsDataURL(blob);
+        } else {
+          // If sharing not available, just show success message
+          Alert.alert(
+            getText('வெற்றி', 'Success'),
+            getText('PDF சேமிக்கப்பட்டது: ', 'PDF saved at: ') + fileUri
+          );
+        }
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
