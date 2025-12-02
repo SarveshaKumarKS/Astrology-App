@@ -254,7 +254,23 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
             retrograde_planets=retrograde_planets,
             retrograde_planets_tamil=retrograde_planets_tamil,
             bhava_maruthal=bhava_maruthal,
-            bhava_maruthal_tamil=bhava_maruthal_tamil
+            bhava_maruthal_tamil=bhava_maruthal_tamil,
+            # Panchangam details
+            sunrise_time=panchangam['sunrise_time'],
+            sunset_time=panchangam['sunset_time'],
+            paksha=panchangam['paksha'],
+            tithi=panchangam['tithi'],
+            tithi_tamil=panchangam['tithi_tamil'],
+            yoga=panchangam['yoga'],
+            yoga_tamil=panchangam['yoga_tamil'],
+            karana=panchangam['karana'],
+            karana_tamil=panchangam['karana_tamil'],
+            ayanamsa=panchangam['ayanamsa'],
+            udayadi_nazhigai=panchangam['udayadi_nazhigai'],
+            yogi_planet=yogi_planet,
+            yogi_planet_tamil=yogi_planet_tamil,
+            avayogi_planet=avayogi_planet,
+            avayogi_planet_tamil=avayogi_planet_tamil
         )
 
     # These helpers mirror Vakkiam; override later if Thirukkanitham has distinct rules.
