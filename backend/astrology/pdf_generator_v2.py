@@ -285,11 +285,11 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     for planet in horoscope_result.planetary_positions:
         planet_data.append([
             planet.planet_tamil,
-            planet.position,
-            planet.nakshatra_tamil,
-            str(planet.nakshatra_pada),
-            planet.sign_lord_tamil,
-            planet.nakshatra_lord_tamil
+            planet.longitude_in_sign_dms or planet.longitude_dms or "N/A",
+            planet.nakshatra_name_tamil or planet.nakshatra_name,
+            str(planet.nakshatra_pada) if planet.nakshatra_pada else "N/A",
+            planet.sign_name_tamil or planet.sign_name,
+            planet.nakshatra_lord_tamil or planet.nakshatra_lord or "N/A"
         ])
     
     planet_table = Table(planet_data, colWidths=[0.9*inch, 0.9*inch, 0.9*inch, 0.7*inch, 0.9*inch, 0.9*inch])
