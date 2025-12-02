@@ -473,6 +473,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "Tamil text properly handled in all responses. Planet names, signs, nakshatras, and other astrological terms available in Tamil."
+  
+  - task: "Panchangam Details Integration"
+    implemented: true
+    working: true
+    file: "backend/astrology/calculations.py, backend/astrology/vakkiam_system.py, backend/astrology/thirukkanitham_system.py, backend/astrology/pdf_generator.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented comprehensive Panchangam calculations including Sunrise, Sunset, Paksha, Tithi, Yoga, Karana, Ayanamsa, Udayadi Nazhigai, Yogi and Avayogi planets. Integrated into both Vakkiam and Thirukkanitham systems. Updated PDF generator to display all Panchangam fields in personal details section. Installed Tamil fonts. Manual testing completed successfully for both systems."
 
 frontend:
   # No frontend testing performed as per instructions
