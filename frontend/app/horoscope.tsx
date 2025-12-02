@@ -375,6 +375,34 @@ export default function HoroscopePage() {
               />
             </View>
             
+            {/* Mother's Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {getText('தாய் பெயர்', "Mother's Name")}
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={birthDetails.mother_name}
+                onChangeText={(value) => handleInputChange('mother_name', value)}
+                placeholder={getText('தாய் பெயரை உள்ளிடவும்', "Enter mother's name")}
+                placeholderTextColor="#95A5A6"
+              />
+            </View>
+            
+            {/* Father's Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {getText('தந்தை பெயர்', "Father's Name")}
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={birthDetails.father_name}
+                onChangeText={(value) => handleInputChange('father_name', value)}
+                placeholder={getText('தந்தை பெயரை உள்ளிடவும்', "Enter father's name")}
+                placeholderTextColor="#95A5A6"
+              />
+            </View>
+            
             {/* Birth Date */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
