@@ -124,11 +124,19 @@ class TamilAstrologyTester:
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # Validate response structure
+                    # Validate response structure including new Panchangam fields
                     required_fields = [
                         'birth_details', 'system', 'language', 'ascendant', 'ascendant_tamil',
                         'moon_sign', 'moon_sign_tamil', 'nakshatra', 'nakshatra_tamil', 
                         'planetary_positions', 'rasi_chart', 'navamsa_chart', 'dasa_periods', 'current_dasa'
+                    ]
+                    
+                    # New Panchangam fields to validate
+                    panchangam_fields = [
+                        'sunrise_time', 'sunset_time', 'paksha', 'tithi', 'tithi_tamil',
+                        'yoga', 'yoga_tamil', 'karana', 'karana_tamil', 'ayanamsa',
+                        'udayadi_nazhigai', 'yogi_planet', 'yogi_planet_tamil',
+                        'avayogi_planet', 'avayogi_planet_tamil'
                     ]
                     
                     missing_fields = [field for field in required_fields if field not in data]
