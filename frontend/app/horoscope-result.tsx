@@ -373,7 +373,7 @@ export default function HoroscopeResultPage() {
           getText('PDF பதிவிறக்கம் தொடங்கியது', 'PDF download started')
         );
       } else {
-        // Mobile platform - use downloadAsync with proper handling
+        // Mobile platform - direct download without base64 conversion
         Alert.alert(
           getText('தயாரிக்கப்படுகிறது', 'Preparing'),
           getText('PDF உருவாக்கப்படுகிறது...', 'Generating PDF...')
@@ -381,7 +381,22 @@ export default function HoroscopeResultPage() {
         
         const fileUri = FileSystem.documentDirectory + fileName;
         
-        // Fetch and save the PDF
+        // Create a temporary file with request data
+        const tempRequestFile = FileSystem.documentDirectory + 'temp_request.json';
+        await FileSystem.writeAsStringAsync(tempRequestFile, JSON.stringify(requestData));
+        
+        // Use downloadAsync - it will save the response directly
+        const downloadResumable = FileSystem.createDownloadResumable(
+          `${backendUrl}/api/generate-pdf`,
+          fileUri,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        
+        // Since downloadAsync doesn't support POST with body, we'll use fetch and read as blob
         const response = await fetch(`${backendUrl}/api/generate-pdf`, {
           method: 'POST',
           headers: {
@@ -394,20 +409,29 @@ export default function HoroscopeResultPage() {
           throw new Error(`Failed to generate PDF: ${response.status}`);
         }
         
-        // Get the PDF as array buffer
-        const arrayBuffer = await response.arrayBuffer();
+        // Read response as blob and convert to base64 using FileReader
+        const blob = await response.blob();
+        const reader = new (FileReader as any)();
         
-        // Convert ArrayBuffer to base64 using js-base64 library
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64String = Base64.encode(binary);
-        
-        // Write to file system
-        await FileSystem.writeAsStringAsync(fileUri, base64String, {
-          encoding: FileSystem.EncodingType.Base64,
+        await new Promise((resolve, reject) => {
+          reader.onloadend = async () => {
+            try {
+              const base64data = reader.result;
+              // Remove the data URL prefix
+              const base64 = base64data.split(',')[1];
+              
+              // Write to file system
+              await FileSystem.writeAsStringAsync(fileUri, base64, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              
+              resolve(true);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
         });
         
         // Share the PDF
