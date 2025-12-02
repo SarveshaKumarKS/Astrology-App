@@ -336,29 +336,28 @@ export default function HoroscopeResultPage() {
       };
       
       const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
+      const fileName = `horoscope_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
       
-      // Fetch PDF
-      const response = await fetch(`${backendUrl}/api/generate-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF');
-      }
-      
-      // Get the blob
-      const blob = await response.blob();
-      
-      // For web, create download link
-      if (typeof window !== 'undefined' && window.document) {
+      if (Platform.OS === 'web') {
+        // Web platform - direct download
+        const response = await fetch(`${backendUrl}/api/generate-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate PDF');
+        }
+        
+        // Get the blob
+        const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `horoscope_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -369,17 +368,44 @@ export default function HoroscopeResultPage() {
           getText('PDF பதிவிறக்கம் தொடங்கியது', 'PDF download started')
         );
       } else {
-        // For mobile, would need expo-file-system or similar
-        Alert.alert(
-          getText('தகவல்', 'Info'),
-          getText('PDF உருவாக்கப்பட்டது. இணைய உலாவியில் திறக்கவும்.', 'PDF generated. Please open in web browser.')
+        // Mobile platform - use FileSystem and Sharing
+        const fileUri = FileSystem.documentDirectory + fileName;
+        
+        const downloadResult = await FileSystem.downloadAsync(
+          `${backendUrl}/api/generate-pdf`,
+          fileUri,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
         );
+        
+        if (downloadResult.status === 200) {
+          // Check if sharing is available
+          const canShare = await Sharing.isAvailableAsync();
+          
+          if (canShare) {
+            await Sharing.shareAsync(downloadResult.uri, {
+              mimeType: 'application/pdf',
+              dialogTitle: getText('ஜாதக PDF', 'Horoscope PDF'),
+              UTI: 'com.adobe.pdf'
+            });
+          } else {
+            Alert.alert(
+              getText('வெற்றி', 'Success'),
+              getText('PDF சேமிக்கப்பட்டது: ', 'PDF saved at: ') + fileUri
+            );
+          }
+        } else {
+          throw new Error('Failed to download PDF');
+        }
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('PDF உருவாக்குவதில் பிழை', 'Error generating PDF')
+        getText('PDF உருவாக்குவதில் பிழை: ', 'Error generating PDF: ') + (error instanceof Error ? error.message : String(error))
       );
     } finally {
       setLoading(false);
