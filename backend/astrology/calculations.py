@@ -569,3 +569,120 @@ class AstronomicalCalculations:
                 break
         
         return current_dasa
+    
+    def calculate_panchangam_details(self, birth_date, birth_time, latitude, longitude, timezone_offset):
+        """Calculate Panchangam details: sunrise, sunset, tithi, yoga, karana, etc."""
+        import swisseph as swe
+        from datetime import datetime, time as dt_time
+        
+        # Get Julian day for the birth date
+        jd = self.get_julian_day(birth_date, birth_time, timezone_offset)
+        
+        # Calculate sunrise and sunset
+        # Set ephemeris path
+        swe.set_ephe_path('/usr/share/ephe')
+        
+        # Calculate sunrise (need to calculate for that date at 00:00 UTC)
+        dt_local_midnight = datetime.combine(birth_date, dt_time(0, 0, 0))
+        dt_utc_midnight = dt_local_midnight - timedelta(hours=timezone_offset)
+        jd_midnight = swe.julday(dt_utc_midnight.year, dt_utc_midnight.month, dt_utc_midnight.day, 
+                                 dt_utc_midnight.hour + dt_utc_midnight.minute/60.0)
+        
+        # Get sunrise and sunset times
+        try:
+            sunrise_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=1)[1][0]
+            sunset_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=2)[1][0]
+            
+            # Convert JD to time
+            sunrise_tuple = swe.revjul(sunrise_jd + timezone_offset/24.0)
+            sunset_tuple = swe.revjul(sunset_jd + timezone_offset/24.0)
+            
+            sunrise_time = f"{int(sunrise_tuple[3])}:{int((sunrise_tuple[3] % 1) * 60):02d}"
+            sunset_time = f"{int(sunset_tuple[3])}:{int((sunset_tuple[3] % 1) * 60):02d}"
+        except:
+            sunrise_time = "06:00"
+            sunset_time = "18:00"
+        
+        # Calculate Sun and Moon positions for tithi, yoga
+        sun_lon = swe.calc_ut(jd, swe.SUN, swe.FLG_SIDEREAL)[0][0]
+        moon_lon = swe.calc_ut(jd, swe.MOON, swe.FLG_SIDEREAL)[0][0]
+        
+        # Calculate Tithi (lunar day) - based on Moon-Sun elongation
+        elongation = (moon_lon - sun_lon) % 360
+        tithi_num = int(elongation / 12) + 1
+        
+        # Determine Paksha
+        if tithi_num <= 15:
+            paksha = "Shukla"
+            paksha_tamil = "சுக்ல பட்சம்"
+        else:
+            paksha = "Krishna"
+            paksha_tamil = "கிருஷ்ண பட்சம்"
+            tithi_num -= 15
+        
+        # Tithi names
+        tithi_names = {
+            1: ("Pratipada", "பிரதமை"), 2: ("Dwitiya", "துவிதியை"), 3: ("Tritiya", "திருதியை"),
+            4: ("Chaturthi", "சதுர்த்தி"), 5: ("Panchami", "பஞ்சமி"), 6: ("Shashthi", "ஷஷ்டி"),
+            7: ("Saptami", "சப்தமி"), 8: ("Ashtami", "அஷ்டமி"), 9: ("Navami", "நவமி"),
+            10: ("Dashami", "தசமி"), 11: ("Ekadashi", "ஏகாதசி"), 12: ("Dwadashi", "துவாதசி"),
+            13: ("Trayodashi", "திரயோதசி"), 14: ("Chaturdashi", "சதுர்த்தசி"), 15: ("Purnima/Amavasya", "பௌர்ணமி/அமாவாசை")
+        }
+        tithi, tithi_tamil = tithi_names.get(tithi_num, ("N/A", "N/A"))
+        
+        # Calculate Yoga (27 yogas)
+        yoga_value = (sun_lon + moon_lon) % 360
+        yoga_num = int(yoga_value / 13.333333) + 1
+        
+        yoga_names = {
+            1: ("Vishkambha", "விஷ்கம்பம்"), 2: ("Priti", "பிரீதி"), 3: ("Ayushman", "ஆயுஷ்மான்"),
+            4: ("Saubhagya", "சௌபாக்யம்"), 5: ("Shobhana", "சோபனம்"), 6: ("Atiganda", "அதிகண்டம்"),
+            7: ("Sukarma", "சுகர்மம்"), 8: ("Dhriti", "த்ருதி"), 9: ("Shoola", "சூலம்"),
+            10: ("Ganda", "கண்டம்"), 11: ("Vriddhi", "வ்ருத்தி"), 12: ("Dhruva", "த்ருவம்"),
+            13: ("Vyaghata", "வ்யாகாதம்"), 14: ("Harshana", "ஹர்ஷணம்"), 15: ("Vajra", "வஜ்ரம்"),
+            16: ("Siddhi", "சித்தி"), 17: ("Vyatipata", "வ்யதீபாதம்"), 18: ("Variyan", "வரீயான்"),
+            19: ("Parigha", "பரிகம்"), 20: ("Shiva", "சிவம்"), 21: ("Siddha", "சித்தம்"),
+            22: ("Sadhya", "சாத்யம்"), 23: ("Shubha", "சுபம்"), 24: ("Shukla", "சுக்லம்"),
+            25: ("Brahma", "பிரம்மம்"), 26: ("Indra", "இந்திரம்"), 27: ("Vaidhriti", "வைத்ருதி")
+        }
+        yoga, yoga_tamil = yoga_names.get(yoga_num, ("N/A", "N/A"))
+        
+        # Calculate Karana (half of tithi)
+        karana_num = int(elongation / 6) % 11
+        karana_names = {
+            0: ("Bava", "பவ"), 1: ("Balava", "பாலவ"), 2: ("Kaulava", "கௌலவ"),
+            3: ("Taitila", "தைதில"), 4: ("Gara", "கர"), 5: ("Vanija", "வணிஜ"),
+            6: ("Vishti", "விஷ்டி"), 7: ("Shakuni", "சகுனி"), 8: ("Chatushpada", "சதுஷ்பத"),
+            9: ("Naga", "நாக"), 10: ("Kimstughna", "கிம்ஸ்துக்ன")
+        }
+        karana, karana_tamil = karana_names.get(karana_num, ("N/A", "N/A"))
+        
+        # Calculate Udayadi Nazhigai (time units from sunrise)
+        try:
+            birth_minutes = birth_time.hour * 60 + birth_time.minute
+            sunrise_minutes = int(sunrise_tuple[3] * 60)
+            diff_minutes = birth_minutes - sunrise_minutes
+            if diff_minutes < 0:
+                diff_minutes += 24 * 60
+            nazhigai = diff_minutes / 24.0  # 1 nazhigai = 24 minutes
+            udayadi_nazhigai = f"{int(nazhigai)}.{int((nazhigai % 1) * 60):02d}"
+        except:
+            udayadi_nazhigai = "N/A"
+        
+        # Ayanamsa
+        ayanamsa_deg = swe.get_ayanamsa_ut(jd)
+        ayanamsa = f"{int(ayanamsa_deg)}° {int((ayanamsa_deg % 1) * 60)}'"
+        
+        return {
+            'sunrise_time': sunrise_time,
+            'sunset_time': sunset_time,
+            'paksha': paksha,
+            'tithi': tithi,
+            'tithi_tamil': tithi_tamil,
+            'yoga': yoga,
+            'yoga_tamil': yoga_tamil,
+            'karana': karana,
+            'karana_tamil': karana_tamil,
+            'ayanamsa': ayanamsa,
+            'udayadi_nazhigai': udayadi_nazhigai
+        }
