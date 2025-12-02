@@ -173,7 +173,7 @@ metadata:
   test_sequence: 1
   run_ui: false
   migration_date: "2025-11-25"
-  preview_url: "https://android-preview-1.preview.emergentagent.com"
+  preview_url: "https://astro-chart-4.preview.emergentagent.com"
   expo_tunnel: "exp://vedic-astrology-1.emergent.ag"
 ##   current_focus:
 ##     - "Task name 1"
