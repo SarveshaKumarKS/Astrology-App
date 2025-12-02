@@ -310,11 +310,77 @@ export default function HoroscopeResultPage() {
     );
   };
 
-  const generatePDF = () => {
-    Alert.alert(
-      getText('PDF உருவாக்கம்', 'PDF Generation'),
-      getText('இந்த அம்சம் விரைவில் கிடைக்கும்', 'This feature will be available soon')
-    );
+  const generatePDF = async () => {
+    if (!horoscopeData) return;
+    
+    try {
+      setLoading(true);
+      
+      // Prepare request data
+      const requestData = {
+        birth_details: {
+          name: horoscopeData.birth_details.name,
+          date_of_birth: horoscopeData.birth_details.date_of_birth,
+          time_of_birth: horoscopeData.birth_details.time_of_birth,
+          place_of_birth: horoscopeData.birth_details.place_of_birth,
+          latitude: parseFloat(String(horoscopeData.birth_details.latitude || 0)),
+          longitude: parseFloat(String(horoscopeData.birth_details.longitude || 0)),
+          timezone: horoscopeData.birth_details.timezone || 'IST',
+          time_correction: parseInt(String(horoscopeData.birth_details.time_correction || 0))
+        },
+        system: horoscopeData.system,
+        language: horoscopeData.language
+      };
+      
+      const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
+      
+      // Fetch PDF
+      const response = await fetch(`${backendUrl}/api/generate-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Get the blob
+      const blob = await response.blob();
+      
+      // For web, create download link
+      if (typeof window !== 'undefined' && window.document) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `horoscope_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        Alert.alert(
+          getText('வெற்றி', 'Success'),
+          getText('PDF பதிவிறக்கம் தொடங்கியது', 'PDF download started')
+        );
+      } else {
+        // For mobile, would need expo-file-system or similar
+        Alert.alert(
+          getText('தகவல்', 'Info'),
+          getText('PDF உருவாக்கப்பட்டது. இணைய உலாவியில் திறக்கவும்.', 'PDF generated. Please open in web browser.')
+        );
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      Alert.alert(
+        getText('பிழை', 'Error'),
+        getText('PDF உருவாக்குவதில் பிழை', 'Error generating PDF')
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!horoscopeData) {
