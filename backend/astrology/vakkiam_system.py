@@ -383,6 +383,28 @@ class VakkiamCalculator(AstronomicalCalculations):
                     bhava_maruthal[planet] = p.house
                     bhava_maruthal_tamil[p.planet_tamil] = p.house
                     break
+        
+        # Calculate Panchangam details
+        tz_offset = self._parse_timezone(birth_details.timezone)
+        panchangam = self.calculate_panchangam_details(
+            birth_details.date_of_birth,
+            birth_details.time_of_birth,
+            birth_details.latitude,
+            birth_details.longitude,
+            tz_offset
+        )
+        
+        # Calculate Yogi and Avayogi planets (based on Nakshatra)
+        # Yogi planet is calculated from nakshatra number
+        yogi_sequence = ["Moon", "Sun", "Jupiter", "Mars", "Mercury", "Saturn", "Venus", "Rahu", "Ketu"]
+        yogi_idx = (moon_nakshatra * 8) % 9
+        yogi_planet = yogi_sequence[yogi_idx]
+        yogi_planet_tamil = PLANET_NAMES.get(yogi_planet, yogi_planet)
+        
+        # Avayogi is 12th from Yogi
+        avayogi_idx = (yogi_idx + 11) % 9
+        avayogi_planet = yogi_sequence[avayogi_idx]
+        avayogi_planet_tamil = PLANET_NAMES.get(avayogi_planet, avayogi_planet)
 
         horoscope = HoroscopeResult(
             birth_details=birth_details,
