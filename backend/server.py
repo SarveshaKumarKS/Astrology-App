@@ -207,8 +207,11 @@ async def generate_pdf(request: HoroscopeRequest):
         # Generate PDF
         pdf_bytes = generate_horoscope_pdf(horoscope, personal_details, system)
         
-        # Return PDF as response
-        filename = f"horoscope_{birth_details.name.replace(' ', '_')}_{system}.pdf"
+        # Return PDF as response - use ASCII-safe filename
+        import re
+        safe_name = re.sub(r'[^\w\s-]', '', birth_details.name.replace(' ', '_'))
+        safe_name = re.sub(r'[-\s]+', '_', safe_name)
+        filename = f"horoscope_{safe_name}_{system}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
