@@ -176,11 +176,11 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     paksha_tithi_str = f"{paksha} - {tithi_tamil}" if paksha and tithi_tamil else (tithi_tamil or paksha or "")
     
     # Build Tamil date string (if available)
-    tamil_date_str = ""
+    tamil_date_str = "N/A"
     if horoscope_result.tamil_day and horoscope_result.tamil_month:
-        tamil_date_str = f"{horoscope_result.tamil_day} {horoscope_result.tamil_month}"
+        tamil_date_str = f"{horoscope_result.tamil_month} {horoscope_result.tamil_day}"
         if horoscope_result.tamil_year:
-            tamil_date_str += f" {horoscope_result.tamil_year}"
+            tamil_date_str += f", {horoscope_result.tamil_year}"
     
     # Build Yogi-Avayogi string
     yogi_avayogi_str = ""
