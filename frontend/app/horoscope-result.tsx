@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import base64 from 'react-native-base64';
 import SouthIndianChart from '../components/SouthIndianChart';
 
 interface PlanetaryPosition {
