@@ -368,38 +368,57 @@ export default function HoroscopeResultPage() {
           getText('PDF பதிவிறக்கம் தொடங்கியது', 'PDF download started')
         );
       } else {
-        // Mobile platform - use FileSystem and Sharing
-        const fileUri = FileSystem.documentDirectory + fileName;
+        // Mobile platform - use fetch first then save with FileSystem
+        const response = await fetch(`${backendUrl}/api/generate-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
         
-        const downloadResult = await FileSystem.downloadAsync(
-          `${backendUrl}/api/generate-pdf`,
-          fileUri,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          }
-        );
+        if (!response.ok) {
+          throw new Error('Failed to generate PDF');
+        }
         
-        if (downloadResult.status === 200) {
+        // Convert response to base64
+        const blob = await response.blob();
+        const reader = new FileReader();
+        
+        reader.onloadend = async () => {
+          const base64data = reader.result as string;
+          const base64 = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
+          
+          const fileUri = FileSystem.documentDirectory + fileName;
+          
+          // Write base64 to file
+          await FileSystem.writeAsStringAsync(fileUri, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
           // Check if sharing is available
           const canShare = await Sharing.isAvailableAsync();
           
           if (canShare) {
-            await Sharing.shareAsync(downloadResult.uri, {
+            await Sharing.shareAsync(fileUri, {
               mimeType: 'application/pdf',
               dialogTitle: getText('ஜாதக PDF', 'Horoscope PDF'),
               UTI: 'com.adobe.pdf'
             });
+            
+            Alert.alert(
+              getText('வெற்றி', 'Success'),
+              getText('PDF பகிரப்பட்டது', 'PDF shared successfully')
+            );
           } else {
             Alert.alert(
               getText('வெற்றி', 'Success'),
-              getText('PDF சேமிக்கப்பட்டது: ', 'PDF saved at: ') + fileUri
+              getText('PDF சேமிக்கப்பட்டது', 'PDF saved successfully')
             );
           }
-        } else {
-          throw new Error('Failed to download PDF');
-        }
+        };
+        
+        reader.readAsDataURL(blob);
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
