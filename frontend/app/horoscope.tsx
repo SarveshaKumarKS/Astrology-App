@@ -20,6 +20,8 @@ import { router } from 'expo-router';
 
 interface BirthDetails {
   name: string;
+  mother_name?: string;
+  father_name?: string;
   date_of_birth: string;
   time_of_birth: string;
   place_of_birth: string;
