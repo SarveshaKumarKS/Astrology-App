@@ -397,13 +397,13 @@ export default function HoroscopeResultPage() {
         // Get the PDF as array buffer
         const arrayBuffer = await response.arrayBuffer();
         
-        // Convert ArrayBuffer to base64
+        // Convert ArrayBuffer to base64 using js-base64 library
         const bytes = new Uint8Array(arrayBuffer);
         let binary = '';
         for (let i = 0; i < bytes.byteLength; i++) {
           binary += String.fromCharCode(bytes[i]);
         }
-        const base64String = base64.encode(binary);
+        const base64String = Base64.encode(binary);
         
         // Write to file system
         await FileSystem.writeAsStringAsync(fileUri, base64String, {
