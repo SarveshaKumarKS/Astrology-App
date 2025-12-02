@@ -1,9 +1,11 @@
 """
 PDF Generator for Tamil Astrology Horoscopes
-Fixed Tamil compound character rendering, proper field mapping, and optimized layout
+Fixed Tamil compound character rendering with proper UTF-8 Unicode support
 """
+# -*- coding: utf-8 -*-
 
 import io
+import os
 from datetime import datetime
 from typing import Dict, Any
 from reportlab.lib.pagesizes import A4
@@ -16,64 +18,54 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.graphics.shapes import Drawing, Rect, Line, String
 from reportlab.graphics import renderPDF
 
-# Register Tamil fonts - using Noto Serif for better compound character support
-# Try to find fonts in common locations
-import os
+# Font paths - Noto Serif Tamil for proper Unicode Tamil support
+TAMIL_BOLD_FONT = "/usr/share/fonts/truetype/noto/NotoSerifTamil-Bold.ttf"
+TAMIL_REGULAR_FONT = "/usr/share/fonts/truetype/noto/NotoSerifTamil-Regular.ttf"
+ENGLISH_BOLD_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+ENGLISH_REGULAR_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
-def find_font(fallback_paths):
-    """Find font file in common locations (only .ttf files, not .ttc)"""
-    for path in fallback_paths:
-        if os.path.exists(path) and path.endswith('.ttf'):
-            return path
-    return None
-
-# Tamil font paths (try Linux first)
-tamil_bold_paths = [
-    "/usr/share/fonts/truetype/noto/NotoSerifTamil-Bold.ttf",
-]
-
-tamil_regular_paths = [
-    "/usr/share/fonts/truetype/noto/NotoSerifTamil-Regular.ttf",
-]
-
-english_bold_paths = [
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-]
-
-english_regular_paths = [
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-]
-
-# Find and register fonts with fallback to built-in fonts
-tamil_bold = find_font(tamil_bold_paths)
-tamil_regular = find_font(tamil_regular_paths)
-english_bold = find_font(english_bold_paths)
-english_regular = find_font(english_regular_paths)
-
-# Register fonts if found, otherwise use built-in fonts
-if tamil_bold:
+# Register fonts with proper error handling
+def register_fonts():
+    """Register Tamil and English fonts for PDF generation"""
+    fonts_registered = {
+        'TamilBold': False,
+        'Tamil': False,
+        'EnglishBold': False,
+        'English': False
+    }
+    
     try:
-        pdfmetrics.registerFont(TTFont("TamilBold", tamil_bold))
-    except:
-        pass
-
-if tamil_regular:
+        if os.path.exists(TAMIL_BOLD_FONT):
+            pdfmetrics.registerFont(TTFont("TamilBold", TAMIL_BOLD_FONT))
+            fonts_registered['TamilBold'] = True
+    except Exception as e:
+        print(f"Warning: Could not register TamilBold font: {e}")
+    
     try:
-        pdfmetrics.registerFont(TTFont("Tamil", tamil_regular))
-    except:
-        pass
-
-if english_bold:
+        if os.path.exists(TAMIL_REGULAR_FONT):
+            pdfmetrics.registerFont(TTFont("Tamil", TAMIL_REGULAR_FONT))
+            fonts_registered['Tamil'] = True
+    except Exception as e:
+        print(f"Warning: Could not register Tamil font: {e}")
+    
     try:
-        pdfmetrics.registerFont(TTFont("EnglishBold", english_bold))
-    except:
-        pass
-
-if english_regular:
+        if os.path.exists(ENGLISH_BOLD_FONT):
+            pdfmetrics.registerFont(TTFont("EnglishBold", ENGLISH_BOLD_FONT))
+            fonts_registered['EnglishBold'] = True
+    except Exception as e:
+        print(f"Warning: Could not register EnglishBold font: {e}")
+    
     try:
-        pdfmetrics.registerFont(TTFont("English", english_regular))
-    except:
-        pass
+        if os.path.exists(ENGLISH_REGULAR_FONT):
+            pdfmetrics.registerFont(TTFont("English", ENGLISH_REGULAR_FONT))
+            fonts_registered['English'] = True
+    except Exception as e:
+        print(f"Warning: Could not register English font: {e}")
+    
+    return fonts_registered
+
+# Register fonts at module load
+_fonts_registered = register_fonts()
 
 # Helper function to get font name with fallback
 def get_font_name(font_key):
