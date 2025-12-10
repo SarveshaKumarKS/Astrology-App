@@ -44,6 +44,20 @@ class AstronomicalCalculations:
         # JD starts at noon; subtract 0.5 to pivot day boundary at 00:00
         return jdn + time_fraction - 0.5
 
+    def get_julian_day_from_ist(self, birth_date: date, birth_time: time, timezone_offset: float = 5.5) -> float:
+        """
+        Calculate Julian Day from Input Time (assumed IST/Standard Time).
+        Converts Local Standard Time -> UTC -> JD.
+        """
+        # 1. Create timezone-naive datetime object
+        dt_local = datetime.combine(birth_date, birth_time)
+        
+        # 2. Convert to UTC using timedelta
+        dt_utc = dt_local - timedelta(hours=timezone_offset)
+        
+        # 3. Get Julian Day from UTC
+        return self.get_julian_day(dt_utc.date(), dt_utc.time(), 0.0)
+
     def _ephem_date_from_jd(self, jd: float) -> ephem.Date:
         """Convert JD (UTC) to ephem.Date."""
         # JD 2451545.0 == 2000-01-01 12:00:00 UTC
@@ -258,86 +272,6 @@ class AstronomicalCalculations:
             }
         
         return navamsa_positions
-
-
-    # ---------- Thirukkanitham (Drik) specific methods ----------
-    
-    def _true_obliquity(self, jd: float) -> float:
-        """True obliquity of the ecliptic (degrees). Meeus approximation."""
-        t = (jd - 2451545.0) / 36525.0
-        # mean obliquity (arcseconds)
-        eps0 = 84381.406 - 46.836769*t - 0.0001831*t*t + 0.00200340*t*t*t - 5.76e-7*t**4 - 4.34e-8*t**5
-        # nutation in obliquity is small; PyEphem already includes nutation in body positions,
-        # for ascendant formula we can use mean or add small correction. Keep mean here:
-        return eps0 / 3600.0
-
-    def _true_node_sidereal(self, jd: float, ayanamsa: float) -> float:
-        """True lunar ascending node (sidereal) in degrees."""
-        # PyEphem provides mean node only, so use standard series (approx):
-        # Start from mean node omega (tropical):
-        t = (jd - 2451545.0) / 36525.0
-        omega = (125.04452 - 1934.136261*t + 0.0020708*t*t + (t**3)/450000.0) % 360.0
-        # Apply a small periodic correction to get 'true' node (deg). A common quick term:
-        # ΔΩ ≈ -0.00478° * sin(Ω)  (approx; there are more terms if you want higher accuracy)
-        corr = -0.00478 * math.sin(math.radians(omega))
-        true_tropical = (omega + corr) % 360.0
-        return (true_tropical - ayanamsa) % 360.0
-
-    def calculate_planetary_positions_topocentric(self, jd: float, latitude: float, longitude: float) -> Dict[str, Dict]:
-        """Like calculate_planetary_positions, but with observer lat/lon (topocentric Moon/planets)."""
-        obs = ephem.Observer()
-        obs.date = self._ephem_date_from_jd(jd)
-        obs.lat = str(latitude)
-        obs.lon = str(longitude)
-
-        ayanamsa = self.calculate_lahiri_ayanamsa(jd)
-        positions = {}
-        for name, body in self.planets.items():
-            if body is None:
-                continue
-            body.compute(obs)
-            ecl = ephem.Ecliptic(body)
-            lon_trop = math.degrees(ecl.lon) % 360.0
-            lat = math.degrees(ecl.lat)
-            lon_sid = (lon_trop - ayanamsa) % 360.0
-            positions[name] = {
-                'longitude': lon_sid,
-                'latitude': lat,
-                'sign': self.get_sign_from_longitude(lon_sid),
-                'nakshatra': self.get_nakshatra_from_longitude(lon_sid)
-            }
-
-        # Nodes: in Thirukkanitham we'll override with TRUE node
-        true_rahu = self._true_node_sidereal(jd, ayanamsa)
-        true_ketu = (true_rahu + 180.0) % 360.0
-        positions['Rahu'] = {
-            'longitude': true_rahu, 'latitude': 0.0,
-            'sign': self.get_sign_from_longitude(true_rahu),
-            'nakshatra': self.get_nakshatra_from_longitude(true_rahu)
-        }
-        positions['Ketu'] = {
-            'longitude': true_ketu, 'latitude': 0.0,
-            'sign': self.get_sign_from_longitude(true_ketu),
-            'nakshatra': self.get_nakshatra_from_longitude(true_ketu)
-        }
-        return positions
-
-    def calculate_ascendant_true_obliquity(self, jd: float, latitude: float, longitude: float) -> float:
-        """Calculate ascendant with true obliquity (for Thirukkanitham/Drik system).
-        Uses the correct formula: x = sin(theta)*cos(eps) + tan(lat)*sin(eps), y = -cos(theta)
-        followed by 180° adjustment to get the eastward rising point.
-        """
-        eps = math.radians(self._true_obliquity(jd))
-        lst = self.get_sidereal_time(jd, longitude)
-        theta = math.radians(lst)
-        phi = math.radians(latitude)
-        
-        # CORRECT formula for ascendant (eastward rising point)
-        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
-        y = -math.cos(theta)  # Negative cosine for ascendant
-        lam_trop = (math.degrees(math.atan2(y, x)) + 180.0) % 360.0
-        lam_sid = (lam_trop - self.calculate_lahiri_ayanamsa(jd)) % 360.0
-        return lam_sid
 
     # ---------- Dasa Period Calculations ----------
     
@@ -570,8 +504,25 @@ class AstronomicalCalculations:
         
         return current_dasa
     
-    def calculate_panchangam_details(self, birth_date, birth_time, latitude, longitude, timezone_offset):
-        """Calculate Panchangam details: sunrise, sunset, tithi, yoga, karana, etc."""
+    def calculate_panchangam_details(self, birth_date, birth_time, latitude, longitude, timezone_offset, 
+                                     sun_longitude=None, moon_longitude=None, ayanamsa_value=None):
+        """
+        Calculate Panchangam details: sunrise, sunset, tithi, yoga, karana, etc.
+        
+        Args:
+            birth_date: Date of birth
+            birth_time: Time of birth
+            latitude: Latitude
+            longitude: Longitude
+            timezone_offset: Timezone offset in hours
+            sun_longitude: Optional Sun longitude in degrees (if using custom ephemeris like Vakkiam)
+            moon_longitude: Optional Moon longitude in degrees (if using custom ephemeris like Vakkiam)
+            ayanamsa_value: Optional ayanamsa value in degrees (if using custom ayanamsa like Vakkiam)
+        
+        If sun_longitude and moon_longitude are provided, they will be used for panchangam calculations
+        instead of Swiss Ephemeris. This is important for Vakkiam system which uses its own ephemeris.
+        If ayanamsa_value is provided, it will be used instead of Swiss Ephemeris ayanamsa.
+        """
         import swisseph as swe
         from datetime import datetime, time as dt_time
         
@@ -604,8 +555,15 @@ class AstronomicalCalculations:
             sunset_time = "18:00"
         
         # Calculate Sun and Moon positions for tithi, yoga
-        sun_lon = swe.calc_ut(jd, swe.SUN, swe.FLG_SIDEREAL)[0][0]
-        moon_lon = swe.calc_ut(jd, swe.MOON, swe.FLG_SIDEREAL)[0][0]
+        # Use provided positions if available (for Vakkiam), otherwise use Swiss Ephemeris (for Thirukkanitham)
+        if sun_longitude is not None and moon_longitude is not None:
+            # Use provided positions (e.g., from Vakkiam ephemeris)
+            sun_lon = sun_longitude % 360.0
+            moon_lon = moon_longitude % 360.0
+        else:
+            # Use Swiss Ephemeris (default for Thirukkanitham)
+            sun_lon = swe.calc_ut(jd, swe.SUN, swe.FLG_SIDEREAL)[0][0]
+            moon_lon = swe.calc_ut(jd, swe.MOON, swe.FLG_SIDEREAL)[0][0]
         
         # Calculate Tithi (lunar day) - based on Moon-Sun elongation
         elongation = (moon_lon - sun_lon) % 360
@@ -669,8 +627,11 @@ class AstronomicalCalculations:
         except:
             udayadi_nazhigai = "N/A"
         
-        # Ayanamsa
-        ayanamsa_deg = swe.get_ayanamsa_ut(jd)
+        # Ayanamsa - use provided value if available (for Vakkiam), otherwise use Swiss Ephemeris
+        if ayanamsa_value is not None:
+            ayanamsa_deg = ayanamsa_value
+        else:
+            ayanamsa_deg = swe.get_ayanamsa_ut(jd)
         ayanamsa = f"{int(ayanamsa_deg)}° {int((ayanamsa_deg % 1) * 60)}'"
         
         # Calculate Tamil date (approximate conversion)

@@ -120,6 +120,12 @@ class HoroscopeResult(BaseModel):
     avayogi_planet: Optional[str] = None
     avayogi_planet_tamil: Optional[str] = None
     
+    # Tamil horoscope detail fields
+    retrograde_status_tamil: Optional[str] = None  # கிரக வக்ர நிலை
+    bhava_change_tamil: Optional[str] = None  # பாவக மாற்றம்
+    dasa_balance_tamil: Optional[str] = None  # திசை இருப்பு
+    current_dasa_bhukthi_tamil: Optional[str] = None  # நடப்பு திசை புத்தி
+    
     @field_serializer('generated_at', when_used='json')
     def serialize_datetime(self, value):
         return value.isoformat() if value else None
