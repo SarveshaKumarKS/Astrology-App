@@ -57,6 +57,7 @@ ENGLISH_BOLD_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ENGLISH_REGULAR_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
 # Cache for rendered Tamil text images
+# Note: Cache is cleared on each PDF generation to ensure fresh rendering
 _tamil_image_cache: Dict[Tuple[str, int, Optional[float]], Tuple[io.BytesIO, float, float]] = {}
 
 
@@ -502,9 +503,10 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     story.append(Spacer(1, 0.02*inch))  # Minimal spacing
     
     # Add Tamil verse lines as images (centered) - render large and resize for quality
+    # Match exact text from ICS PDF
     verse_line1_img = tamil_image_flowable("ஜனனீ ஜன்ம ஸௌக்யானாம் வர்த்தனீ குல ஸம்பதாம்", 
                                           font_size=18, max_width=5.0*inch)  # Large font, resize to fit
-    verse_line2_img = tamil_image_flowable("புத்ரீ பூர்வ புண்யானாம் லிக்யதே ஜன்ம பத்ரிகா.", 
+    verse_line2_img = tamil_image_flowable("புத்ரீ பூர்வ புண்யானாம் விக்யேத ஜன்ம பத்ரிகா.", 
                                           font_size=18, max_width=5.0*inch)  # Large font, resize to fit
     
     verse_table = Table([[verse_line1_img], [verse_line2_img]], colWidths=[5.0*inch])

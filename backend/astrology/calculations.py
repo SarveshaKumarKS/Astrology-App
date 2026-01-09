@@ -289,9 +289,16 @@ class AstronomicalCalculations:
         start_idx = DASA_ORDER.index(nakshatra_lord)
         
         # Calculate fractional balance of the first dasha
-        # fraction_passed = (moon_longitude % (360/27)) / (360/27)
-        span = 360.0 / 27.0  # 13°20'
-        fraction_passed = (moon_longitude_deg % span) / span  # 0..1
+        # Need to calculate position within the specific nakshatra (not just modulo)
+        span = 360.0 / 27.0  # 13°20' per nakshatra
+        # Get the start longitude of the current nakshatra
+        nakshatra_start = (birth_nakshatra - 1) * span
+        # Calculate position within the nakshatra
+        position_in_nakshatra = (moon_longitude_deg - nakshatra_start) % 360.0
+        # Ensure it's within the nakshatra span
+        if position_in_nakshatra > span:
+            position_in_nakshatra = position_in_nakshatra - span
+        fraction_passed = position_in_nakshatra / span  # 0..1
         
         # Calculate remaining years for first dasha
         remaining_years = DASA_YEARS[nakshatra_lord] * (1.0 - fraction_passed)
@@ -332,7 +339,12 @@ class AstronomicalCalculations:
             level="maha",
             years=actual_years + actual_months/12.0 + actual_days/365.2425,
             months=actual_years * 12 + actual_months,
-            days=actual_days
+            days=actual_days,
+            balance_years=first_dasha_balance_years,
+            balance_months=first_dasha_balance_months,
+            balance_days=first_dasha_balance_days,
+            first_dasha_planet=nakshatra_lord,
+            first_dasha_planet_tamil=PLANET_NAMES[nakshatra_lord]
         ))
         cur_start = first_end
 
