@@ -1,4 +1,4 @@
-from datetime import date, timedelta, time, datetime
+from datetime import date, timedelta, time, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from typing import Dict, List, Optional
 import math
@@ -31,14 +31,14 @@ VAKYA_CYCLES = {
 
 class VakyaEngine:
     """
-    Vakya Engine for table-based lookup calculations.
-    Loads correction tables from final_vakya_tables.json and performs
-    lookup-based position calculations.
+    Vakya Engine for Parametric Epicyclic Model calculations based on Aryabhatiya.
+    Loads calibrated physics constants from final_vakya_tables.json and performs
+    trigonometric calculations for planetary positions.
     """
     
     def __init__(self, tables_file: Optional[str] = None):
         """
-        Initialize VakyaEngine by loading lookup tables.
+        Initialize VakyaEngine by loading calibrated constants.
         
         Args:
             tables_file: Path to final_vakya_tables.json. If None, looks in same directory.
@@ -47,8 +47,9 @@ class VakyaEngine:
             FileNotFoundError: If tables file is not found
             ValueError: If JSON is invalid or required keys/planets are missing
         """
-        # Base Reference: J2000.0 = JD 2451545.0 = January 1, 2000, 12:00 TT
-        self.BASE_EPOCH_JD = 2451545.0
+        # Base Reference: Calibration uses "Days since 2000-01-01 00:00:00 UTC"
+        self.BASE_EPOCH_DATETIME = datetime(2000, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        self.BASE_EPOCH_JD = 2451545.0  # Keep for compatibility with other calculations
         self.BASE_YEAR = 2000.0
         
         # Load tables file
@@ -57,53 +58,29 @@ class VakyaEngine:
             tables_file = os.path.join(script_dir, 'final_vakya_tables.json')
         
         try:
+            if not os.path.exists(tables_file):
+                print(f"⚠️  Warning: Vakya tables file not found: {tables_file}")
+                self.tables = {}
+                return
+            
             with open(tables_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # Load data using .get() with default empty dicts for safety
-            self.tables = data.get('tables', {})
-            self.anchors = data.get('anchors', {})
-            self.rates = data.get('rates', {})
+            # Store the raw data - handle varying JSON key names gracefully
+            self.tables = data
             
-            # Validate that top-level keys exist
-            if not self.tables:
-                raise ValueError("Missing 'tables' key in JSON file or it is empty")
-            if not self.anchors:
-                raise ValueError("Missing 'anchors' key in JSON file or it is empty")
-            if not self.rates:
-                raise ValueError("Missing 'rates' key in JSON file or it is empty")
-            
-            # Verify all required planets are present in all three dictionaries
+            # Validate that we have all required planets
             required_planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']
-            missing_planets = []
-            
-            for planet in required_planets:
-                if planet not in self.tables:
-                    missing_planets.append(f"table for {planet}")
-                if planet not in self.anchors:
-                    missing_planets.append(f"anchor for {planet}")
-                if planet not in self.rates:
-                    missing_planets.append(f"rate for {planet}")
+            missing_planets = [p for p in required_planets if p not in data]
             
             if missing_planets:
-                raise ValueError(f"Missing required data in tables file: {', '.join(missing_planets)}")
-            
-            # Validate that tables are non-empty arrays
-            for planet in required_planets:
-                if not isinstance(self.tables[planet], list) or len(self.tables[planet]) == 0:
-                    raise ValueError(f"Table for {planet} must be a non-empty array")
-                if not isinstance(self.anchors[planet], (int, float)):
-                    raise ValueError(f"Anchor for {planet} must be a number")
-                if not isinstance(self.rates[planet], (int, float)):
-                    raise ValueError(f"Rate for {planet} must be a number")
+                print(f"⚠️  Warning: Missing planet data in tables file: {', '.join(missing_planets)}")
             
         except FileNotFoundError:
-            raise FileNotFoundError(f"Vakya tables file not found: {tables_file}")
+            print(f"⚠️  Warning: Vakya tables file not found: {tables_file}")
+            self.tables = {}
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in tables file: {e}")
-        except ValueError:
-            # Re-raise ValueError as-is (from our validation)
-            raise
         except Exception as e:
             raise ValueError(f"Error loading tables file: {e}")
     
@@ -111,77 +88,328 @@ class VakyaEngine:
         """Normalize angle to 0-360 range"""
         return angle % 360.0
     
-    def _jd_to_year(self, jd: float) -> float:
-        """Convert Julian Day to approximate year (decimal)"""
-        days_since_j2000 = jd - 2451545.0
-        years_since_j2000 = days_since_j2000 / 365.25
-        return 2000.0 + years_since_j2000
-    
-    def _lookup_correction(self, planet: str, days: float) -> float:
+    def _jd_to_datetime_utc(self, jd: float) -> datetime:
         """
-        Look up correction value from table based on cycle position.
+        Convert Julian Day to UTC datetime.
+        JD 2451545.0 = January 1, 2000, 12:00:00 TT (approximately UTC)
+        """
+        days_since_j2000 = jd - 2451545.0
+        dt_utc = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc) + timedelta(days=days_since_j2000)
+        return dt_utc
+    
+    def _to_utc_days(self, birth_dt: datetime) -> float:
+        """
+        CRITICAL: Convert birth datetime to days since 2000-01-01 00:00:00 UTC.
+        This must match the calibration script exactly.
+        
+        If birth_dt has no timezone, assume it is IST (UTC+5:30) and convert to UTC.
         
         Args:
-            planet: Planet name
-            days: Days from base epoch
+            birth_dt: Input datetime (timezone-naive or timezone-aware)
             
         Returns:
-            Correction value in degrees
+            Days since 2000-01-01 00:00:00 UTC as a float
         """
-        if planet not in VAKYA_CYCLES:
-            return 0.0
+        # Handle timezone-naive datetime (assume IST)
+        if birth_dt.tzinfo is None:
+            # Assume IST (UTC+5:30) and convert to UTC
+            birth_dt = birth_dt.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
+            birth_dt = birth_dt.astimezone(timezone.utc)
+            else:
+            # Convert to UTC if in different timezone
+            birth_dt = birth_dt.astimezone(timezone.utc)
         
-        cycle_length = VAKYA_CYCLES[planet]
-        table = self.tables[planet]
-        table_size = len(table)
+        # Calculate delta from base epoch
+        delta = birth_dt - self.BASE_EPOCH_DATETIME
+        return delta.total_seconds() / 86400.0
+    
+    def _get_days_since_2000(self, dt_input: datetime) -> float:
+        """Alias for _to_utc_days for backward compatibility"""
+        return self._to_utc_days(dt_input)
+    
+    def _get_planet_data(self, planet: str, key: str, default=None):
+        """Get planet data with flexible key name handling"""
+        if planet not in self.tables:
+            return default
         
-        # Calculate position in cycle (0 to cycle_length)
-        cycle_position = days % cycle_length
+        planet_data = self.tables[planet]
         
-        # Map cycle position to table index
-        # Table is indexed by integer days within the cycle
-        index = int(cycle_position) % table_size
+        # Handle varying key names
+        key_variants = {
+            'L0': ['L0', 'epoch_l0', 'l0'],
+            'Rate': ['Rate', 'mean_motion', 'rate'],
+            'Apogee': ['Apogee', 'apogee_l0', 'apogee'],
+            'Amp': ['Amp', 'amplitude', 'manda_coeff'],
+            'A0': ['A0', 'apogee_l0', 'apogee'],
+            'Rate_Apogee': ['Rate_Apogee', 'apogee_rate', 'rate_apogee'],
+            'sun_l0_ref': ['sun_l0_ref', 'sun_L0', 'sun_l0'],
+            'sun_rate_ref': ['sun_rate_ref', 'sun_Rate', 'sun_rate'],
+            'manda_coeff': ['manda_coeff', 'MandaCoeff', 'manda'],
+            'sighra_circ': ['sighra_circ', 'SighraCirc', 'sighra']
+        }
         
-        # Get correction value from table
-        correction = table[index]
+        if key in key_variants:
+            for variant in key_variants[key]:
+                if variant in planet_data:
+                    return planet_data[variant]
         
-        return correction
+        # Direct key lookup
+        return planet_data.get(key, default)
+    
+    def _calc_sun(self, t: float) -> float:
+        """
+        Calculate Sun longitude using simple epicycle model.
+        
+        Formula:
+        Mean = (L0 + Rate * t) % 360
+        Anomaly = Mean - Apogee
+        Correction = -Amp * sin(Anomaly_rad)
+        TrueLongitude = (Mean + Correction) % 360
+        """
+        L0 = self._get_planet_data('Sun', 'L0', 0.0)
+        Rate = self._get_planet_data('Sun', 'Rate', 0.0)
+        Apogee = self._get_planet_data('Sun', 'Apogee', 0.0)
+        Amp = self._get_planet_data('Sun', 'Amp', 0.0)
+        
+        Mean = (L0 + Rate * t) % 360.0
+        Anomaly = Mean - Apogee
+        Anomaly_rad = math.radians(Anomaly)
+        Correction = -Amp * math.sin(Anomaly_rad)
+        TrueLongitude = (Mean + Correction) % 360.0
+        
+        return self._normalize(TrueLongitude)
+    
+    def _calc_moon(self, t: float) -> float:
+        """
+        Calculate Moon longitude using moving apogee epicycle model.
+        
+        Formula:
+        Mean = (L0 + Rate * t) % 360
+        TrueApogee = (ApogeeL0 + ApogeeRate * t) % 360
+        Anomaly = Mean - TrueApogee
+        Correction = Amplitude * sin(Anomaly_rad)
+        TrueLongitude = (Mean + Correction) % 360
+        """
+        L0 = self._get_planet_data('Moon', 'L0', 0.0)
+        Rate = self._get_planet_data('Moon', 'Rate', 0.0)
+        A0 = self._get_planet_data('Moon', 'A0', 0.0)  # Apogee L0
+        Rate_Apogee = self._get_planet_data('Moon', 'Rate_Apogee', 0.0)
+        Amp = self._get_planet_data('Moon', 'Amp', 0.0)
+        
+        Mean = (L0 + Rate * t) % 360.0
+        TrueApogee = (A0 + Rate_Apogee * t) % 360.0
+        Anomaly = Mean - TrueApogee
+        Anomaly_rad = math.radians(Anomaly)
+        Correction = Amp * math.sin(Anomaly_rad)
+        TrueLongitude = (Mean + Correction) % 360.0
+        
+        return self._normalize(TrueLongitude)
+    
+    def _calc_outer(self, planet: str, t: float) -> float:
+        """
+        Calculate outer planet (Mars, Jupiter, Saturn) longitude using double epicycle model.
+        
+        Formula:
+        M_p = (L0_p + Rate_p * t) % 360
+        M_s = (L0_sun + Rate_sun * t) % 360
+        K_manda = M_p - Apogee
+        Corr_manda = -MandaCoeff * sin(K_manda)
+        TrueMean_p = M_p + Corr_manda
+        K_sighra = M_s - TrueMean_p
+        r = SighraCirc / 360.0
+        y = r * sin(K_sighra)
+        x = 1.0 + r * cos(K_sighra)
+        Corr_sighra = arctan2(y, x) [in degrees]
+        TrueLongitude = (TrueMean_p + Corr_sighra) % 360
+        """
+        L0_p = self._get_planet_data(planet, 'epoch_l0', 0.0)
+        Rate_p = self._get_planet_data(planet, 'mean_motion', 0.0)
+        L0_sun = self._get_planet_data(planet, 'sun_l0_ref', 0.0)
+        Rate_sun = self._get_planet_data(planet, 'sun_rate_ref', 0.0)
+        Apogee = self._get_planet_data(planet, 'apogee_l0', 0.0)
+        MandaCoeff = self._get_planet_data(planet, 'manda_coeff', 0.0)
+        SighraCirc = self._get_planet_data(planet, 'sighra_circ', 0.0)
+        
+        # Mean Position
+        M_p = (L0_p + Rate_p * t) % 360.0
+        
+        # Mean Sun
+        M_s = (L0_sun + Rate_sun * t) % 360.0
+        
+        # Manda Correction (Orbit Shape)
+        K_manda = M_p - Apogee
+        K_manda_rad = math.radians(K_manda)
+        Corr_manda = -MandaCoeff * math.sin(K_manda_rad)
+        TrueMean_p = M_p + Corr_manda
+        
+        # Sighra Correction (Retrograde Loop)
+        K_sighra = M_s - TrueMean_p
+        K_sighra_rad = math.radians(K_sighra)
+        r = SighraCirc / 360.0
+        y = r * math.sin(K_sighra_rad)
+        x = 1.0 + r * math.cos(K_sighra_rad)
+        Corr_sighra_rad = math.atan2(y, x)
+        Corr_sighra = math.degrees(Corr_sighra_rad)
+        
+        TrueLongitude = (TrueMean_p + Corr_sighra) % 360.0
+        
+        return self._normalize(TrueLongitude)
+    
+    def _calc_inner(self, planet: str, t: float) -> float:
+        """
+        Calculate inner planet (Mercury, Venus) longitude using inverted double epicycle model.
+        
+        For inner planets, the "Mean Planet" is the Sun, and the "Sighra Ucca" is the Fast Planet.
+        
+        Formula:
+        M_s = (L0_sun + Rate_sun * t) % 360
+        U_sighra = (L0_p + Rate_p * t) % 360
+        K_manda = M_s - Apogee
+        Corr_manda = -MandaCoeff * sin(K_manda)
+        TrueMean_sun = M_s + Corr_manda
+        K_sighra = U_sighra - TrueMean_sun
+        r = SighraCirc / 360.0
+        y = r * sin(K_sighra)
+        x = 1.0 + r * cos(K_sighra)
+        Corr_sighra = arctan2(y, x) [in degrees]
+        TrueLongitude = (TrueMean_sun + Corr_sighra) % 360
+        """
+        L0_sun = self._get_planet_data(planet, 'sun_l0_ref', 0.0)
+        Rate_sun = self._get_planet_data(planet, 'sun_rate_ref', 0.0)
+        L0_p = self._get_planet_data(planet, 'epoch_l0', 0.0)  # Sighra Ucca
+        Rate_p = self._get_planet_data(planet, 'mean_motion', 0.0)
+        Apogee = self._get_planet_data(planet, 'apogee_l0', 0.0)
+        MandaCoeff = self._get_planet_data(planet, 'manda_coeff', 0.0)
+        SighraCirc = self._get_planet_data(planet, 'sighra_circ', 0.0)
+        
+        # Mean Sun (Deferent Center)
+        M_s = (L0_sun + Rate_sun * t) % 360.0
+        
+        # Sighra Ucca (Fast Planet)
+        U_sighra = (L0_p + Rate_p * t) % 360.0
+        
+        # Manda Correction (Applied to Sun using Planet's Apogee!)
+        K_manda = M_s - Apogee
+        K_manda_rad = math.radians(K_manda)
+        Corr_manda = -MandaCoeff * math.sin(K_manda_rad)
+        TrueMean_sun = M_s + Corr_manda
+        
+        # Sighra Correction
+        K_sighra = U_sighra - TrueMean_sun
+        K_sighra_rad = math.radians(K_sighra)
+        r = SighraCirc / 360.0
+        y = r * math.sin(K_sighra_rad)
+        x = 1.0 + r * math.cos(K_sighra_rad)
+        Corr_sighra_rad = math.atan2(y, x)
+        Corr_sighra = math.degrees(Corr_sighra_rad)
+        
+        TrueLongitude = (TrueMean_sun + Corr_sighra) % 360.0
+        
+        return self._normalize(TrueLongitude)
+    
+    def _calc_node(self, planet: str, t: float) -> float:
+        """
+        Calculate node (Rahu, Ketu) longitude using linear motion.
+        
+        Formula:
+        True = (L0 + Rate * t) % 360
+        """
+        L0 = self._get_planet_data(planet, 'epoch_l0', 0.0)
+        Rate = self._get_planet_data(planet, 'mean_motion', 0.0)
+        
+        TrueLongitude = (L0 + Rate * t) % 360.0
+        
+        return self._normalize(TrueLongitude)
     
     def calculate_longitude(self, planet: str, jd: float) -> float:
         """
-        Calculate planet longitude using table lookup.
+        Calculate planet longitude using Parametric Epicyclic Model.
         
-        Formula:
-        Longitude = Anchor + (Rate * days) + Table_Correction
+        Dispatches to appropriate calculation method based on planet type.
+        
+        Args:
+            planet: Planet name
+            jd: Julian Day (will be converted to UTC datetime, then to days since 2000)
+            
+        Returns:
+            Longitude in degrees (0-360)
+        """
+        if planet not in self.tables:
+            raise ValueError(f"Planet {planet} not found in tables")
+        
+        # Convert JD to UTC datetime, then to days since 2000-01-01 00:00:00 UTC
+        dt_utc = self._jd_to_datetime_utc(jd)
+        t = self._to_utc_days(dt_utc)
+        
+        # Dispatch to appropriate calculation method
+        if planet == 'Sun':
+            return self._calc_sun(t)
+        elif planet == 'Moon':
+            return self._calc_moon(t)
+        elif planet in ['Mars', 'Jupiter', 'Saturn']:
+            return self._calc_outer(planet, t)
+        elif planet in ['Mercury', 'Venus']:
+            return self._calc_inner(planet, t)
+        elif planet in ['Rahu', 'Ketu']:
+            return self._calc_node(planet, t)
+        else:
+            raise ValueError(f"Unknown planet: {planet}")
+    
+    def check_retrograde(self, planet: str, jd: float) -> bool:
+        """
+        Check if a planet is retrograde by calculating instantaneous velocity.
+        
+        Method:
+        1. Calculate Pos1 at time t
+        2. Calculate Pos2 at time t + (1/24.0) (1 hour later)
+        3. Velocity = Pos2 - Pos1
+        4. Handle 360-degree wrap (if vel < -300, it implies 359->0 wrap, so add 360)
+        5. If Velocity < 0, return True
         
         Args:
             planet: Planet name
             jd: Julian Day
             
         Returns:
-            Longitude in degrees (0-360)
+            True if planet is retrograde, False otherwise
         """
-        if planet not in self.anchors or planet not in self.rates:
-            raise ValueError(f"Planet {planet} not found in tables")
+        if planet in ['Sun', 'Moon', 'Rahu', 'Ketu']:
+            # These planets don't go retrograde
+            return False
         
-        days = jd - self.BASE_EPOCH_JD
-        anchor = self.anchors[planet]
-        rate = self.rates[planet]
+        # Calculate position at time t
+        Pos1 = self.calculate_longitude(planet, jd)
         
-        # Base mean longitude
-        mean_longitude = anchor + (rate * days)
+        # Calculate position 1 hour later
+        dt_utc = self._jd_to_datetime_utc(jd)
+        dt_utc_next = dt_utc + timedelta(hours=1)
+        jd_next = self._jd_to_julian_day(dt_utc_next)
+        Pos2 = self.calculate_longitude(planet, jd_next)
         
-        # Look up correction from table
-        correction = self._lookup_correction(planet, days)
+        # Calculate velocity (change in position)
+        Velocity = Pos2 - Pos1
         
-        # Apply correction
-        longitude = self._normalize(mean_longitude + correction)
+        # Handle 360-degree wrap
+        if Velocity < -300:
+            # Likely wrapped from 359->0, so add 360
+            Velocity += 360.0
+        elif Velocity > 300:
+            # Likely wrapped from 0->359, so subtract 360
+            Velocity -= 360.0
         
-        return longitude
+        # Retrograde if velocity is negative
+        return Velocity < 0
+    
+    def _jd_to_julian_day(self, dt_utc: datetime) -> float:
+        """Convert UTC datetime to Julian Day"""
+        # Simple conversion: days since J2000.0
+        delta = dt_utc - datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        days = delta.total_seconds() / 86400.0
+        return 2451545.0 + days
     
     def calculate_longitudes(self, jd: float) -> Dict[str, float]:
         """
-        Calculate all planet longitudes using table lookup.
+        Calculate all planet longitudes using Parametric Epicyclic Model.
         
         Args:
             jd: Julian Day
@@ -193,7 +421,11 @@ class VakyaEngine:
         
         # Calculate all planets
         for planet in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']:
-            results[planet] = self.calculate_longitude(planet, jd)
+            try:
+                results[planet] = self.calculate_longitude(planet, jd)
+            except Exception as e:
+                print(f"⚠️  Warning: Error calculating {planet}: {e}")
+                results[planet] = 0.0
         
         return results
 
