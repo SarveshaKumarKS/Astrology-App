@@ -243,7 +243,7 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
         avayogi_planet_tamil = PLANET_NAMES.get(avayogi_planet, avayogi_planet)
 
         return HoroscopeResult(
-            birth_details=birth_details,
+            birth_details=birth_details.model_dump() if hasattr(birth_details, 'model_dump') else birth_details.dict() if hasattr(birth_details, 'dict') else birth_details,
             system=self.system_name,
             language=language,
             ascendant=SIGNS[asc_sign],

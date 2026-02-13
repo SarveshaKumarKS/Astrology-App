@@ -115,7 +115,7 @@ class VakyaEngine:
             # Assume IST (UTC+5:30) and convert to UTC
             birth_dt = birth_dt.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
             birth_dt = birth_dt.astimezone(timezone.utc)
-            else:
+        else:
             # Convert to UTC if in different timezone
             birth_dt = birth_dt.astimezone(timezone.utc)
         
