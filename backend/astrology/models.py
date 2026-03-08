@@ -158,6 +158,43 @@ class CompatibilityResult(BaseModel):
     recommendation_tamil: str
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
+class NKVPlanetaryContext(BaseModel):
+    planet: str
+    planet_tamil: str
+    sign: str
+    sign_tamil: str
+    house: int
+    house_type: str  # "Kendra", "Trikona", "Dusthana", "Upachaya", "Maraka", "Neutral"
+    house_type_tamil: str
+
+class NKVPalanResult(BaseModel):
+    birth_summary: Dict[str, str]
+    planetary_context: Dict[str, NKVPlanetaryContext]
+    rahu_ketu_axis: str
+    rahu_ketu_axis_tamil: str
+    saturn_moon_aspect: str
+    saturn_moon_aspect_tamil: str
+    rahu_dispositor: str
+    rahu_dispositor_tamil: str
+    rahu_dispositor_strong: bool
+    section1_title: str
+    section1_title_tamil: str
+    section1_placement: str
+    section1_placement_tamil: str
+    section1_palan: str
+    section1_palan_tamil: str
+    section2_title: str
+    section2_title_tamil: str
+    section2_placement: str
+    section2_placement_tamil: str
+    section2_palan: str
+    section2_palan_tamil: str
+    section3_title: str
+    section3_title_tamil: str
+    section3_advice: str
+    section3_advice_tamil: str
+
+
 class PanchangamDetails(BaseModel):
     date: date
     tithi: str

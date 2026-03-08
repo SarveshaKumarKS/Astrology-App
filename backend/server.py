@@ -12,6 +12,8 @@ from datetime import datetime, date, time
 from astrology.vakkiam_system import VakkiamCalculator
 from astrology.thirukkanitham_system import ThirukkanithamCalculator
 from astrology.models import BirthDetails, HoroscopeResult, CompatibilityResult
+from astrology.nkv_palan import compute_nkv_context, generate_nkv_predictions
+from astrology.palan_pdf_generator import generate_palan_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -233,6 +235,58 @@ async def generate_pdf(request: HoroscopeRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# Generate NKV Palan PDF
+@api_router.post("/generate-palan-pdf")
+async def generate_palan_pdf_endpoint(request: HoroscopeRequest):
+    """Generate an NKV Palan (prediction) PDF report."""
+    from fastapi.responses import Response
+
+    try:
+        birth_details = BirthDetails(
+            name=request.birth_details.name,
+            date_of_birth=request.birth_details.date_of_birth,
+            time_of_birth=request.birth_details.time_of_birth,
+            place_of_birth=request.birth_details.place_of_birth,
+            latitude=request.birth_details.latitude,
+            longitude=request.birth_details.longitude,
+            timezone=request.birth_details.timezone,
+            time_correction=request.birth_details.time_correction,
+        )
+
+        system = request.system.lower()
+        if system not in ("vakkiam", "thirukkanitham"):
+            raise HTTPException(status_code=400, detail="Invalid system. Use 'vakkiam' or 'thirukkanitham'")
+
+        calculator = VakkiamCalculator() if system == "vakkiam" else ThirukkanithamCalculator()
+        horoscope = calculator.generate_horoscope(birth_details, request.language)
+
+        context = compute_nkv_context(horoscope)
+        palan_result = generate_nkv_predictions(context)
+
+        pdf_bytes = generate_palan_pdf(palan_result, name=birth_details.name)
+
+        import re, unicodedata
+        safe_name = unicodedata.normalize("NFKD", birth_details.name)
+        safe_name = re.sub(r"[^\x00-\x7F]+", "", safe_name)
+        safe_name = re.sub(r"[^\w\s-]", "", safe_name)
+        safe_name = re.sub(r"[-\s]+", "_", safe_name.replace(" ", "_"))
+        if not safe_name:
+            safe_name = "user"
+        filename = f"palan_{safe_name}_{system}.pdf"
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generating Palan PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating Palan PDF: {str(e)}")
 
 # Marriage Compatibility
 @api_router.post("/compatibility")

@@ -451,6 +451,107 @@ export default function HoroscopeResultPage() {
     }
   };
 
+  const generatePalanPDF = async () => {
+    if (!horoscopeData) return;
+
+    try {
+      setLoading(true);
+
+      const requestData = {
+        birth_details: {
+          name: horoscopeData.birth_details.name,
+          date_of_birth: horoscopeData.birth_details.date_of_birth,
+          time_of_birth: horoscopeData.birth_details.time_of_birth,
+          place_of_birth: horoscopeData.birth_details.place_of_birth,
+          latitude: parseFloat(String((horoscopeData.birth_details as any).latitude || 0)),
+          longitude: parseFloat(String((horoscopeData.birth_details as any).longitude || 0)),
+          timezone: (horoscopeData.birth_details as any).timezone || 'IST',
+          time_correction: parseInt(String((horoscopeData.birth_details as any).time_correction || 0)),
+        },
+        system: horoscopeData.system,
+        language: horoscopeData.language,
+      };
+
+      const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
+      const fileName = `palan_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(`${backendUrl}/api/generate-palan-pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+        });
+
+        if (!response.ok) throw new Error('Failed to generate Palan PDF');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        Alert.alert(
+          getText('வெற்றி', 'Success'),
+          getText('பலன் PDF பதிவிறக்கம் தொடங்கியது', 'Palan PDF download started')
+        );
+      } else {
+        Alert.alert(
+          getText('தயாரிக்கப்படுகிறது', 'Preparing'),
+          getText('பலன் PDF உருவாக்கப்படுகிறது...', 'Generating Palan PDF...')
+        );
+
+        const fileUri = FileSystem.documentDirectory + fileName;
+
+        const response = await fetch(`${backendUrl}/api/generate-palan-pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+        });
+
+        if (!response.ok) throw new Error(`Failed to generate Palan PDF: ${response.status}`);
+
+        const blob = await response.blob();
+        const reader = new (FileReader as any)();
+
+        await new Promise((resolve, reject) => {
+          reader.onloadend = async () => {
+            try {
+              const base64data = reader.result;
+              const base64 = base64data.split(',')[1];
+              await FileSystem.writeAsStringAsync(fileUri, base64, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              resolve(true);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/pdf',
+          dialogTitle: getText('பலன் PDF', 'Palan PDF'),
+          UTI: 'com.adobe.pdf',
+        });
+      }
+    } catch (error) {
+      console.error('Error generating Palan PDF:', error);
+      Alert.alert(
+        getText('பிழை', 'Error'),
+        getText('பலன் PDF உருவாக்குவதில் பிழை: ', 'Error generating Palan PDF: ') +
+          (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!horoscopeData) {
     return (
       <SafeAreaView style={styles.container}>
@@ -511,15 +612,32 @@ export default function HoroscopeResultPage() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={generatePDF}
-        >
-          <Ionicons name="document-text-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.actionButtonText}>
-            {getText('PDF உருவாக்கு', 'Generate PDF')}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtonRow}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={generatePDF}
+            disabled={loading}
+          >
+            <Ionicons name="document-text-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>
+              {getText('PDF உருவாக்கு', 'Generate PDF')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.palanButton]}
+            onPress={generatePalanPDF}
+            disabled={loading}
+          >
+            <Ionicons name="star-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>
+              {getText('பலன் PDF', 'Palan PDF')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {loading && (
+          <ActivityIndicator size="small" color="#4A90E2" style={{ marginTop: 8 }} />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -731,23 +849,31 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E8E8E8',
   },
+  actionButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   actionButton: {
+    flex: 1,
     backgroundColor: '#E74C3C',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },
+  palanButton: {
+    backgroundColor: '#8E44AD',
+  },
   actionButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
 });
