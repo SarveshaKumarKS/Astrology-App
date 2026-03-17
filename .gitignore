@@ -98,3 +98,7 @@ NKV_Palan_Logic_Summary.docx
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
