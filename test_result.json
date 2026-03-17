@@ -1,0 +1,38 @@
+[
+    {
+        "Name": "Raj",
+        "DOB": "06/04/1989",
+        "TOB": "18:40:00",
+        "Place_of_Birth": "Palayankottai"
+    },
+    {
+        "Name": "case1",
+        "DOB": "14/01/2000",
+        "TOB": "22:48:00",
+        "Place_of_Birth": "Salem"
+    },
+    {
+        "Name": "Kishan",
+        "DOB": "15/12/1996",
+        "TOB": "23:37:00",
+        "Place_of_Birth": "Trichy"
+    },
+    {
+        "Name": "case2",
+        "DOB": "14/12/1990",
+        "TOB": "22:20:00",
+        "Place_of_Birth": "Salem"
+    },
+    {
+        "Name": "Dillibabu",
+        "DOB": "01/01/1980",
+        "TOB": "12:00:00",
+        "Place_of_Birth": "Chennai"
+    },
+    {
+        "Name": "Shymala",
+        "DOB": "01/01/1980",
+        "TOB": "12:00:00",
+        "Place_of_Birth": "Chennai"
+    }
+]

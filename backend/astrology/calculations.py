@@ -553,15 +553,16 @@ class AstronomicalCalculations:
         
         # Get sunrise and sunset times
         try:
-            sunrise_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=1)[1][0]
-            sunset_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=2)[1][0]
+            # Correct PySwissEph signature: (tjdut, body, rsmi, geopos)
+            sunrise_jd = swe.rise_trans(jd_midnight, swe.SUN, 1, (longitude, latitude, 0.0))[1][0]
+            sunset_jd = swe.rise_trans(jd_midnight, swe.SUN, 2, (longitude, latitude, 0.0))[1][0]
             
             # Convert JD to time
             sunrise_tuple = swe.revjul(sunrise_jd + timezone_offset/24.0)
             sunset_tuple = swe.revjul(sunset_jd + timezone_offset/24.0)
             
-            sunrise_time = f"{int(sunrise_tuple[3])}:{int((sunrise_tuple[3] % 1) * 60):02d}"
-            sunset_time = f"{int(sunset_tuple[3])}:{int((sunset_tuple[3] % 1) * 60):02d}"
+            sunrise_time = f"{int(sunrise_tuple[3]):02d}:{int((sunrise_tuple[3] % 1) * 60):02d}"
+            sunset_time = f"{int(sunset_tuple[3]):02d}:{int((sunset_tuple[3] % 1) * 60):02d}"
         except:
             sunrise_time = "06:00"
             sunset_time = "18:00"
@@ -690,14 +691,14 @@ class AstronomicalCalculations:
 
             tamil_sign_index = int(sun_lon_sidereal // 30)  # 0..11
             tamil_month = tamil_months[tamil_sign_index]
+            # Tamil day: days since solar ingress (approximate)
+            tamil_day = int(sun_lon_sidereal % 30.0) + 1
         except Exception:
             # Fallback: simple mapping from Gregorian month
             gregorian_month = birth_date.month
             approx_idx = (gregorian_month + 2) % 12
             tamil_month = tamil_months[approx_idx]
-
-        # Tamil day: days since solar ingress (approximate)
-        tamil_day = birth_date.day
+            tamil_day = birth_date.day
 
         # Tamil year name (60-year cycle, approximate; Chithirai-based year boundary)
         tamil_year = birth_date.year

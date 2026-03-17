@@ -56,6 +56,11 @@ TAMIL_BOLD_FONT_PATHS = [
 ENGLISH_BOLD_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ENGLISH_REGULAR_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
+# ── ICS-style color palette (matches 1988.pdf reference) ──────────────────────
+GREEN       = colors.HexColor('#008000')
+YELLOW      = colors.HexColor('#FFFF00')
+LIGHT_GREEN = colors.HexColor('#E8F5E9')
+
 # Cache for rendered Tamil text images
 # Note: Cache is cleared on each PDF generation to ensure fresh rendering
 _tamil_image_cache: Dict[Tuple[str, int, Optional[float]], Tuple[io.BytesIO, float, float]] = {}
@@ -195,6 +200,7 @@ def tamil_image_flowable(
     font_size: int = 12,
     max_width: Optional[float] = None,  # in points
     is_bold: bool = False,
+    text_color: Tuple[int, int, int, int] = (0, 128, 0, 255),  # green by default (matches 1988.pdf)
 ) -> RLImage:
     """
     Create a ReportLab Image flowable from Tamil text.
@@ -203,20 +209,20 @@ def tamil_image_flowable(
     """
     if not text or not text.strip():
         # Return minimal empty image
-        buf, w_px, h_px = render_tamil_to_png("", font_size=font_size, is_bold=is_bold)
+        buf, w_px, h_px = render_tamil_to_png("", font_size=font_size, is_bold=is_bold, text_color=text_color)
         w_pt = w_px * 72.0 / 96.0
         h_pt = h_px * 72.0 / 96.0
         return RLImage(buf, width=w_pt, height=h_pt)
-    
+
     # Check cache
-    cache_key = (text, font_size, max_width, is_bold)
+    cache_key = (text, font_size, max_width, is_bold, text_color)
     if cache_key in _tamil_image_cache:
         buf, w_pt, h_pt = _tamil_image_cache[cache_key]
         buf.seek(0)  # Reset buffer position
         return RLImage(buf, width=w_pt, height=h_pt)
-    
+
     # Render text to PNG
-    buf, w_px, h_px = render_tamil_to_png(text, font_size=font_size, is_bold=is_bold)
+    buf, w_px, h_px = render_tamil_to_png(text, font_size=font_size, is_bold=is_bold, text_color=text_color)
     
     # Convert pixels to points - use higher DPI for better quality (120 DPI for sharper rendering)
     w_pt = w_px * 72.0 / 120.0
@@ -284,12 +290,12 @@ def draw_header():
     # Title "ASTRO NKV" in large bold letters (English - keep as text)
     header_drawing.add(String(270, 35, "ASTRO NKV",
                               fontName=get_font_name('EnglishBold'), fontSize=16,
-                              fillColor=colors.HexColor('#333333'),  # Neutral dark gray
+                              fillColor=GREEN,
                               textAnchor='middle'))
-    
-    # Decorative line - neutral gray
+
+    # Decorative line - green
     header_drawing.add(Line(50, 8, 490, 8,
-                           strokeColor=colors.HexColor('#666666'),  # Neutral gray
+                           strokeColor=GREEN,
                            strokeWidth=1))
     
     return header_drawing
@@ -315,14 +321,14 @@ def render_chart_as_pil_image(
         buf.seek(0)
         return buf
     
-    # Create image
-    img = Image.new("RGB", (width_px, height_px), (255, 255, 255))
+    # Create image with yellow background
+    img = Image.new("RGB", (width_px, height_px), (255, 255, 0))
     draw = ImageDraw.Draw(img)
     
-    # Colors
-    border_color = (102, 102, 102)  # #666666
-    bg_color = (255, 255, 255)  # White
-    text_color = (51, 51, 51)  # #333333
+    # Colors — ICS style: green borders, yellow cell background
+    border_color = (0, 128, 0)    # #008000 green
+    bg_color = (255, 255, 0)      # #FFFF00 yellow
+    text_color = (51, 51, 51)     # #333333 dark for readability
     
     # Calculate dimensions (matching frontend)
     BORDER = 2
@@ -346,9 +352,9 @@ def render_chart_as_pil_image(
     # Helper to draw a cell
     def draw_cell(house_num: int, x: int, y: int):
         """Draw a single cell"""
-        # Draw cell border
-        draw.rectangle([(x, y), (x + CELL_SIZE - 1, y + CELL_SIZE - 1)], 
-                      outline=border_color, width=CELL_BORDER)
+        # Draw cell with yellow fill and green border
+        draw.rectangle([(x, y), (x + CELL_SIZE - 1, y + CELL_SIZE - 1)],
+                      fill=bg_color, outline=border_color, width=CELL_BORDER)
         
         # Get planets for this house
         planets = chart_data.get(house_num, [])
@@ -633,9 +639,8 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
         ('ALIGN', (3, 0), (3, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),  # Neutral gray
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F5F5F5')),  # Light gray
-        ('BACKGROUND', (2, 0), (2, -1), colors.HexColor('#F5F5F5')),  # Light gray
+        ('GRID', (0, 0), (-1, -1), 0.5, GREEN),  # green grid
+        # No gray background — white cells match 1988.pdf
         ('LEFTPADDING', (0, 0), (-1, -1), 3),
         ('RIGHTPADDING', (0, 0), (-1, -1), 3),
         ('TOPPADDING', (0, 0), (-1, -1), 1),
@@ -679,12 +684,12 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     # Compact column widths to fit on one page
     planet_table = Table(planet_data, colWidths=[0.7*inch, 0.85*inch, 0.9*inch, 0.45*inch, 0.85*inch, 0.7*inch])
     planet_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E0E0E0')),  # Neutral gray header
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#000000')),  # Black text
+        ('BACKGROUND', (0, 0), (-1, 0), GREEN),          # green header
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),    # white header text
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),  # Neutral gray grid
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#FAFAFA'), colors.white]),  # Very light gray alternating
+        ('GRID', (0, 0), (-1, -1), 0.5, GREEN),          # green grid
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_GREEN]),
         ('LEFTPADDING', (0, 0), (-1, -1), 2),
         ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ('TOPPADDING', (0, 0), (-1, -1), 1),
@@ -855,12 +860,12 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
             info_table.setStyle(TableStyle([
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F5F5F5')),  # Neutral light gray
+                # No gray background — white matches 1988.pdf
                 ('LEFTPADDING', (0, 0), (-1, -1), 4),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 3),
                 ('TOPPADDING', (0, 0), (-1, -1), 1.5),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-                ('LINEBEFORE', (0, 0), (-1, -1), 2, colors.HexColor('#999999')),  # Neutral gray border
+                ('LINEBEFORE', (0, 0), (-1, -1), 2, GREEN),  # green left border
             ]))
             story.append(info_table)
     
