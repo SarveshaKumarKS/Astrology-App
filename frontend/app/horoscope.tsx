@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import { ApiError, fetchJson, isAbortError } from './api';
 
 interface BirthDetails {
   name: string;
@@ -215,12 +216,8 @@ export default function HoroscopePage() {
     setLoading(true);
     
     try {
-      const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/horoscope`, {
+      const result = await fetchJson<any>('/api/horoscope', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           birth_details: {
             name: birthDetails.name,
@@ -236,28 +233,28 @@ export default function HoroscopePage() {
           language: language,
         }),
       });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        // Navigate to results page with horoscope data
-        router.push({
-          pathname: '/horoscope-result',
-          params: {
-            data: JSON.stringify(result)
-          }
-        });
-      } else {
-        throw new Error(result.detail || 'Failed to generate horoscope');
-      }
+      // Navigate to results page with horoscope data
+      router.push({
+        pathname: '/horoscope-result',
+        params: {
+          data: JSON.stringify(result),
+        },
+      });
     } catch (error) {
       console.error('Error generating horoscope:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText(
-          'ஜாதகம் உருவாக்குவதில் பிழை ஏற்பட்டது',
-          'Error occurred while generating horoscope'
-        )
+        error instanceof ApiError
+          ? getText(
+              error.detail || 'சேவையக பிழை ஏற்பட்டது',
+              error.detail || 'Server error'
+            )
+          : isAbortError(error)
+            ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+            : getText(
+                'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+                'Network/server error. Please try again.'
+              )
       );
     } finally {
       setLoading(false);

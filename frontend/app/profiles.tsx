@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { ApiError, fetchJson, fetchApi, isAbortError } from './api';
 
 interface UserProfile {
   id: string;
@@ -43,20 +44,23 @@ export default function ProfilesPage() {
 
   const loadProfiles = async () => {
     try {
-      const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/profiles`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setProfiles(data);
-      } else {
-        throw new Error(data.detail || 'Failed to load profiles');
-      }
+      const data = await fetchJson<UserProfile[]>('/api/profiles', { method: 'GET' });
+      setProfiles(data);
     } catch (error) {
       console.error('Error loading profiles:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('சுயவிவரங்களை ஏற்றுவதில் பிழை', 'Error loading profiles')
+        error instanceof ApiError
+          ? getText(
+              error.detail || 'சேவையக பிழை ஏற்பட்டது',
+              error.detail || 'Server error'
+            )
+          : isAbortError(error)
+            ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+            : getText(
+                'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+                'Network/server error. Please try again.'
+              )
       );
     } finally {
       setLoading(false);
@@ -112,10 +116,7 @@ export default function ProfilesPage() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-              const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/profiles/${profileId}`, {
-                method: 'DELETE'
-              });
+              const response = await fetchApi(`/api/profiles/${profileId}`, { method: 'DELETE' });
               
               if (response.ok) {
                 setProfiles(profiles.filter(p => p.id !== profileId));
@@ -130,7 +131,17 @@ export default function ProfilesPage() {
               console.error('Error deleting profile:', error);
               Alert.alert(
                 getText('பிழை', 'Error'),
-                getText('சுயவிவரம் நீக்குவதில் பிழை', 'Error deleting profile')
+                error instanceof ApiError
+                  ? getText(
+                      error.detail || 'சேவையக பிழை ஏற்பட்டது',
+                      error.detail || 'Server error'
+                    )
+                  : isAbortError(error)
+                    ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+                    : getText(
+                        'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+                        'Network/server error. Please try again.'
+                      )
               );
             }
           }

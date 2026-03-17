@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import SouthIndianChart from '../components/SouthIndianChart';
+import { fetchApi, isAbortError } from './api';
 
 interface PlanetaryPosition {
   planet: string;
@@ -118,6 +119,20 @@ export default function HoroscopeResultPage() {
 
   const getText = (tamil: string, english: string) => {
     return language === 'tamil' ? tamil : english;
+  };
+
+  const extractErrorDetail = async (response: Response): Promise<string | undefined> => {
+    try {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data: any = await response.json();
+        return data?.detail ? String(data.detail) : undefined;
+      }
+      const text = await response.text();
+      return text ? text.slice(0, 300) : undefined;
+    } catch {
+      return undefined;
+    }
   };
 
   const renderBasicInfo = () => {
@@ -335,16 +350,15 @@ export default function HoroscopeResultPage() {
         language: horoscopeData.language
       };
       
-      const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
       const fileName = `horoscope_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
       
       console.log('Platform:', Platform.OS);
-      console.log('Backend URL:', backendUrl);
+      console.log('Backend URL:', process.env.EXPO_PUBLIC_BACKEND_URL);
       
       if (Platform.OS === 'web') {
         // Web platform - direct download
         console.log('Using web download method');
-        const response = await fetch(`${backendUrl}/api/generate-pdf`, {
+        const response = await fetchApi('/api/generate-pdf', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -353,7 +367,8 @@ export default function HoroscopeResultPage() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to generate PDF');
+          const detail = await extractErrorDetail(response);
+          throw new Error(detail || 'Failed to generate PDF');
         }
         
         // Get the blob
@@ -385,18 +400,8 @@ export default function HoroscopeResultPage() {
         await FileSystem.writeAsStringAsync(tempRequestFile, JSON.stringify(requestData));
         
         // Use downloadAsync - it will save the response directly
-        const downloadResumable = FileSystem.createDownloadResumable(
-          `${backendUrl}/api/generate-pdf`,
-          fileUri,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        
         // Since downloadAsync doesn't support POST with body, we'll use fetch and read as blob
-        const response = await fetch(`${backendUrl}/api/generate-pdf`, {
+        const response = await fetchApi('/api/generate-pdf', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -405,7 +410,8 @@ export default function HoroscopeResultPage() {
         });
         
         if (!response.ok) {
-          throw new Error(`Failed to generate PDF: ${response.status}`);
+          const detail = await extractErrorDetail(response);
+          throw new Error(detail || `Failed to generate PDF: ${response.status}`);
         }
         
         // Read response as blob and convert to base64 using FileReader
@@ -444,7 +450,10 @@ export default function HoroscopeResultPage() {
       console.error('Error generating PDF:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('PDF உருவாக்குவதில் பிழை: ', 'Error generating PDF: ') + (error instanceof Error ? error.message : String(error))
+        isAbortError(error)
+          ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+          : getText('PDF உருவாக்குவதில் பிழை: ', 'Error generating PDF: ') +
+              (error instanceof Error ? error.message : String(error))
       );
     } finally {
       setLoading(false);
@@ -472,17 +481,19 @@ export default function HoroscopeResultPage() {
         language: horoscopeData.language,
       };
 
-      const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
       const fileName = `palan_${horoscopeData.birth_details.name.replace(/\s+/g, '_')}.pdf`;
 
       if (Platform.OS === 'web') {
-        const response = await fetch(`${backendUrl}/api/generate-palan-pdf`, {
+        const response = await fetchApi('/api/generate-palan-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
         });
 
-        if (!response.ok) throw new Error('Failed to generate Palan PDF');
+        if (!response.ok) {
+          const detail = await extractErrorDetail(response);
+          throw new Error(detail || 'Failed to generate Palan PDF');
+        }
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -506,13 +517,16 @@ export default function HoroscopeResultPage() {
 
         const fileUri = FileSystem.documentDirectory + fileName;
 
-        const response = await fetch(`${backendUrl}/api/generate-palan-pdf`, {
+        const response = await fetchApi('/api/generate-palan-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
         });
 
-        if (!response.ok) throw new Error(`Failed to generate Palan PDF: ${response.status}`);
+        if (!response.ok) {
+          const detail = await extractErrorDetail(response);
+          throw new Error(detail || `Failed to generate Palan PDF: ${response.status}`);
+        }
 
         const blob = await response.blob();
         const reader = new (FileReader as any)();
@@ -544,8 +558,10 @@ export default function HoroscopeResultPage() {
       console.error('Error generating Palan PDF:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('பலன் PDF உருவாக்குவதில் பிழை: ', 'Error generating Palan PDF: ') +
-          (error instanceof Error ? error.message : String(error))
+        isAbortError(error)
+          ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+          : getText('பலன் PDF உருவாக்குவதில் பிழை: ', 'Error generating Palan PDF: ') +
+              (error instanceof Error ? error.message : String(error))
       );
     } finally {
       setLoading(false);

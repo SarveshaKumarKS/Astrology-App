@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import { ApiError, fetchJson, isAbortError } from './api';
 
 interface BirthDetails {
   name: string;
@@ -126,12 +127,8 @@ export default function CompatibilityPage() {
     setLoading(true);
     
     try {
-      const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/compatibility`, {
+      const result = await fetchJson<any>('/api/compatibility', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           male_details: {
             name: maleDetails.name,
@@ -157,31 +154,36 @@ export default function CompatibilityPage() {
           language: language,
         }),
       });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        Alert.alert(
-          getText('வெற்றி', 'Success'),
-          getText(`பொருத்தம் ${result.percentage.toFixed(1)}% - ${result.overall_rating_tamil || result.overall_rating}`, 
-                 `Compatibility ${result.percentage.toFixed(1)}% - ${result.overall_rating}`),
-          [
-            {
-              text: getText('சரி', 'OK'),
-              onPress: () => {
-                console.log('Compatibility result:', result);
-              }
-            }
-          ]
-        );
-      } else {
-        throw new Error(result.detail || 'Failed to check compatibility');
-      }
+      Alert.alert(
+        getText('வெற்றி', 'Success'),
+        getText(
+          `பொருத்தம் ${result.percentage.toFixed(1)}% - ${result.overall_rating_tamil || result.overall_rating}`,
+          `Compatibility ${result.percentage.toFixed(1)}% - ${result.overall_rating}`
+        ),
+        [
+          {
+            text: getText('சரி', 'OK'),
+            onPress: () => {
+              console.log('Compatibility result:', result);
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error('Error checking compatibility:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('பொருத்தம் சரிபார்க்கும்போது பிழை ஏற்பட்டது', 'Error occurred while checking compatibility')
+        error instanceof ApiError
+          ? getText(
+              error.detail || 'சேவையக பிழை ஏற்பட்டது',
+              error.detail || 'Server error'
+            )
+          : isAbortError(error)
+            ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+            : getText(
+                'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+                'Network/server error. Please try again.'
+              )
       );
     } finally {
       setLoading(false);

@@ -32,6 +32,8 @@ api_router = APIRouter(prefix="/api")
 # Astrology System Models
 class BirthDetailsInput(BaseModel):
     name: str
+    mother_name: Optional[str] = None
+    father_name: Optional[str] = None
     date_of_birth: date
     time_of_birth: time
     place_of_birth: str
@@ -78,6 +80,8 @@ async def generate_horoscope(request: HoroscopeRequest):
         # Convert request to internal format
         birth_details = BirthDetails(
             name=request.birth_details.name,
+            mother_name=request.birth_details.mother_name,
+            father_name=request.birth_details.father_name,
             date_of_birth=request.birth_details.date_of_birth,
             time_of_birth=request.birth_details.time_of_birth,
             place_of_birth=request.birth_details.place_of_birth,
@@ -166,6 +170,8 @@ async def generate_pdf(request: HoroscopeRequest):
         # Convert request to internal format
         birth_details = BirthDetails(
             name=request.birth_details.name,
+            mother_name=request.birth_details.mother_name,
+            father_name=request.birth_details.father_name,
             date_of_birth=request.birth_details.date_of_birth,
             time_of_birth=request.birth_details.time_of_birth,
             place_of_birth=request.birth_details.place_of_birth,
@@ -295,6 +301,8 @@ async def check_compatibility(request: CompatibilityRequest):
         # Convert request to internal format
         male_details = BirthDetails(
             name=request.male_details.name,
+            mother_name=request.male_details.mother_name,
+            father_name=request.male_details.father_name,
             date_of_birth=request.male_details.date_of_birth,
             time_of_birth=request.male_details.time_of_birth,
             place_of_birth=request.male_details.place_of_birth,
@@ -306,6 +314,8 @@ async def check_compatibility(request: CompatibilityRequest):
         
         female_details = BirthDetails(
             name=request.female_details.name,
+            mother_name=request.female_details.mother_name,
+            father_name=request.female_details.father_name,
             date_of_birth=request.female_details.date_of_birth,
             time_of_birth=request.female_details.time_of_birth,
             place_of_birth=request.female_details.place_of_birth,

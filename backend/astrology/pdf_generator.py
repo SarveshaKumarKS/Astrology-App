@@ -558,7 +558,8 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     # Build values
     mother_name = getattr(horoscope_result.birth_details, 'mother_name', None) or "N/A"
     father_name = getattr(horoscope_result.birth_details, 'father_name', None) or "N/A"
-    paksha = getattr(horoscope_result, 'paksha', None) or "N/A"
+    paksha_ta = getattr(horoscope_result, 'paksha_tamil', None)
+    paksha = paksha_ta or getattr(horoscope_result, 'paksha', None) or "N/A"
     tithi_tamil = getattr(horoscope_result, 'tithi_tamil', None) or "N/A"
     
     # Build Tamil date
@@ -566,10 +567,14 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     tamil_month = getattr(horoscope_result, 'tamil_month', None)
     tamil_day = getattr(horoscope_result, 'tamil_day', None)
     tamil_year = getattr(horoscope_result, 'tamil_year', None)
+    tamil_year_name = getattr(horoscope_result, 'tamil_year_name', None)
     if tamil_month and tamil_day:
-        tamil_date_str = f"{tamil_month} {tamil_day}"
-        if tamil_year:
-            tamil_date_str += f", {tamil_year}"
+        if tamil_year_name:
+            tamil_date_str = f"{tamil_month} {tamil_day}, {tamil_year_name}"
+        elif tamil_year:
+            tamil_date_str = f"{tamil_month} {tamil_day}, {tamil_year}"
+        else:
+            tamil_date_str = f"{tamil_month} {tamil_day}"
     
     left_vals = [
         tamil_image_flowable(horoscope_result.birth_details.name, font_size=10),

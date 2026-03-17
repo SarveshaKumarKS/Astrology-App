@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import { ApiError, fetchJson, isAbortError } from './api';
 
 interface PanchangamData {
   date: string;
@@ -72,20 +73,25 @@ export default function PanchangamPage() {
   const loadPanchangam = async (date: Date = selectedDate) => {
     try {
       const dateString = date.toISOString().split('T')[0];
-      const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/panchangam/${dateString}?language=${language}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setPanchangamData(data);
-      } else {
-        throw new Error(data.detail || 'Failed to load panchangam');
-      }
+      const data = await fetchJson<PanchangamData>(`/api/panchangam/${dateString}?language=${language}`, {
+        method: 'GET',
+      });
+      setPanchangamData(data);
     } catch (error) {
       console.error('Error loading panchangam:', error);
       Alert.alert(
         getText('பிழை', 'Error'),
-        getText('பஞ்சாங்கத்தை ஏற்றுவதில் பிழை', 'Error loading panchangam')
+        error instanceof ApiError
+          ? getText(
+              error.detail || 'சேவையக பிழை ஏற்பட்டது',
+              error.detail || 'Server error'
+            )
+          : isAbortError(error)
+            ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
+            : getText(
+                'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+                'Network/server error. Please try again.'
+              )
       );
     } finally {
       setLoading(false);
