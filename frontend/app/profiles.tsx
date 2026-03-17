@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ApiError, fetchJson, fetchApi, isAbortError } from './api';
+import { ApiError, fetchJson, fetchApi, isAbortError } from '../lib/api';
 
 interface UserProfile {
   id: string;

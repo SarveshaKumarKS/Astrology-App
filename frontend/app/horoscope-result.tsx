@@ -16,7 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import SouthIndianChart from '../components/SouthIndianChart';
-import { fetchApi, isAbortError } from './api';
+import { fetchApi, isAbortError } from '../lib/api';
 
 interface PlanetaryPosition {
   planet: string;

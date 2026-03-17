@@ -17,7 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { ApiError, fetchJson, isAbortError } from './api';
+import { ApiError, fetchJson, isAbortError } from '../lib/api';
 
 interface BirthDetails {
   name: string;
