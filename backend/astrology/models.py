@@ -104,7 +104,6 @@ class HoroscopeResult(BaseModel):
     sunrise_time: Optional[str] = None
     sunset_time: Optional[str] = None
     paksha: Optional[str] = None  # Krishna/Shukla
-    paksha_tamil: Optional[str] = None
     tithi: Optional[str] = None
     tithi_tamil: Optional[str] = None
     yoga: Optional[str] = None
@@ -115,7 +114,6 @@ class HoroscopeResult(BaseModel):
     tamil_month: Optional[str] = None
     tamil_day: Optional[int] = None
     tamil_year: Optional[int] = None
-    tamil_year_name: Optional[str] = None
     udayadi_nazhigai: Optional[str] = None
     yogi_planet: Optional[str] = None
     yogi_planet_tamil: Optional[str] = None

@@ -553,16 +553,15 @@ class AstronomicalCalculations:
         
         # Get sunrise and sunset times
         try:
-            # Correct PySwissEph signature: (tjdut, body, rsmi, geopos)
-            sunrise_jd = swe.rise_trans(jd_midnight, swe.SUN, 1, (longitude, latitude, 0.0))[1][0]
-            sunset_jd = swe.rise_trans(jd_midnight, swe.SUN, 2, (longitude, latitude, 0.0))[1][0]
+            sunrise_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=1)[1][0]
+            sunset_jd = swe.rise_trans(jd_midnight, swe.SUN, longitude, latitude, rsmi=2)[1][0]
             
             # Convert JD to time
             sunrise_tuple = swe.revjul(sunrise_jd + timezone_offset/24.0)
             sunset_tuple = swe.revjul(sunset_jd + timezone_offset/24.0)
             
-            sunrise_time = f"{int(sunrise_tuple[3]):02d}:{int((sunrise_tuple[3] % 1) * 60):02d}"
-            sunset_time = f"{int(sunset_tuple[3]):02d}:{int((sunset_tuple[3] % 1) * 60):02d}"
+            sunrise_time = f"{int(sunrise_tuple[3])}:{int((sunrise_tuple[3] % 1) * 60):02d}"
+            sunset_time = f"{int(sunset_tuple[3])}:{int((sunset_tuple[3] % 1) * 60):02d}"
         except:
             sunrise_time = "06:00"
             sunset_time = "18:00"
@@ -647,86 +646,27 @@ class AstronomicalCalculations:
             ayanamsa_deg = swe.get_ayanamsa_ut(jd)
         ayanamsa = f"{int(ayanamsa_deg)}° {int((ayanamsa_deg % 1) * 60)}'"
         
-        # === Tamil date (solar calendar, approximate but sign-based) ===
-        # Tamil solar month is based on Sun's sidereal sign at sunrise.
+        # Calculate Tamil date (approximate conversion)
+        # Tamil months based on solar transit
         tamil_months = [
-            "சித்திரை",  # Mesha
-            "வைகாசி",   # Vrishabha
-            "ஆனி",      # Mithuna
-            "ஆடி",      # Kataka
-            "ஆவணி",    # Simha
-            "புரட்டாசி", # Kanya
-            "ஐப்பசி",    # Tula
-            "கார்த்திகை",# Vrischika
-            "மார்கழி",  # Dhanu
-            "தை",       # Makara
-            "மாசி",     # Kumbha
-            "பங்குனி"   # Meena
+            "தை", "மாசி", "பங்குனி", "சித்திரை", "வைகாசி", "ஆனி",
+            "ஆடி", "ஆவணி", "புரட்டாசி", "ஐப்பசி", "கார்த்திகை", "மார்கழி"
         ]
-
-        # Compute Sun sidereal longitude at sunrise to determine month
-        try:
-            # sunrise_tuple computed earlier when sunrise_time was calculated
-            # We reconstruct sunrise local time from sunrise_time string.
-            sr_parts = sunrise_time.split(':')
-            sr_hour = int(sr_parts[0])
-            sr_min = int(sr_parts[1]) if len(sr_parts) > 1 else 0
-            from datetime import time as dt_time
-            sr_dt_local = datetime.combine(birth_date, dt_time(sr_hour, sr_min, 0))
-            sr_dt_utc = sr_dt_local - timedelta(hours=timezone_offset)
-            sr_jd = swe.julday(sr_dt_utc.year, sr_dt_utc.month, sr_dt_utc.day,
-                               sr_dt_utc.hour + sr_dt_utc.minute / 60.0)
-
-            if sun_longitude is not None and ayanamsa_value is not None:
-                # Use provided Vakkiam longitudes/ayanamsa for consistency
-                sun_lon_sidereal = sun_longitude % 360.0
-            else:
-                # Thirukkanitham: use Swiss Ephemeris sidereal Sun
-                sun_lon_tropical = swe.calc_ut(sr_jd, swe.SUN)[0][0]
-                if ayanamsa_value is not None:
-                    ayanamsa_deg = ayanamsa_value
-                else:
-                    ayanamsa_deg = swe.get_ayanamsa_ut(sr_jd)
-                sun_lon_sidereal = (sun_lon_tropical - ayanamsa_deg) % 360.0
-
-            tamil_sign_index = int(sun_lon_sidereal // 30)  # 0..11
-            tamil_month = tamil_months[tamil_sign_index]
-            # Tamil day: days since solar ingress (approximate)
-            tamil_day = int(sun_lon_sidereal % 30.0) + 1
-        except Exception:
-            # Fallback: simple mapping from Gregorian month
-            gregorian_month = birth_date.month
-            approx_idx = (gregorian_month + 2) % 12
-            tamil_month = tamil_months[approx_idx]
-            tamil_day = birth_date.day
-
-        # Tamil year name (60-year cycle, approximate; Chithirai-based year boundary)
-        tamil_year = birth_date.year
-        # If before approx. Chithirai 14 (mid-April), treat as previous Tamil year
-        if birth_date.month < 4 or (birth_date.month == 4 and birth_date.day < 14):
-            tamil_year -= 1
-
-        tamil_year_names = [
-            "பிரபவ", "விபவ", "சுக்கில", "பிரமோதூத", "பிரமாதி", "விக்ரம", "விஷு",
-            "சித்திரபானு", "சுபானு", "தாரண", "பார்த்திப", "விய", "சார்வரி", "பிளவ",
-            "சுபகிருது", "சோபகிருது", "குரோதி", "விசுவாவசு", "பராபவ", "பிலவங்க",
-            "கீலக", "சௌம்ய", "சாதாரண", "விரோதிகிருதி", "பரிதாபி", "பிரமாதீச", "ஆனந்த",
-            "ராக்ஷச", "நள", "பிங்கள", "காளயுக்தி", "ஸித்தார்த்தி", "ரௌத்திரி", "துன்மதி",
-            "துந்துபி", "ருத்ரோத்காரி", "ராக்தாக்ஷி", "க்ரோதன", "அக்ஷய", "ப்லவங்க",
-            "கீலக", "சௌம்ய", "சாதாரண", "விரோதிகிருதி", "பரிதாபி", "பிரமாதீச", "ஆனந்த",
-            "ராக்ஷச", "நள", "பிங்கள", "காளயுக்தி", "ஸித்தார்த்தி", "ரௌத்திரி", "துன்மதி",
-            "துந்துபி", "ருத்ரோத்காரி", "ராக்தாக்ஷி", "க்ரோதன"
-        ]
-        # Anchor: 1987-04-14 approx. as first name in list (Prabhava-like start)
-        base_year = 1987
-        idx = (tamil_year - base_year) % 60
-        tamil_year_name = tamil_year_names[idx]
+        
+        # Simple approximation: Tamil month roughly corresponds to solar month
+        # Chithirai (April-May) is month 1 of Tamil calendar
+        gregorian_month = birth_date.month
+        tamil_month_idx = (gregorian_month + 8) % 12  # Rough approximation
+        tamil_month = tamil_months[tamil_month_idx]
+        
+        # Tamil year calculation (Kali year - approximate)
+        tamil_year = birth_date.year + 3101 - 1970  # Approximate Kali era year
+        tamil_day = birth_date.day
         
         return {
             'sunrise_time': sunrise_time,
             'sunset_time': sunset_time,
             'paksha': paksha,
-            'paksha_tamil': paksha_tamil,
             'tithi': tithi,
             'tithi_tamil': tithi_tamil,
             'yoga': yoga,
@@ -737,6 +677,5 @@ class AstronomicalCalculations:
             'udayadi_nazhigai': udayadi_nazhigai,
             'tamil_month': tamil_month,
             'tamil_day': tamil_day,
-            'tamil_year': tamil_year,
-            'tamil_year_name': tamil_year_name
+            'tamil_year': tamil_year
         }
