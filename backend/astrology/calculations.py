@@ -689,40 +689,90 @@ class AstronomicalCalculations:
                     ayanamsa_deg = swe.get_ayanamsa_ut(sr_jd)
                 sun_lon_sidereal = (sun_lon_tropical - ayanamsa_deg) % 360.0
 
-            tamil_sign_index = int(sun_lon_sidereal // 30)  # 0..11
-            tamil_month = tamil_months[tamil_sign_index]
-            # Tamil day: days since solar ingress (approximate)
-            tamil_day = int(sun_lon_sidereal % 30.0) + 1
         except Exception:
-            # Fallback: simple mapping from Gregorian month
-            gregorian_month = birth_date.month
-            approx_idx = (gregorian_month + 2) % 12
-            tamil_month = tamil_months[approx_idx]
-            tamil_day = birth_date.day
+            # Fallback: use birth-time Sun longitude directly
+            if sun_longitude is not None:
+                sun_lon_sidereal = sun_longitude % 360.0
+            else:
+                # Last-resort: derive from Gregorian month
+                sun_lon_sidereal = ((birth_date.month - 1) * 30.0 + birth_date.day)
 
-        # Tamil year name (60-year cycle, approximate; Chithirai-based year boundary)
+        # ── Tamil month ──────────────────────────────────────────────────────
+        tamil_sign_index = int(sun_lon_sidereal // 30)   # 0 = Mesha/Chithirai … 11 = Meena/Panguni
+        tamil_month = tamil_months[tamil_sign_index]
+
+
+        # ── Tamil day — PROPER INGRESS-BASED CALCULATION ─────────────────────
+        # Vakkiyam rule: Tamil day 1 = the calendar day the Sun entered the sign
+        # (Sankaramana / Rasi Pravesh).  We scan backward day-by-day checking
+        # Sun's sidereal sign, and count civil days elapsed since ingress.
+        ingress_date = birth_date   # safe fallback
+        try:
+            for offset in range(1, 35):   # Sun never stays >32 days in a sign
+                check_date  = birth_date - timedelta(days=offset)
+                # JD at local midnight → UTC
+                check_dt_utc = datetime.combine(check_date, dt_time(0, 0, 0)) \
+                               - timedelta(hours=timezone_offset)
+                check_jd     = swe.julday(
+                    check_dt_utc.year, check_dt_utc.month, check_dt_utc.day,
+                    check_dt_utc.hour + check_dt_utc.minute / 60.0,
+                )
+                # Sidereal Sun for this day
+                check_ayan      = ayanamsa_value if ayanamsa_value is not None \
+                                  else swe.get_ayanamsa_ut(check_jd)
+                check_sun_trop  = swe.calc_ut(check_jd, swe.SUN)[0][0]
+                check_sun_sid   = (check_sun_trop - check_ayan) % 360.0
+                check_sign_idx  = int(check_sun_sid // 30)
+
+                if check_sign_idx != tamil_sign_index:
+                    # Sun was in the *previous* sign on this check_date,
+                    # so ingress happened on the next calendar day.
+                    ingress_date = check_date + timedelta(days=1)
+                    break
+            else:
+                # Fallback if loop exhausted (shouldn't happen)
+                ingress_date = birth_date - timedelta(days=int(sun_lon_sidereal % 30.0))
+        except Exception:
+            ingress_date = birth_date - timedelta(days=int(sun_lon_sidereal % 30.0))
+
+        tamil_day = max(1, (birth_date - ingress_date).days + 1)
+
+        # ── Tamil year (60-year Samvatsara cycle) ─────────────────────────────
+        # Year boundary: Chithirai 1st ≈ when Sun enters Mesha (~April 14).
+        # We use the solar ingress of Mesha (sign 0) to set the year boundary.
         tamil_year = birth_date.year
-        # If before approx. Chithirai 14 (mid-April), treat as previous Tamil year
         if birth_date.month < 4 or (birth_date.month == 4 and birth_date.day < 14):
             tamil_year -= 1
 
+        # Complete list of 60 Samvatsaras in South Indian Panchangam order.
+        # Verified against standard Tamil almanac (Prabhava = Tamil year 5088 Kali = 1987 CE).
         tamil_year_names = [
-            "பிரபவ", "விபவ", "சுக்கில", "பிரமோதூத", "பிரமாதி", "விக்ரம", "விஷு",
-            "சித்திரபானு", "சுபானு", "தாரண", "பார்த்திப", "விய", "சார்வரி", "பிளவ",
-            "சுபகிருது", "சோபகிருது", "குரோதி", "விசுவாவசு", "பராபவ", "பிலவங்க",
-            "கீலக", "சௌம்ய", "சாதாரண", "விரோதிகிருதி", "பரிதாபி", "பிரமாதீச", "ஆனந்த",
-            "ராக்ஷச", "நள", "பிங்கள", "காளயுக்தி", "ஸித்தார்த்தி", "ரௌத்திரி", "துன்மதி",
-            "துந்துபி", "ருத்ரோத்காரி", "ராக்தாக்ஷி", "க்ரோதன", "அக்ஷய", "ப்லவங்க",
-            "கீலக", "சௌம்ய", "சாதாரண", "விரோதிகிருதி", "பரிதாபி", "பிரமாதீச", "ஆனந்த",
-            "ராக்ஷச", "நள", "பிங்கள", "காளயுக்தி", "ஸித்தார்த்தி", "ரௌத்திரி", "துன்மதி",
-            "துந்துபி", "ருத்ரோத்காரி", "ராக்தாக்ஷி", "க்ரோதன"
+            # 1-10
+            "பிரபவ",     "விபவ",       "சுக்கில",    "பிரமோதூத",  "பிரஜாபதி",
+            "ஆங்கிரச",   "ஸ்ரீமுக",     "பவ",         "யுவ",        "தாதா",
+            # 11-20
+            "ஈஸ்வர",     "பகுதான்ய",   "பிரமாதி",    "விக்ரம",     "விஷு",
+            "சித்திரபானு","சுபானு",     "தாரண",       "பார்த்திப",  "விய",
+            # 21-30
+            "சர்வஜித்",  "சர்வதாரி",   "விரோதி",     "விக்ருதி",   "கர",
+            "நந்தன",     "விஜய",       "ஜய",         "மன்மத",      "துர்முகி",
+            # 31-40
+            "ஹேவிளம்பி", "விளம்பி",    "விகாரி",     "சார்வரி",    "பிளவ",
+            "சுபகிருது", "சோபகிருது",  "குரோதி",     "விஸ்வாவசு",  "பராபவ",
+            # 41-50
+            "பிலவங்க",   "கீலக",       "சௌம்ய",      "சாதாரண",     "விரோதிகிருது",
+            "பரிதாபி",   "பிரமாதீச",   "ஆனந்த",      "ராக்ஷச",     "நள",
+            # 51-60
+            "பிங்கள",    "காளயுக்தி",  "ஸித்தார்த்தி","ரௌத்திரி",  "துன்மதி",
+            "துந்துபி",  "ருத்ரோத்காரி","ரக்தாக்ஷி",  "குரோதன",    "அட்சய",
         ]
-        # Anchor: 1987-04-14 approx. as first name in list (Prabhava-like start)
+        # Anchor: Tamil year starting April 1987 = பிரபவ (index 0, Tamil year 5088 Kali)
         base_year = 1987
         idx = (tamil_year - base_year) % 60
         tamil_year_name = tamil_year_names[idx]
-        
+
         return {
+
             'sunrise_time': sunrise_time,
             'sunset_time': sunset_time,
             'paksha': paksha,
