@@ -202,13 +202,17 @@ def render_tamil_to_png(
         text_w = int(len(text) * font_size * 0.6)
         text_h = font_size
 
-    img_w = max(int(text_w) + 2 * padding, 1)
-    img_h = max(int(text_h) + 2 * padding, 1)
+    # Add 2px per side to accommodate stroke without clipping
+    stroke_px = 1
+    img_w = max(int(text_w) + 2 * padding + 2 * stroke_px, 1)
+    img_h = max(int(text_h) + 2 * padding + 2 * stroke_px, 1)
 
     img  = Image.new("RGBA", (img_w, img_h), bg_color)
     draw = ImageDraw.Draw(img)
     if font:
-        draw.text((padding, padding), text, font=font, fill=text_color)
+        # stroke_width=1 gives Tamil glyphs the same visual weight as numbers
+        draw.text((padding, padding), text, font=font, fill=text_color,
+                  stroke_width=stroke_px, stroke_fill=text_color)
     else:
         draw.text((padding, padding), text, fill=text_color)
 
@@ -289,11 +293,11 @@ def draw_header() -> Table:
     # ── Centre column: shloka (two lines) ────────────────────────────────────
     verse1 = tamil_image_flowable(
         "ஜனனீ ஜன்ம ஸௌக்யானாம் வர்த்தனீ குல ஸம்பதாம்",
-        font_size=13, max_width=4.3 * inch, text_color=PIL_TEXT_NAVY,
+        font_size=15, max_width=4.3 * inch, text_color=PIL_TEXT_NAVY,
     )
     verse2 = tamil_image_flowable(
         "புத்ரீ பூர்வ புண்யானாம் விக்யேத ஜன்ம பத்ரிகா.",
-        font_size=13, max_width=4.3 * inch, text_color=PIL_TEXT_NAVY,
+        font_size=15, max_width=4.3 * inch, text_color=PIL_TEXT_NAVY,
     )
     centre_inner = Table([[verse1], [verse2]], colWidths=[4.3 * inch])
     centre_inner.setStyle(TableStyle([
@@ -572,15 +576,15 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
 
     # ── 1. Divine Header ──────────────────────────────────────────────────────
     story.append(draw_header())
-    story.append(Spacer(1, 0.03 * inch))
+    story.append(Spacer(1, 0.02 * inch))
 
     # ── 2. Personal Details ───────────────────────────────────────────────────
     # Helper: right-aligned label image
-    def lbl(text, size=9):
+    def lbl(text, size=10):
         return tamil_image_flowable(text, font_size=size, is_bold=True,
                                     text_color=PIL_TEXT_NAVY)
 
-    # Helper: value image (slightly smaller)
+    # Helper: value image
     def val(text, size=10):
         return tamil_image_flowable(text, font_size=size,
                                     text_color=PIL_TEXT_NAVY)
@@ -666,17 +670,18 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         # Comfortable padding (gutter between label and value)
         ('LEFTPADDING',   (0, 0), (-1, -1), 4),
         ('RIGHTPADDING',  (0, 0), (-1, -1), 4),
-        ('TOPPADDING',    (0, 0), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING',    (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
     ]))
     story.append(personal_table)
-    story.append(Spacer(1, 0.02 * inch))
+    story.append(Spacer(1, 0.01 * inch))
 
     # ── 3. Planetary Positions Matrix ─────────────────────────────────────────
     # Column widths defined once — used for both the Table and max_width capping
     # so PIL images can NEVER be wider than their cell (prevents left-clipping).
-    PCOL = [1.05 * inch, 1.1 * inch, 1.55 * inch,
-            0.65 * inch, 1.4 * inch, 1.25 * inch]
+    # Cols sum to ~7.0in: wide enough for நட்சத்திரம் (longest header)
+    PCOL = [1.0 * inch, 1.0 * inch, 1.6 * inch,
+            0.6 * inch, 1.35 * inch, 1.2 * inch]
     PAD_CELL = 8  # left+right padding in points (4 each side)
 
     def hdr(text, col_idx):
@@ -746,11 +751,11 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         # ── Breathing room ──
         ('LEFTPADDING',   (0, 0), (-1, -1), 4),
         ('RIGHTPADDING',  (0, 0), (-1, -1), 4),
-        ('TOPPADDING',    (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING',    (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(planet_table)
-    story.append(Spacer(1, 0.02 * inch))
+    story.append(Spacer(1, 0.01 * inch))
 
     # ── 4. Astrological Charts ────────────────────────────────────────────────
     rasi_houses    = {}
@@ -774,7 +779,7 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
     for hn in sorted(rasi_houses):    print(f"  House {hn:2d}: {rasi_houses[hn]}")
     print("="*60 + "\n")
 
-    CHART_SIZE = 2.7 * inch   # balanced — readable at 300 DPI, fits on one page
+    CHART_SIZE = 3.0 * inch   # large enough to command the space, fits on one page
 
     rasi_img    = draw_south_indian_chart_exact(rasi_houses,    "ராசி",     width=CHART_SIZE, height=CHART_SIZE)
     navamsa_img = draw_south_indian_chart_exact(navamsa_houses, "நவாம்சம்", width=CHART_SIZE, height=CHART_SIZE)
@@ -790,7 +795,7 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
     story.append(chart_table)
-    story.append(Spacer(1, 0.04 * inch))
+    story.append(Spacer(1, 0.02 * inch))
 
     # ── 5. The Path Ahead — Dasa / Bhukti Footer ─────────────────────────────
     if horoscope_result.current_dasa:
@@ -798,14 +803,14 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
 
         # Render dasa text with white color (transparent bg) so it sits cleanly
         # on the TEXT_NAVY table-cell background drawn by ReportLab.
-        def dasa_img(text, size=12):
+        def dasa_img(text, size=14):
             return tamil_image_flowable(text, font_size=size, max_width=6.8 * inch,
                                         text_color=PIL_WHITE_TEXT)
 
         dasa_rows = []
 
         # Title row
-        dasa_rows.append([dasa_img("தசா காலங்கள்", size=13)])
+        dasa_rows.append([dasa_img("தசா காலங்கள்", size=16)])
 
         # Retrograde
         retro = horoscope_result.retrograde_planets_tamil or []
@@ -868,8 +873,8 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
                 ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
                 ('LEFTPADDING',   (0, 0), (-1, -1), 8),
                 ('RIGHTPADDING',  (0, 0), (-1, -1), 6),
-                ('TOPPADDING',    (0, 0), (-1, -1), 4),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING',    (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
                 # ACCENT_GOLD 1.5pt outer box border
                 ('BOX',        (0, 0), (-1, -1), 1.5, ACCENT_GOLD),
             ]
