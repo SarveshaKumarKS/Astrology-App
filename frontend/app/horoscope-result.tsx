@@ -89,6 +89,11 @@ interface HoroscopeData {
   planetary_positions: PlanetaryPosition[];
   rasi_chart: Chart;
   navamsa_chart: Chart;
+  karu_udayam_rasi_chart?: Chart;
+  karu_udayam_date_of_birth?: string;
+  karu_udayam_tamil_month?: string;
+  karu_udayam_tamil_day?: number;
+  karu_udayam_approx_diff_days?: number;
   dasa_periods: DasaPeriod[];
   current_dasa: DasaPeriod;
   // Extended fields
@@ -622,6 +627,11 @@ export default function HoroscopeResultPage() {
           horoscopeData.navamsa_chart, 
           'Navamsa Chart', 
           'நவாம்ச கட்டம்'
+        )}
+        {horoscopeData.karu_udayam_rasi_chart && renderChart(
+          horoscopeData.karu_udayam_rasi_chart,
+          'Karu Udayam Rasi Chart',
+          'கரு உதயம் ராசி கட்டம்'
         )}
         {renderDasaPeriods()}
       </ScrollView>

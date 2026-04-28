@@ -127,9 +127,19 @@ class HoroscopeResult(BaseModel):
     bhava_change_tamil: Optional[str] = None  # பாவக மாற்றம்
     dasa_balance_tamil: Optional[str] = None  # திசை இருப்பு
     current_dasa_bhukthi_tamil: Optional[str] = None  # நடப்பு திசை புத்தி
+    # Karu Udayam derived chart fields
+    karu_udayam_rasi_chart: Optional[Chart] = None
+    karu_udayam_date_of_birth: Optional[date] = None
+    karu_udayam_tamil_month: Optional[str] = None
+    karu_udayam_tamil_day: Optional[int] = None
+    karu_udayam_approx_diff_days: Optional[int] = None
     
     @field_serializer('generated_at', when_used='json')
     def serialize_datetime(self, value):
+        return value.isoformat() if value else None
+
+    @field_serializer('karu_udayam_date_of_birth', when_used='json')
+    def serialize_karu_udayam_date(self, value):
         return value.isoformat() if value else None
 
 class CompatibilityFactor(BaseModel):

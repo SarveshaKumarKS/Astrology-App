@@ -14,6 +14,11 @@ from astrology.thirukkanitham_system import ThirukkanithamCalculator
 from astrology.models import BirthDetails, HoroscopeResult, CompatibilityResult
 from astrology.nkv_palan import compute_nkv_context, generate_nkv_predictions
 from astrology.palan_pdf_generator import generate_palan_pdf
+from astrology.karu_udayam import (
+    get_karu_udayam_tamil_date,
+    resolve_karu_udayam_gregorian_date,
+    strip_lagnam_from_chart,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -101,6 +106,41 @@ async def generate_horoscope(request: HoroscopeRequest):
         
         # Generate horoscope
         horoscope = calculator.generate_horoscope(birth_details, request.language)
+
+        # Generate Karu Udayam (derived) Raasi chart from lookup table
+        try:
+            if horoscope.tamil_month and horoscope.tamil_day:
+                karu_tamil = get_karu_udayam_tamil_date(horoscope.tamil_month, horoscope.tamil_day)
+                if karu_tamil:
+                    karu_month, karu_day = karu_tamil
+                    karu_gregorian = resolve_karu_udayam_gregorian_date(
+                        calculator,
+                        birth_details,
+                        karu_month,
+                        karu_day,
+                    )
+                    if karu_gregorian:
+                        karu_date, diff_days = karu_gregorian
+                        karu_birth_details = BirthDetails(
+                            name=birth_details.name,
+                            mother_name=birth_details.mother_name,
+                            father_name=birth_details.father_name,
+                            date_of_birth=karu_date,
+                            time_of_birth=birth_details.time_of_birth,
+                            place_of_birth=birth_details.place_of_birth,
+                            latitude=birth_details.latitude,
+                            longitude=birth_details.longitude,
+                            timezone=birth_details.timezone,
+                            time_correction=birth_details.time_correction,
+                        )
+                        karu_horoscope = calculator.generate_horoscope(karu_birth_details, request.language)
+                        horoscope.karu_udayam_rasi_chart = strip_lagnam_from_chart(karu_horoscope.rasi_chart)
+                        horoscope.karu_udayam_date_of_birth = karu_date
+                        horoscope.karu_udayam_tamil_month = karu_month
+                        horoscope.karu_udayam_tamil_day = karu_day
+                        horoscope.karu_udayam_approx_diff_days = diff_days
+        except Exception as e:
+            logging.warning(f"Karu Udayam chart generation skipped: {str(e)}")
         
         # Save to database
         horoscope_dict = horoscope.dict()
@@ -134,6 +174,8 @@ async def generate_horoscope(request: HoroscopeRequest):
                 horoscope_dict['current_dasa']['current_bhukti_end_date'] = str(horoscope_dict['current_dasa']['current_bhukti_end_date'])
             if 'next_bhukti_end_date' in horoscope_dict['current_dasa'] and horoscope_dict['current_dasa']['next_bhukti_end_date']:
                 horoscope_dict['current_dasa']['next_bhukti_end_date'] = str(horoscope_dict['current_dasa']['next_bhukti_end_date'])
+        if 'karu_udayam_date_of_birth' in horoscope_dict and horoscope_dict['karu_udayam_date_of_birth']:
+            horoscope_dict['karu_udayam_date_of_birth'] = str(horoscope_dict['karu_udayam_date_of_birth'])
         
         # Convert chart house keys from integers to strings for MongoDB
         if 'rasi_chart' in horoscope_dict and 'houses' in horoscope_dict['rasi_chart']:
@@ -144,6 +186,15 @@ async def generate_horoscope(request: HoroscopeRequest):
             horoscope_dict['navamsa_chart']['houses'] = {str(k): v for k, v in horoscope_dict['navamsa_chart']['houses'].items()}
         if 'navamsa_chart' in horoscope_dict and 'houses_tamil' in horoscope_dict['navamsa_chart']:
             horoscope_dict['navamsa_chart']['houses_tamil'] = {str(k): v for k, v in horoscope_dict['navamsa_chart']['houses_tamil'].items()}
+        if 'karu_udayam_rasi_chart' in horoscope_dict and horoscope_dict['karu_udayam_rasi_chart']:
+            if 'houses' in horoscope_dict['karu_udayam_rasi_chart']:
+                horoscope_dict['karu_udayam_rasi_chart']['houses'] = {
+                    str(k): v for k, v in horoscope_dict['karu_udayam_rasi_chart']['houses'].items()
+                }
+            if 'houses_tamil' in horoscope_dict['karu_udayam_rasi_chart']:
+                horoscope_dict['karu_udayam_rasi_chart']['houses_tamil'] = {
+                    str(k): v for k, v in horoscope_dict['karu_udayam_rasi_chart']['houses_tamil'].items()
+                }
         
         await db.horoscopes.insert_one(horoscope_dict)
         
