@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 _LOOKUP_PATH = Path(__file__).parent / "data" / "karu_udayam_lookup.json"
 _OFFSET_DAYS = 300
-_SEARCH_WINDOW_DAYS = 90
+_MAX_BACKWARD_SEARCH_DAYS = 420
 
 _MONTH_ALIASES = {
     "chithirai": "சித்திரை",
@@ -117,33 +117,29 @@ def get_karu_udayam_tamil_date(birth_tamil_month: str, birth_tamil_day: int) -> 
     return LOOKUP_BY_BIRTH.get((month, int(birth_tamil_day)))
 
 
-def resolve_karu_udayam_gregorian_date(calculator, birth_details: BirthDetails, karu_tamil_month: str, karu_tamil_day: int) -> Optional[Tuple[date, int]]:
+def resolve_karu_udayam_gregorian_date(
+    calculator,
+    birth_details: BirthDetails,
+    karu_tamil_month: str,
+    karu_tamil_day: int,
+) -> Optional[Tuple[date, int]]:
     tz_offset = calculator._parse_timezone(birth_details.timezone)
-    target_offset_date = birth_details.date_of_birth - timedelta(days=_OFFSET_DAYS)
-    start = target_offset_date - timedelta(days=_SEARCH_WINDOW_DAYS)
-    end = target_offset_date + timedelta(days=_SEARCH_WINDOW_DAYS)
+    # Infer Gregorian date from the *Tamil* Karu Udayam month/day by scanning backward
+    # from the birth date. The 300-day offset is used only as a cross-validation metric.
+    for back in range(1, _MAX_BACKWARD_SEARCH_DAYS + 1):
+        cur = birth_details.date_of_birth - timedelta(days=back)
+        panchangam = calculator.calculate_panchangam_details(
+            cur,
+            birth_details.time_of_birth,
+            birth_details.latitude,
+            birth_details.longitude,
+            tz_offset,
+        )
+        if panchangam.get("tamil_month") == karu_tamil_month and panchangam.get("tamil_day") == int(karu_tamil_day):
+            diff_days = abs(back - _OFFSET_DAYS)
+            return cur, diff_days
 
-    candidates: List[date] = []
-    cur = start
-    while cur <= end:
-        if cur < birth_details.date_of_birth:
-            panchangam = calculator.calculate_panchangam_details(
-                cur,
-                birth_details.time_of_birth,
-                birth_details.latitude,
-                birth_details.longitude,
-                tz_offset,
-            )
-            if panchangam.get("tamil_month") == karu_tamil_month and panchangam.get("tamil_day") == int(karu_tamil_day):
-                candidates.append(cur)
-        cur += timedelta(days=1)
-
-    if not candidates:
-        return None
-
-    best = min(candidates, key=lambda d: abs((birth_details.date_of_birth - d).days - _OFFSET_DAYS))
-    diff_days = abs((birth_details.date_of_birth - best).days - _OFFSET_DAYS)
-    return best, diff_days
+    return None
 
 
 def strip_lagnam_from_chart(chart: Chart) -> Chart:
