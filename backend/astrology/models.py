@@ -130,6 +130,7 @@ class HoroscopeResult(BaseModel):
     # Karu Udayam derived chart fields
     karu_udayam_rasi_chart: Optional[Chart] = None
     karu_udayam_date_of_birth: Optional[date] = None
+    karu_udayam_time_of_birth: Optional[time] = None
     karu_udayam_tamil_month: Optional[str] = None
     karu_udayam_tamil_day: Optional[int] = None
     karu_udayam_approx_diff_days: Optional[int] = None
@@ -140,6 +141,10 @@ class HoroscopeResult(BaseModel):
 
     @field_serializer('karu_udayam_date_of_birth', when_used='json')
     def serialize_karu_udayam_date(self, value):
+        return value.isoformat() if value else None
+
+    @field_serializer('karu_udayam_time_of_birth', when_used='json')
+    def serialize_karu_udayam_time(self, value):
         return value.isoformat() if value else None
 
 class CompatibilityFactor(BaseModel):

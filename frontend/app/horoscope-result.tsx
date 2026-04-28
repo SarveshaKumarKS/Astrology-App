@@ -91,6 +91,7 @@ interface HoroscopeData {
   navamsa_chart: Chart;
   karu_udayam_rasi_chart?: Chart;
   karu_udayam_date_of_birth?: string;
+  karu_udayam_time_of_birth?: string;
   karu_udayam_tamil_month?: string;
   karu_udayam_tamil_day?: number;
   karu_udayam_approx_diff_days?: number;
@@ -250,7 +251,7 @@ export default function HoroscopeResultPage() {
     );
   };
 
-  const renderChart = (chart: Chart, title: string, titleTamil: string) => {
+  const renderChart = (chart: Chart, title: string, titleTamil: string, subtitle?: string) => {
     // Convert houses object to use Tamil labels
     const housesForChart: { [key: number]: string[] } = {};
     for (let i = 1; i <= 12; i++) {
@@ -264,6 +265,7 @@ export default function HoroscopeResultPage() {
         <Text style={styles.sectionTitle}>
           {getText(titleTamil, title)}
         </Text>
+        {subtitle ? <Text style={styles.chartMetaText}>{subtitle}</Text> : null}
         
         <View style={styles.chartContainer}>
           <SouthIndianChart 
@@ -631,7 +633,8 @@ export default function HoroscopeResultPage() {
         {horoscopeData.karu_udayam_rasi_chart && renderChart(
           horoscopeData.karu_udayam_rasi_chart,
           'Karu Udayam Rasi Chart',
-          'கரு உதயம் ராசி கட்டம்'
+          'கரு உதயம் ராசி கட்டம்',
+          `${getText('தேதி', 'Date')}: ${formatDateDDMMYYYY(horoscopeData.karu_udayam_date_of_birth || '')} | ${getText('நேரம்', 'Time')}: ${horoscopeData.karu_udayam_time_of_birth || horoscopeData.birth_details.time_of_birth || 'N/A'}`
         )}
         {renderDasaPeriods()}
       </ScrollView>
@@ -804,6 +807,12 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignItems: 'center',
+  },
+  chartMetaText: {
+    fontSize: 14,
+    color: '#2C3E50',
+    marginBottom: 10,
+    fontWeight: '500',
   },
   chartGrid: {
     flexDirection: 'row',

@@ -136,6 +136,7 @@ async def generate_horoscope(request: HoroscopeRequest):
                         karu_horoscope = calculator.generate_horoscope(karu_birth_details, request.language)
                         horoscope.karu_udayam_rasi_chart = strip_lagnam_from_chart(karu_horoscope.rasi_chart)
                         horoscope.karu_udayam_date_of_birth = karu_date
+                        horoscope.karu_udayam_time_of_birth = birth_details.time_of_birth
                         horoscope.karu_udayam_tamil_month = karu_month
                         horoscope.karu_udayam_tamil_day = karu_day
                         horoscope.karu_udayam_approx_diff_days = diff_days
@@ -176,6 +177,8 @@ async def generate_horoscope(request: HoroscopeRequest):
                 horoscope_dict['current_dasa']['next_bhukti_end_date'] = str(horoscope_dict['current_dasa']['next_bhukti_end_date'])
         if 'karu_udayam_date_of_birth' in horoscope_dict and horoscope_dict['karu_udayam_date_of_birth']:
             horoscope_dict['karu_udayam_date_of_birth'] = str(horoscope_dict['karu_udayam_date_of_birth'])
+        if 'karu_udayam_time_of_birth' in horoscope_dict and horoscope_dict['karu_udayam_time_of_birth']:
+            horoscope_dict['karu_udayam_time_of_birth'] = str(horoscope_dict['karu_udayam_time_of_birth'])
         
         # Convert chart house keys from integers to strings for MongoDB
         if 'rasi_chart' in horoscope_dict and 'houses' in horoscope_dict['rasi_chart']:
