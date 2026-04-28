@@ -123,19 +123,29 @@ def resolve_karu_udayam_gregorian_date(
     karu_tamil_month: str,
     karu_tamil_day: int,
 ) -> Optional[Tuple[date, int]]:
-    tz_offset = calculator._parse_timezone(birth_details.timezone)
     # Infer Gregorian date from the *Tamil* Karu Udayam month/day by scanning backward
-    # from the birth date. The 300-day offset is used only as a cross-validation metric.
+    # from the birth date. Use the calculator's full horoscope pipeline so the
+    # matching Tamil date follows the same system-specific rules as the final chart.
+    # The 300-day offset is used only as a cross-validation metric.
     for back in range(1, _MAX_BACKWARD_SEARCH_DAYS + 1):
         cur = birth_details.date_of_birth - timedelta(days=back)
-        panchangam = calculator.calculate_panchangam_details(
-            cur,
-            birth_details.time_of_birth,
-            birth_details.latitude,
-            birth_details.longitude,
-            tz_offset,
+        candidate_details = BirthDetails(
+            name=birth_details.name,
+            mother_name=birth_details.mother_name,
+            father_name=birth_details.father_name,
+            date_of_birth=cur,
+            time_of_birth=birth_details.time_of_birth,
+            place_of_birth=birth_details.place_of_birth,
+            latitude=birth_details.latitude,
+            longitude=birth_details.longitude,
+            timezone=birth_details.timezone,
+            time_correction=birth_details.time_correction,
         )
-        if panchangam.get("tamil_month") == karu_tamil_month and panchangam.get("tamil_day") == int(karu_tamil_day):
+        candidate_horoscope = calculator.generate_horoscope(candidate_details, "tamil")
+        if (
+            candidate_horoscope.tamil_month == karu_tamil_month
+            and candidate_horoscope.tamil_day == int(karu_tamil_day)
+        ):
             diff_days = abs(back - _OFFSET_DAYS)
             return cur, diff_days
 

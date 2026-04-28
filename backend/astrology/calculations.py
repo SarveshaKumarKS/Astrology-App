@@ -647,8 +647,9 @@ class AstronomicalCalculations:
             ayanamsa_deg = swe.get_ayanamsa_ut(jd)
         ayanamsa = f"{int(ayanamsa_deg)}° {int((ayanamsa_deg % 1) * 60)}'"
         
-        # === Tamil date (solar calendar, approximate but sign-based) ===
-        # Tamil solar month is based on Sun's sidereal sign at sunrise.
+        # === Tamil date (solar calendar, sign-based at the birth instant) ===
+        # For this app's expected traditional behavior, the Tamil solar month/day
+        # should follow the actual birth instant rather than a sunrise-only anchor.
         tamil_months = [
             "சித்திரை",  # Mesha
             "வைகாசி",   # Vrishabha
@@ -664,29 +665,18 @@ class AstronomicalCalculations:
             "பங்குனி"   # Meena
         ]
 
-        # Compute Sun sidereal longitude at sunrise to determine month
+        # Compute Sun sidereal longitude at the birth instant to determine month
         try:
-            # sunrise_tuple computed earlier when sunrise_time was calculated
-            # We reconstruct sunrise local time from sunrise_time string.
-            sr_parts = sunrise_time.split(':')
-            sr_hour = int(sr_parts[0])
-            sr_min = int(sr_parts[1]) if len(sr_parts) > 1 else 0
-            from datetime import time as dt_time
-            sr_dt_local = datetime.combine(birth_date, dt_time(sr_hour, sr_min, 0))
-            sr_dt_utc = sr_dt_local - timedelta(hours=timezone_offset)
-            sr_jd = swe.julday(sr_dt_utc.year, sr_dt_utc.month, sr_dt_utc.day,
-                               sr_dt_utc.hour + sr_dt_utc.minute / 60.0)
-
             if sun_longitude is not None and ayanamsa_value is not None:
                 # Use provided Vakkiam longitudes/ayanamsa for consistency
                 sun_lon_sidereal = sun_longitude % 360.0
             else:
-                # Thirukkanitham: use Swiss Ephemeris sidereal Sun
-                sun_lon_tropical = swe.calc_ut(sr_jd, swe.SUN)[0][0]
+                # Thirukkanitham: use Swiss Ephemeris sidereal Sun at birth time
+                sun_lon_tropical = swe.calc_ut(jd, swe.SUN)[0][0]
                 if ayanamsa_value is not None:
                     ayanamsa_deg = ayanamsa_value
                 else:
-                    ayanamsa_deg = swe.get_ayanamsa_ut(sr_jd)
+                    ayanamsa_deg = swe.get_ayanamsa_ut(jd)
                 sun_lon_sidereal = (sun_lon_tropical - ayanamsa_deg) % 360.0
 
         except Exception:
@@ -702,16 +692,17 @@ class AstronomicalCalculations:
         tamil_month = tamil_months[tamil_sign_index]
 
 
-        # ── Tamil day — PROPER INGRESS-BASED CALCULATION ─────────────────────
-        # Vakkiyam rule: Tamil day 1 = the calendar day the Sun entered the sign
-        # (Sankaramana / Rasi Pravesh).  We scan backward day-by-day checking
-        # Sun's sidereal sign, and count civil days elapsed since ingress.
+        # ── Tamil day — ingress-based at the birth-time instant ───────────────
+        # Day 1 is the civil date on which the Sun entered the sign for the
+        # birth-time instant used by the chart, not the prior sunrise anchor.
         ingress_date = birth_date   # safe fallback
         try:
+            from datetime import time as dt_time
+            birth_clock = dt_time(birth_time.hour, birth_time.minute, birth_time.second)
             for offset in range(1, 35):   # Sun never stays >32 days in a sign
                 check_date  = birth_date - timedelta(days=offset)
-                # JD at local midnight → UTC
-                check_dt_utc = datetime.combine(check_date, dt_time(0, 0, 0)) \
+                # JD at the same local birth-time instant → UTC
+                check_dt_utc = datetime.combine(check_date, birth_clock) \
                                - timedelta(hours=timezone_offset)
                 check_jd     = swe.julday(
                     check_dt_utc.year, check_dt_utc.month, check_dt_utc.day,
@@ -725,8 +716,9 @@ class AstronomicalCalculations:
                 check_sign_idx  = int(check_sun_sid // 30)
 
                 if check_sign_idx != tamil_sign_index:
-                    # Sun was in the *previous* sign on this check_date,
-                    # so ingress happened on the next calendar day.
+                    # Sun was in the previous sign at the same birth-time instant
+                    # on this date, so the current Tamil day sequence begins on
+                    # the next civil day.
                     ingress_date = check_date + timedelta(days=1)
                     break
             else:
