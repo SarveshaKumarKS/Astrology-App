@@ -144,7 +144,7 @@ async def generate_horoscope(request: HoroscopeRequest):
             logging.warning(f"Karu Udayam chart generation skipped: {str(e)}")
         
         # Save to database
-        horoscope_dict = horoscope.dict()
+        horoscope_dict = horoscope.model_dump()
         horoscope_dict['_id'] = str(uuid.uuid4())
         horoscope_dict['created_at'] = datetime.utcnow()
         horoscope_dict['system'] = request.system
@@ -208,7 +208,7 @@ async def generate_horoscope(request: HoroscopeRequest):
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
-        logging.error(f"Error generating horoscope: {str(e)}")
+        logging.exception("Error generating horoscope")
         raise HTTPException(status_code=500, detail=f"Error generating horoscope: {str(e)}")
 
 # Generate PDF
@@ -291,9 +291,7 @@ async def generate_pdf(request: HoroscopeRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error generating PDF: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error generating PDF")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
 # Generate NKV Palan PDF
@@ -343,9 +341,7 @@ async def generate_palan_pdf_endpoint(request: HoroscopeRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error generating Palan PDF: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logging.exception("Error generating Palan PDF")
         raise HTTPException(status_code=500, detail=f"Error generating Palan PDF: {str(e)}")
 
 # Marriage Compatibility
@@ -391,7 +387,7 @@ async def check_compatibility(request: CompatibilityRequest):
         compatibility = calculator.check_compatibility(male_details, female_details, request.language)
         
         # Save to database
-        compatibility_dict = compatibility.dict()
+        compatibility_dict = compatibility.model_dump()
         compatibility_dict['_id'] = str(uuid.uuid4())
         compatibility_dict['created_at'] = datetime.utcnow()
         compatibility_dict['system'] = request.system
@@ -414,14 +410,14 @@ async def check_compatibility(request: CompatibilityRequest):
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
-        logging.error(f"Error checking compatibility: {str(e)}")
+        logging.exception("Error checking compatibility")
         raise HTTPException(status_code=500, detail=f"Error checking compatibility: {str(e)}")
 
 # User Profile Management
 @api_router.post("/profiles", response_model=UserProfile)
 async def create_profile(profile_data: UserProfile):
     try:
-        profile_dict = profile_data.dict()
+        profile_dict = profile_data.model_dump()
         
         # Convert date objects to strings for MongoDB compatibility
         if 'birth_details' in profile_dict and 'date_of_birth' in profile_dict['birth_details']:
@@ -433,7 +429,7 @@ async def create_profile(profile_data: UserProfile):
         profile_dict['_id'] = str(result.inserted_id)
         return UserProfile(**profile_dict)
     except Exception as e:
-        logging.error(f"Error creating profile: {str(e)}")
+        logging.exception("Error creating profile")
         raise HTTPException(status_code=500, detail=f"Error creating profile: {str(e)}")
 
 @api_router.get("/profiles", response_model=List[UserProfile])
@@ -442,7 +438,7 @@ async def get_profiles():
         profiles = await db.user_profiles.find().to_list(1000)
         return [UserProfile(**profile) for profile in profiles]
     except Exception as e:
-        logging.error(f"Error fetching profiles: {str(e)}")
+        logging.exception("Error fetching profiles")
         raise HTTPException(status_code=500, detail=f"Error fetching profiles: {str(e)}")
 
 @api_router.get("/profiles/{profile_id}", response_model=UserProfile)
@@ -453,7 +449,7 @@ async def get_profile(profile_id: str):
             raise HTTPException(status_code=404, detail="Profile not found")
         return UserProfile(**profile)
     except Exception as e:
-        logging.error(f"Error fetching profile: {str(e)}")
+        logging.exception("Error fetching profile")
         raise HTTPException(status_code=500, detail=f"Error fetching profile: {str(e)}")
 
 # Panchangam (Thirukkanitham only)
@@ -463,7 +459,7 @@ async def get_panchangam(date: date, language: str = "tamil"):
         panchangam = thirukkanitham_calc.get_daily_panchangam(date, language)
         return panchangam
     except Exception as e:
-        logging.error(f"Error getting panchangam: {str(e)}")
+        logging.exception("Error getting panchangam")
         raise HTTPException(status_code=500, detail=f"Error getting panchangam: {str(e)}")
 
 # Include the router in the main app

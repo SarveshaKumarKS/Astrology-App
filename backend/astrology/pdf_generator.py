@@ -6,6 +6,7 @@ Sacred, authoritative, and deeply personal layout with a luxurious spiritual pal
 
 import io
 import os
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
@@ -30,7 +31,7 @@ try:
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
-    print("⚠ Warning: Pillow not available. Tamil text will not render correctly.")
+    logging.warning("Pillow not available. Tamil text will not render correctly.")
 
 # ── Project paths ──────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -111,7 +112,7 @@ def find_tamil_font(is_bold: bool = False) -> Optional[str]:
             else:
                 _cached_tamil_font_path = p
             return p
-    print("⚠ Warning: No Tamil font found!")
+    logging.warning("No Tamil font found.")
     return None
 
 
@@ -124,7 +125,7 @@ def register_english_fonts():
                 pdfmetrics.registerFont(TTFont(key, path))
                 registered[key] = True
         except Exception as e:
-            print(f"Warning: Could not register {key} font: {e}")
+            logging.warning("Could not register %s font: %s", key, e)
     return registered
 
 
@@ -710,9 +711,6 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         rasi_deg = getattr(planet, 'longitude_in_sign_dms', None) or "N/A"
         pada     = str(getattr(planet, 'nakshatra_pada', None) or "N/A")
 
-        if planet.planet == "Sun":
-            print(f"DEBUG — Sun: {full_lon} | rasi: {rasi_deg}")
-
         planet_data.append([
             tval(planet.planet_tamil, 0),
             eng(full_lon, 9),
@@ -770,14 +768,6 @@ def generate_horoscope_pdf(horoscope_result, personal_details: Dict[str, Any], s
         for k, v in horoscope_result.navamsa_chart.houses_tamil.items():
             hk = int(k) if isinstance(k, str) else k
             navamsa_houses[hk] = v if isinstance(v, list) else ([v] if v else [])
-
-    # Debug logs
-    print("\n" + "="*60)
-    print("DEBUG — NAVAMSA CHART DATA (houses_tamil):")
-    for hn in sorted(navamsa_houses): print(f"  House {hn:2d}: {navamsa_houses[hn]}")
-    print("DEBUG — RASI CHART DATA (houses_tamil):")
-    for hn in sorted(rasi_houses):    print(f"  House {hn:2d}: {rasi_houses[hn]}")
-    print("="*60 + "\n")
 
     CHART_SIZE = 3.0 * inch   # large enough to command the space, fits on one page
 

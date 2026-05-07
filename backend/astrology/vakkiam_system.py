@@ -1,9 +1,12 @@
-from datetime import date, timedelta, time, datetime, timezone
+from datetime import date, timedelta, time, datetime
+from dataclasses import dataclass
 from dateutil.relativedelta import relativedelta
 from typing import Dict, List, Optional
 import math
 import json
-import os
+from itertools import islice
+from pathlib import Path
+from bisect import bisect_left
 from astrology.calculations import AstronomicalCalculations
 from astrology.models import (
     BirthDetails, HoroscopeResult, CompatibilityResult, PlanetaryPosition,
@@ -14,456 +17,391 @@ from astrology.constants import (
     DASA_ORDER, DASA_YEARS, COMPATIBILITY_FACTORS
 )
 
-# Vakya Cycle Constants (days)
-# These represent the cycle lengths for each planet's correction table
-VAKYA_CYCLES = {
-    'Sun': 365.258756,
-    'Moon': 248.0,
-    'Mars': 779.94,
-    'Mercury': 115.88,
-    'Jupiter': 398.88,
-    'Venus': 583.92,
-    'Saturn': 378.09,
-    'Rahu': 6793.5,
-    'Ketu': 6793.5
-}
+def _vakya_resource_path(filename: str) -> Path:
+    return Path(__file__).resolve().parent / filename
 
 
-class VakyaEngine:
-    """
-    Vakya Engine for Parametric Epicyclic Model calculations based on Aryabhatiya.
-    Loads calibrated physics constants from final_vakya_tables.json and performs
-    trigonometric calculations for planetary positions.
-    """
-    
-    def __init__(self, tables_file: Optional[str] = None):
-        """
-        Initialize VakyaEngine by loading calibrated constants.
-        
-        Args:
-            tables_file: Path to final_vakya_tables.json. If None, looks in same directory.
-        
-        Raises:
-            FileNotFoundError: If tables file is not found
-            ValueError: If JSON is invalid or required keys/planets are missing
-        """
-        # Base Reference: Calibration uses "Days since 2000-01-01 00:00:00 UTC"
-        self.BASE_EPOCH_DATETIME = datetime(2000, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        self.BASE_EPOCH_JD = 2451545.0  # Keep for compatibility with other calculations
-        self.BASE_YEAR = 2000.0
-        
-        # Load tables file
-        if tables_file is None:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            tables_file = os.path.join(script_dir, 'final_vakya_tables.json')
-        
-        try:
-            if not os.path.exists(tables_file):
-                print(f"⚠️  Warning: Vakya tables file not found: {tables_file}")
-                self.tables = {}
-                return
-            
-            with open(tables_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # Store the raw data - handle varying JSON key names gracefully
-            self.tables = data
-            
-            # Validate that we have all required planets
-            required_planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']
-            missing_planets = [p for p in required_planets if p not in data]
-            
-            if missing_planets:
-                print(f"⚠️  Warning: Missing planet data in tables file: {', '.join(missing_planets)}")
-            
-        except FileNotFoundError:
-            print(f"⚠️  Warning: Vakya tables file not found: {tables_file}")
-            self.tables = {}
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in tables file: {e}")
-        except Exception as e:
-            raise ValueError(f"Error loading tables file: {e}")
-    
-    def _normalize(self, angle: float) -> float:
-        """Normalize angle to 0-360 range"""
-        return angle % 360.0
-    
-    def _jd_to_datetime_utc(self, jd: float) -> datetime:
-        """
-        Convert Julian Day to UTC datetime.
-        JD 2451545.0 = January 1, 2000, 12:00:00 TT (approximately UTC)
-        """
-        days_since_j2000 = jd - 2451545.0
-        dt_utc = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc) + timedelta(days=days_since_j2000)
-        return dt_utc
-    
-    def _to_utc_days(self, birth_dt: datetime) -> float:
-        """
-        CRITICAL: Convert birth datetime to days since 2000-01-01 00:00:00 UTC.
-        This must match the calibration script exactly.
-        
-        If birth_dt has no timezone, assume it is IST (UTC+5:30) and convert to UTC.
-        
-        Args:
-            birth_dt: Input datetime (timezone-naive or timezone-aware)
-            
-        Returns:
-            Days since 2000-01-01 00:00:00 UTC as a float
-        """
-        # Handle timezone-naive datetime (assume IST)
-        if birth_dt.tzinfo is None:
-            # Assume IST (UTC+5:30) and convert to UTC
-            birth_dt = birth_dt.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
-            birth_dt = birth_dt.astimezone(timezone.utc)
+def _vakya_dms_to_decimal_degrees(degrees: float, minutes: float, seconds: float) -> float:
+    return degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+
+def _vakya_arc_seconds_to_decimal_degrees(arc_seconds: float) -> float:
+    return arc_seconds / 3600.0
+
+
+def _vakya_get_cumulative_kali_days(gregorian_year: int) -> float:
+    return ((210389 * gregorian_year) + 652415052) / 576
+
+
+def _vakya_to_pure_days(value: Dict[str, float]) -> float:
+    return value["day"] + (value["naaligai"] / 60.0)
+
+
+def _vakya_rasi_degree_minute_to_degrees(rasi: int, degree: int, minute: int) -> float:
+    return (rasi * 30.0) + degree + (minute / 60.0)
+
+
+def _vakya_arc_minutes_to_degrees(arc_minutes: float) -> float:
+    return arc_minutes / 60.0
+
+
+def _vakya_month_length_to_days(month_length: Dict[str, int]) -> float:
+    return month_length["day"] + (month_length["naaligai"] / 60.0) + (month_length["vinaaligai"] / 3600.0)
+
+
+def _vakya_get_year_bounded_days(day: int, month: int) -> float:
+    month_length = {
+        1: {"day": 30, "naaligai": 55, "vinaaligai": 32},
+        2: {"day": 62, "naaligai": 19, "vinaaligai": 44},
+        3: {"day": 93, "naaligai": 56, "vinaaligai": 22},
+        4: {"day": 125, "naaligai": 24, "vinaaligai": 34},
+        5: {"day": 156, "naaligai": 26, "vinaaligai": 44},
+        6: {"day": 186, "naaligai": 54, "vinaaligai": 6},
+        7: {"day": 216, "naaligai": 48, "vinaaligai": 13},
+        8: {"day": 246, "naaligai": 18, "vinaaligai": 37},
+        9: {"day": 275, "naaligai": 39, "vinaaligai": 30},
+        10: {"day": 305, "naaligai": 6, "vinaaligai": 46},
+        11: {"day": 334, "naaligai": 55, "vinaaligai": 10},
+        12: {"day": 365, "naaligai": 15, "vinaaligai": 31},
+    }
+    if month == 1:
+        return float(day)
+    return _vakya_month_length_to_days(month_length[month - 1]) + (day - 1)
+
+
+def _vakya_get_ujjain_offset_time(hour: int, minute: int) -> float:
+    ist_to_ujjain_diff_time_minutes = 26.92
+    ist_time_minutes = (hour * 60) + minute
+    lmt_ujjain_converted_minutes = ist_time_minutes - ist_to_ujjain_diff_time_minutes
+    lmt_ujjain_converted_offset_minutes = lmt_ujjain_converted_minutes - 360
+    return lmt_ujjain_converted_offset_minutes / 1440
+
+
+def _vakya_get_jdn(year: int, month: int, day: int) -> int:
+    return date(year, month, day).toordinal() + 1721425
+
+
+class VakyaTamilCalendar:
+    def __init__(self) -> None:
+        self.tam_ny_anchor_date_greg = {"year": 2025, "month": 4, "day": 14}
+
+    def get_month_days(self, year: int):
+        cumulative_year_kali_days = _vakya_get_cumulative_kali_days(gregorian_year=year)
+        month_start_weekday_index: Dict[int, int] = {}
+        month_days: Dict[int, int] = {}
+        for month in range(1, 14):
+            if month == 1:
+                new_start_kali_day_remainder = round(cumulative_year_kali_days) % 7
+            elif month == 13:
+                cumulative_next_year_kali_days = _vakya_get_cumulative_kali_days(gregorian_year=(year + 1))
+                new_start_kali_day_remainder = round(cumulative_next_year_kali_days) % 7
+            else:
+                year_bounded_days = _vakya_get_year_bounded_days(day=1, month=month)
+                cumulative_month_kali_days = round(cumulative_year_kali_days + year_bounded_days)
+                new_start_kali_day_remainder = cumulative_month_kali_days % 7
+            month_start_weekday_index[month] = new_start_kali_day_remainder
+
+        i = 1
+        while i < len(month_start_weekday_index):
+            if month_start_weekday_index[i + 1] < month_start_weekday_index[i]:
+                rem_days = (month_start_weekday_index[i + 1] - month_start_weekday_index[i]) + 7
+            else:
+                rem_days = month_start_weekday_index[i + 1] - month_start_weekday_index[i]
+            month_days[i] = 28 + rem_days
+            i += 1
+        return month_days, sum(month_days.values())
+
+    def eng_to_tam_date(self, input_date_greg: Dict[str, int]) -> Dict[str, int]:
+        anchor_jdn = _vakya_get_jdn(**self.tam_ny_anchor_date_greg)
+        input_jdn = _vakya_get_jdn(**input_date_greg)
+        jdn_days_diff = input_jdn - anchor_jdn
+        years_elapsed = 0
+        if jdn_days_diff < 0:
+            for year in range(self.tam_ny_anchor_date_greg["year"] - 1, input_date_greg["year"] - 2, -1):
+                _, total_year_length_days = self.get_month_days(year)
+                jdn_days_diff += total_year_length_days
+                years_elapsed -= 1
+                if jdn_days_diff >= 0:
+                    break
         else:
-            # Convert to UTC if in different timezone
-            birth_dt = birth_dt.astimezone(timezone.utc)
-        
-        # Calculate delta from base epoch
-        delta = birth_dt - self.BASE_EPOCH_DATETIME
-        return delta.total_seconds() / 86400.0
-    
-    def _get_days_since_2000(self, dt_input: datetime) -> float:
-        """Alias for _to_utc_days for backward compatibility"""
-        return self._to_utc_days(dt_input)
-    
-    def _get_planet_data(self, planet: str, key: str, default=None):
-        """Get planet data with flexible key name handling"""
-        if planet not in self.tables:
-            return default
-        
-        planet_data = self.tables[planet]
-        
-        # Handle varying key names
-        key_variants = {
-            'L0': ['L0', 'epoch_l0', 'l0'],
-            'Rate': ['Rate', 'mean_motion', 'rate'],
-            'Apogee': ['Apogee', 'apogee_l0', 'apogee'],
-            'Amp': ['Amp', 'amplitude', 'manda_coeff'],
-            'A0': ['A0', 'apogee_l0', 'apogee'],
-            'Rate_Apogee': ['Rate_Apogee', 'apogee_rate', 'rate_apogee'],
-            'sun_l0_ref': ['sun_l0_ref', 'sun_L0', 'sun_l0'],
-            'sun_rate_ref': ['sun_rate_ref', 'sun_Rate', 'sun_rate'],
-            'manda_coeff': ['manda_coeff', 'MandaCoeff', 'manda'],
-            'sighra_circ': ['sighra_circ', 'SighraCirc', 'sighra']
+            for year in range(self.tam_ny_anchor_date_greg["year"], input_date_greg["year"]):
+                _, total_year_length_days = self.get_month_days(year)
+                if jdn_days_diff >= total_year_length_days:
+                    jdn_days_diff -= total_year_length_days
+                    years_elapsed += 1
+                else:
+                    break
+
+        tamil_year = self.tam_ny_anchor_date_greg["year"] + years_elapsed
+        month_lengths, _ = self.get_month_days(year=tamil_year)
+        tamil_month = 1
+        for month, month_length in month_lengths.items():
+            if jdn_days_diff >= month_length:
+                jdn_days_diff -= month_length
+            else:
+                tamil_month = month
+                break
+        return {"year": tamil_year, "month": tamil_month, "day": int(jdn_days_diff + 1)}
+
+
+class VakyaReferenceSun:
+    def __init__(self) -> None:
+        self.mnemonics_arc_minutes = {
+            1: 14, 2: 32, 3: 54, 4: 78, 5: 105, 6: 133, 7: 163, 8: 194, 9: 224, 10: 254,
+            11: 284, 12: 311, 13: 335, 14: 358, 15: 376, 16: 391, 17: 403, 18: 411, 19: 415,
+            20: 416, 21: 412, 22: 406, 23: 398, 24: 386, 25: 374, 26: 361, 27: 347, 28: 334,
+            29: 322, 30: 311, 31: 303, 32: 297, 33: 295, 34: 296, 35: 301, 36: 309, 37: 322,
         }
-        
-        if key in key_variants:
-            for variant in key_variants[key]:
-                if variant in planet_data:
-                    return planet_data[variant]
-        
-        # Direct key lookup
-        return planet_data.get(key, default)
-    
-    def _calc_sun(self, t: float) -> float:
-        """
-        Calculate Sun longitude using simple epicycle model.
-        
-        Formula:
-        Mean = (L0 + Rate * t) % 360
-        Anomaly = Mean - Apogee
-        Correction = -Amp * sin(Anomaly_rad)
-        TrueLongitude = (Mean + Correction) % 360
-        """
-        L0 = self._get_planet_data('Sun', 'L0', 0.0)
-        Rate = self._get_planet_data('Sun', 'Rate', 0.0)
-        Apogee = self._get_planet_data('Sun', 'Apogee', 0.0)
-        Amp = self._get_planet_data('Sun', 'Amp', 0.0)
-        
-        Mean = (L0 + Rate * t) % 360.0
-        Anomaly = Mean - Apogee
-        Anomaly_rad = math.radians(Anomaly)
-        Correction = -Amp * math.sin(Anomaly_rad)
-        TrueLongitude = (Mean + Correction) % 360.0
-        
-        return self._normalize(TrueLongitude)
-    
-    def _calc_moon(self, t: float) -> float:
-        """
-        Calculate Moon longitude using moving apogee epicycle model.
-        
-        Formula:
-        Mean = (L0 + Rate * t) % 360
-        TrueApogee = (ApogeeL0 + ApogeeRate * t) % 360
-        Anomaly = Mean - TrueApogee
-        Correction = Amplitude * sin(Anomaly_rad)
-        TrueLongitude = (Mean + Correction) % 360
-        """
-        L0 = self._get_planet_data('Moon', 'L0', 0.0)
-        Rate = self._get_planet_data('Moon', 'Rate', 0.0)
-        A0 = self._get_planet_data('Moon', 'A0', 0.0)  # Apogee L0
-        Rate_Apogee = self._get_planet_data('Moon', 'Rate_Apogee', 0.0)
-        Amp = self._get_planet_data('Moon', 'Amp', 0.0)
-        
-        Mean = (L0 + Rate * t) % 360.0
-        TrueApogee = (A0 + Rate_Apogee * t) % 360.0
-        Anomaly = Mean - TrueApogee
-        Anomaly_rad = math.radians(Anomaly)
-        Correction = Amp * math.sin(Anomaly_rad)
-        TrueLongitude = (Mean + Correction) % 360.0
-        
-        return self._normalize(TrueLongitude)
-    
-    def _calc_outer(self, planet: str, t: float) -> float:
-        """
-        Calculate outer planet (Mars, Jupiter, Saturn) longitude using double epicycle model.
-        
-        Formula:
-        M_p = (L0_p + Rate_p * t) % 360
-        M_s = (L0_sun + Rate_sun * t) % 360
-        K_manda = M_p - Apogee
-        Corr_manda = -MandaCoeff * sin(K_manda)
-        TrueMean_p = M_p + Corr_manda
-        K_sighra = M_s - TrueMean_p
-        r = SighraCirc / 360.0
-        y = r * sin(K_sighra)
-        x = 1.0 + r * cos(K_sighra)
-        Corr_sighra = arctan2(y, x) [in degrees]
-        TrueLongitude = (TrueMean_p + Corr_sighra) % 360
-        """
-        L0_p = self._get_planet_data(planet, 'epoch_l0', 0.0)
-        Rate_p = self._get_planet_data(planet, 'mean_motion', 0.0)
-        L0_sun = self._get_planet_data(planet, 'sun_l0_ref', 0.0)
-        Rate_sun = self._get_planet_data(planet, 'sun_rate_ref', 0.0)
-        Apogee = self._get_planet_data(planet, 'apogee_l0', 0.0)
-        MandaCoeff = self._get_planet_data(planet, 'manda_coeff', 0.0)
-        SighraCirc = self._get_planet_data(planet, 'sighra_circ', 0.0)
-        
-        # Mean Position
-        M_p = (L0_p + Rate_p * t) % 360.0
-        
-        # Mean Sun
-        M_s = (L0_sun + Rate_sun * t) % 360.0
-        
-        # Manda Correction (Orbit Shape)
-        K_manda = M_p - Apogee
-        K_manda_rad = math.radians(K_manda)
-        Corr_manda = -MandaCoeff * math.sin(K_manda_rad)
-        TrueMean_p = M_p + Corr_manda
-        
-        # Sighra Correction (Retrograde Loop)
-        K_sighra = M_s - TrueMean_p
-        K_sighra_rad = math.radians(K_sighra)
-        r = SighraCirc / 360.0
-        y = r * math.sin(K_sighra_rad)
-        x = 1.0 + r * math.cos(K_sighra_rad)
-        Corr_sighra_rad = math.atan2(y, x)
-        Corr_sighra = math.degrees(Corr_sighra_rad)
-        
-        TrueLongitude = (TrueMean_p + Corr_sighra) % 360.0
-        
-        return self._normalize(TrueLongitude)
-    
-    def _calc_inner(self, planet: str, t: float) -> float:
-        """
-        Calculate inner planet (Mercury, Venus) longitude using inverted double epicycle model.
-        
-        For inner planets, the "Mean Planet" is the Sun, and the "Sighra Ucca" is the Fast Planet.
-        
-        Formula:
-        M_s = (L0_sun + Rate_sun * t) % 360
-        U_sighra = (L0_p + Rate_p * t) % 360
-        K_manda = M_s - Apogee
-        Corr_manda = -MandaCoeff * sin(K_manda)
-        TrueMean_sun = M_s + Corr_manda
-        K_sighra = U_sighra - TrueMean_sun
-        r = SighraCirc / 360.0
-        y = r * sin(K_sighra)
-        x = 1.0 + r * cos(K_sighra)
-        Corr_sighra = arctan2(y, x) [in degrees]
-        TrueLongitude = (TrueMean_sun + Corr_sighra) % 360
-        """
-        L0_sun = self._get_planet_data(planet, 'sun_l0_ref', 0.0)
-        Rate_sun = self._get_planet_data(planet, 'sun_rate_ref', 0.0)
-        L0_p = self._get_planet_data(planet, 'epoch_l0', 0.0)  # Sighra Ucca
-        Rate_p = self._get_planet_data(planet, 'mean_motion', 0.0)
-        Apogee = self._get_planet_data(planet, 'apogee_l0', 0.0)
-        MandaCoeff = self._get_planet_data(planet, 'manda_coeff', 0.0)
-        SighraCirc = self._get_planet_data(planet, 'sighra_circ', 0.0)
-        
-        # Mean Sun (Deferent Center)
-        M_s = (L0_sun + Rate_sun * t) % 360.0
-        
-        # Sighra Ucca (Fast Planet)
-        U_sighra = (L0_p + Rate_p * t) % 360.0
-        
-        # Manda Correction (Applied to Sun using Planet's Apogee!)
-        K_manda = M_s - Apogee
-        K_manda_rad = math.radians(K_manda)
-        Corr_manda = -MandaCoeff * math.sin(K_manda_rad)
-        TrueMean_sun = M_s + Corr_manda
-        
-        # Sighra Correction
-        K_sighra = U_sighra - TrueMean_sun
-        K_sighra_rad = math.radians(K_sighra)
-        r = SighraCirc / 360.0
-        y = r * math.sin(K_sighra_rad)
-        x = 1.0 + r * math.cos(K_sighra_rad)
-        Corr_sighra_rad = math.atan2(y, x)
-        Corr_sighra = math.degrees(Corr_sighra_rad)
-        
-        TrueLongitude = (TrueMean_sun + Corr_sighra) % 360.0
-        
-        return self._normalize(TrueLongitude)
-    
-    def _calc_node(self, planet: str, t: float) -> float:
-        """
-        Calculate node (Rahu, Ketu) longitude using linear motion.
-        
-        Formula:
-        True = (L0 + Rate * t) % 360
-        """
-        L0 = self._get_planet_data(planet, 'epoch_l0', 0.0)
-        Rate = self._get_planet_data(planet, 'mean_motion', 0.0)
-        
-        TrueLongitude = (L0 + Rate * t) % 360.0
-        
-        return self._normalize(TrueLongitude)
-    
-    def calculate_longitude(self, planet: str, jd: float) -> float:
-        """
-        Calculate planet longitude using Parametric Epicyclic Model.
-        
-        Dispatches to appropriate calculation method based on planet type.
-        
-        Args:
-            planet: Planet name
-            jd: Julian Day (will be converted to UTC datetime, then to days since 2000)
-            
-        Returns:
-            Longitude in degrees (0-360)
-        """
-        if planet not in self.tables:
-            raise ValueError(f"Planet {planet} not found in tables")
-        
-        # Convert JD to UTC datetime, then to days since 2000-01-01 00:00:00 UTC
-        dt_utc = self._jd_to_datetime_utc(jd)
-        t = self._to_utc_days(dt_utc)
-        
-        # Dispatch to appropriate calculation method
-        if planet == 'Sun':
-            return self._calc_sun(t)
-        elif planet == 'Moon':
-            return self._calc_moon(t)
-        elif planet in ['Mars', 'Jupiter', 'Saturn']:
-            return self._calc_outer(planet, t)
-        elif planet in ['Mercury', 'Venus']:
-            return self._calc_inner(planet, t)
-        elif planet in ['Rahu', 'Ketu']:
-            return self._calc_node(planet, t)
+        self.input_date_prev = None
+        self.year_bounded_days_prev = None
+
+    def get_true_position_degrees(self, dt: Dict[str, int], time_offset_days: float) -> float:
+        input_date = dict(islice(dt.items(), 3))
+        if input_date != self.input_date_prev:
+            cumulative_year_kali_days = _vakya_get_cumulative_kali_days(gregorian_year=dt["year"])
+            year_bounded_days_data = _vakya_get_year_bounded_days(day=dt["day"], month=dt["month"])
+            cumulative_custom_kali_days = round(cumulative_year_kali_days + year_bounded_days_data)
+            year_bounded_days_data = cumulative_custom_kali_days - cumulative_year_kali_days
         else:
-            raise ValueError(f"Unknown planet: {planet}")
-    
-    def check_retrograde(self, planet: str, jd: float) -> bool:
-        """
-        Check if a planet is retrograde by calculating instantaneous velocity.
-        
-        Method:
-        1. Calculate Pos1 at time t
-        2. Calculate Pos2 at time t + (1/24.0) (1 hour later)
-        3. Velocity = Pos2 - Pos1
-        4. Handle 360-degree wrap (if vel < -300, it implies 359->0 wrap, so add 360)
-        5. If Velocity < 0, return True
-        
-        Args:
-            planet: Planet name
-            jd: Julian Day
-            
-        Returns:
-            True if planet is retrograde, False otherwise
-        """
-        if planet in ['Sun', 'Moon', 'Rahu', 'Ketu']:
-            # These planets don't go retrograde
-            return False
-        
-        # Calculate position at time t
-        Pos1 = self.calculate_longitude(planet, jd)
-        
-        # Calculate position 1 hour later
-        dt_utc = self._jd_to_datetime_utc(jd)
-        dt_utc_next = dt_utc + timedelta(hours=1)
-        jd_next = self._jd_to_julian_day(dt_utc_next)
-        Pos2 = self.calculate_longitude(planet, jd_next)
-        
-        # Calculate velocity (change in position)
-        Velocity = Pos2 - Pos1
-        
-        # Handle 360-degree wrap
-        if Velocity < -300:
-            # Likely wrapped from 359->0, so add 360
-            Velocity += 360.0
-        elif Velocity > 300:
-            # Likely wrapped from 0->359, so subtract 360
-            Velocity -= 360.0
-        
-        # Retrograde if velocity is negative
-        return Velocity < 0
-    
-    def _jd_to_julian_day(self, dt_utc: datetime) -> float:
-        """Convert UTC datetime to Julian Day"""
-        # Simple conversion: days since J2000.0
-        delta = dt_utc - datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        days = delta.total_seconds() / 86400.0
-        return 2451545.0 + days
-    
-    def calculate_longitudes(self, jd: float) -> Dict[str, float]:
-        """
-        Calculate all planet longitudes using Parametric Epicyclic Model.
-        
-        Args:
-            jd: Julian Day
-            
-        Returns:
-            Dictionary of planet names to longitudes in degrees
-        """
-        results = {}
-        
-        # Calculate all planets
-        for planet in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']:
-            try:
-                results[planet] = self.calculate_longitude(planet, jd)
-            except Exception as e:
-                print(f"⚠️  Warning: Error calculating {planet}: {e}")
-                results[planet] = 0.0
-        
-        return results
+            year_bounded_days_data = self.year_bounded_days_prev
+
+        year_bounded_days = year_bounded_days_data + time_offset_days
+        if year_bounded_days < 0:
+            year_bounded_days = _vakya_get_year_bounded_days(month=13, day=1) + year_bounded_days
+
+        mnemonic_index_original = year_bounded_days / 10
+        mnemonic_index = int(mnemonic_index_original)
+        deductive_arc_minutes = self.mnemonics_arc_minutes.get(mnemonic_index, 0)
+        true_position_decimal_degrees = year_bounded_days - _vakya_arc_minutes_to_degrees(deductive_arc_minutes)
+
+        if mnemonic_index_original not in self.mnemonics_arc_minutes:
+            year_bounded_days_leftover = year_bounded_days % 10
+            deductive_arc_minutes_next = self.mnemonics_arc_minutes[mnemonic_index + 1]
+            interpolation_arc_seconds = (abs(deductive_arc_minutes_next - deductive_arc_minutes) * year_bounded_days_leftover) / 10
+            if deductive_arc_minutes_next > deductive_arc_minutes:
+                correction_arc_seconds = -interpolation_arc_seconds
+            else:
+                correction_arc_seconds = interpolation_arc_seconds
+            true_position_decimal_degrees += _vakya_arc_seconds_to_decimal_degrees(correction_arc_seconds)
+
+        self.input_date_prev = input_date
+        self.year_bounded_days_prev = year_bounded_days_data
+        return true_position_decimal_degrees % 360
 
 
-class VakyaEphemerisProvider:
-    """
-    Table-Lookup Based Vakya Ephemeris Provider.
-    Uses J2000.0 (JD 2451545.0 = January 1, 2000, 12:00 TT) as the base epoch.
-    Uses reverse-engineered lookup tables from final_vakya_tables.json for all calculations.
-    
-    The system uses table-based lookup:
-    - Longitude = Anchor + (Rate * days) + Table_Correction[cycle_position]
-    """
+class VakyaReferenceMoon:
+    def __init__(self) -> None:
+        self._table_cache = None
 
-    def __init__(self, tables_file: Optional[str] = None):
-        """
-        Initialize VakyaEphemerisProvider with table-based lookup engine.
-        
-        Args:
-            tables_file: Path to final_vakya_tables.json. If None, uses default location.
-        """
-        # Initialize the VakyaEngine for table-based calculations
-        self.engine = VakyaEngine(tables_file)
+    def _table(self):
+        if self._table_cache is None:
+            with _vakya_resource_path("planets_synodic_cycles_position_table.json").open("r", encoding="utf-8") as file:
+                self._table_cache = json.load(file)
+        return self._table_cache
 
-    def calculate_longitudes(self, jd: float) -> Dict[str, float]:
-        """
-        Calculate sidereal longitudes using table-based lookup.
-        
-        Uses the VakyaEngine to perform all calculations via table lookup.
-        All corrections are retrieved from pre-computed tables based on cycle position.
-        
-        Args:
-            jd: Julian Day of birth
-            
-        Returns:
-            Dictionary of planet names to longitudes in degrees
-        """
-        return self.engine.calculate_longitudes(jd)
+    def get_rahu_ketu_true_position_decimal_rasi(self, cumulative_custom_kali_days: float):
+        rahu = 12 - (((((56600 * cumulative_custom_kali_days) - 90563735600) / 56603) % 6792) / 566)
+        ketu = (rahu + 6) % 12
+        return rahu, ketu
+
+    def get_moon_true_position_degrees(self, cumulative_custom_kali_days: float) -> float:
+        q1, r1 = divmod((cumulative_custom_kali_days - 1600984), 12372)
+        q2, r2 = divmod(r1, 3031)
+        q3, r3 = divmod(r2, 248)
+        dhruva_degrees = (
+            (_vakya_dms_to_decimal_degrees(297, 48, 10) * q1)
+            + (_vakya_dms_to_decimal_degrees(337, 31, 1) * q2)
+            + (_vakya_dms_to_decimal_degrees(27, 44, 6) * q3)
+            + _vakya_dms_to_decimal_degrees(212, 0, 7)
+        ) % 360
+        table = self._table()
+        mnemonic_key = int(r3 // 1)
+        mnemonic_key_leftover_fraction = r3 % 1
+        if mnemonic_key == 0:
+            if not mnemonic_key_leftover_fraction:
+                mnemonic_key = 248
+            else:
+                mnemonic_value_degrees = 0
+        if mnemonic_key != 0 or (mnemonic_key == 0 and not mnemonic_key_leftover_fraction):
+            mnemonic_value = table["moon"][str(mnemonic_key)]
+            mnemonic_value_degrees = _vakya_dms_to_decimal_degrees((mnemonic_value["rasi"] * 30) + mnemonic_value["degree"], mnemonic_value["arc_minutes"], 0)
+        uncorrected_true_position_degrees = dhruva_degrees + mnemonic_value_degrees
+        if mnemonic_key in (248, 0):
+            daily_motion_degrees = _vakya_dms_to_decimal_degrees(12, 3, 0)
+        else:
+            next_mnemonic_key = mnemonic_key + 1
+            mnemonic_value_next_day = table["moon"][str(next_mnemonic_key)]
+            mnemonic_value_degrees_next_day = _vakya_dms_to_decimal_degrees((mnemonic_value_next_day["rasi"] * 30) + mnemonic_value_next_day["degree"], mnemonic_value_next_day["arc_minutes"], 0)
+            if mnemonic_value_degrees_next_day < mnemonic_value_degrees:
+                daily_motion_degrees = (mnemonic_value_degrees_next_day - mnemonic_value_degrees) + 360
+            else:
+                daily_motion_degrees = mnemonic_value_degrees_next_day - mnemonic_value_degrees
+        if mnemonic_key_leftover_fraction:
+            uncorrected_true_position_degrees += mnemonic_key_leftover_fraction * daily_motion_degrees
+        uncorrected_true_position_degrees %= 360
+        vinadis = (q3 * 32) - (q2 * 8)
+        correction_arc_seconds = (daily_motion_degrees - _vakya_dms_to_decimal_degrees(13, 11, 0)) * vinadis
+        correction_degrees = _vakya_arc_seconds_to_decimal_degrees(correction_arc_seconds)
+        return (uncorrected_true_position_degrees + correction_degrees) % 360
+
+
+class VakyaReferencePanchaGraha:
+    def __init__(self) -> None:
+        self.sodhya = {
+            "mars": {"day": 1552827, "naaligai": 35, "dhruva": -402},
+            "mercury": {"day": 1592740, "naaligai": 22, "dhruva": -32},
+            "jupiter": {"day": 1570425, "naaligai": 17, "dhruva": -261},
+            "venus": {"day": 1561937, "naaligai": 44, "dhruva": 17},
+            "saturn": {"day": 1589474, "naaligai": 28, "dhruva": -326},
+        }
+        self.mandalas_planets = {
+            "mars": [{"day": 634089, "naaligai": 9, "dhruva": 4}, {"day": 132589, "naaligai": 21, "dhruva": 27}, {"day": 28857, "naaligai": 41, "dhruva": 133}, {"day": 17158, "naaligai": 37, "dhruva": -504}, {"day": 11699, "naaligai": 4, "dhruva": 638}],
+            "mercury": [{"day": 16801, "naaligai": 54, "dhruva": -1}, {"day": 4750, "naaligai": 53, "dhruva": 149}, {"day": 2549, "naaligai": 15, "dhruva": -447}],
+            "jupiter": [{"day": 474875, "naaligai": 27, "dhruva": 0}, {"day": 125648, "naaligai": 50, "dhruva": -9}, {"day": 65018, "naaligai": 17, "dhruva": 133}, {"day": 30315, "naaligai": 17, "dhruva": -71}, {"day": 21539, "naaligai": 48, "dhruva": -619}, {"day": 4387, "naaligai": 44, "dhruva": 274}],
+            "venus": [{"day": 437945, "naaligai": 9, "dhruva": 0}, {"day": 174594, "naaligai": 8, "dhruva": 29}, {"day": 88756, "naaligai": 53, "dhruva": -58}, {"day": 44962, "naaligai": 23, "dhruva": 2103}, {"day": 2919, "naaligai": 38, "dhruva": -144}],
+            "saturn": [{"day": 570534, "naaligai": 8, "dhruva": 5}, {"day": 182994, "naaligai": 23, "dhruva": -13}, {"day": 21551, "naaligai": 0, "dhruva": 43}, {"day": 10964, "naaligai": 32, "dhruva": 401}],
+        }
+        self.synodic_period = {"mars": 780, "mercury": 116, "jupiter": 399, "venus": 584, "saturn": 378}
+        self.apogee_planets = {
+            "mars": {"rasi": 3, "degree": 28, "arc_minutes": 0},
+            "mercury": {"rasi": 7, "degree": 0, "arc_minutes": 0},
+            "jupiter": {"rasi": 6, "degree": 0, "arc_minutes": 0},
+            "venus": {"rasi": 3, "degree": 0, "arc_minutes": 0},
+            "saturn": {"rasi": 7, "degree": 26, "arc_minutes": 0},
+        }
+        self.planets = ("mars", "mercury", "jupiter", "venus", "saturn")
+        self.total_dhruva = 0
+        self.input_date_prev = None
+        self.cumulative_custom_kali_days_prev = None
+        self.total_kali_days = None
+        self._table_cache = None
+
+    def _table(self):
+        if self._table_cache is None:
+            with _vakya_resource_path("planets_synodic_cycles_position_table.json").open("r", encoding="utf-8") as file:
+                self._table_cache = json.load(file)
+        return self._table_cache
+
+    def get_mandalas_remainder_days(self, mandalas_planet, remainder_days: float) -> float:
+        lower_mandalas = [mandala for mandala in mandalas_planet if _vakya_to_pure_days(mandala) <= remainder_days]
+        if not lower_mandalas:
+            return remainder_days
+        max_lower_mandala = max(lower_mandalas, key=lambda x: x["day"])
+        max_lower_mandala_days = _vakya_to_pure_days(max_lower_mandala)
+        quotient = int(remainder_days // max_lower_mandala_days)
+        remainder = remainder_days % max_lower_mandala_days
+        self.total_dhruva += quotient * max_lower_mandala["dhruva"]
+        return self.get_mandalas_remainder_days(mandalas_planet, remainder)
+
+    def get_true_position_degrees(self, dt: Dict[str, int], time_offset_days: float) -> Dict[str, float]:
+        input_date = dict(islice(dt.items(), 3))
+        planets_true_position_degrees: Dict[str, float] = {}
+        if input_date != self.input_date_prev:
+            cumulative_kali_days = _vakya_get_cumulative_kali_days(gregorian_year=dt["year"])
+            year_bounded_days = _vakya_get_year_bounded_days(day=dt["day"], month=dt["month"])
+            cumulative_custom_kali_days = round(cumulative_kali_days + year_bounded_days)
+        else:
+            cumulative_custom_kali_days = self.cumulative_custom_kali_days_prev
+        self.total_kali_days = cumulative_custom_kali_days + time_offset_days
+        table = self._table()
+        for planet in self.planets:
+            self.total_dhruva = 0
+            sodhya_planet = self.sodhya[planet]
+            remainder_days_sodhya = self.total_kali_days - _vakya_to_pure_days(sodhya_planet)
+            self.total_dhruva += sodhya_planet["dhruva"]
+            mandalas_remainder_days = self.get_mandalas_remainder_days(self.mandalas_planets[planet], remainder_days_sodhya)
+            completed_synodic_cycles = int(mandalas_remainder_days // self.synodic_period[planet])
+            remaining_synodic_days = mandalas_remainder_days % self.synodic_period[planet]
+            planet_table = table[planet]
+            total_planet_synodic_cycles = len(planet_table.keys())
+            current_cycle_number = (completed_synodic_cycles % total_planet_synodic_cycles) + 1
+            current_cycle_table = planet_table[str(current_cycle_number)]
+            current_cycle_days = sorted(int(day) for day in current_cycle_table.keys())
+            is_continuity_reference = False
+            is_initial_reference = False
+            if remaining_synodic_days < current_cycle_days[0]:
+                prev_cycle_number = total_planet_synodic_cycles if current_cycle_number == 1 else current_cycle_number - 1
+                prev_cycle_table = planet_table[str(prev_cycle_number)]
+                prev_cycle_days = sorted(int(day) for day in prev_cycle_table.keys())
+                lower_cycle_day = [prev_cycle_days[-1]]
+                if completed_synodic_cycles == 0:
+                    is_initial_reference = True
+                else:
+                    is_continuity_reference = True
+            else:
+                lower_cycle_day = [cycle_day for cycle_day in current_cycle_days if cycle_day < remaining_synodic_days]
+            prev_day = max(lower_cycle_day)
+            if not is_initial_reference and not is_continuity_reference:
+                prev_day_data = current_cycle_table[str(prev_day)]
+            else:
+                prev_day_data = prev_cycle_table[str(prev_day)]
+                prev_day = 0
+            if planet == "venus":
+                prev_day_data["correction"] = prev_day_data["correction_a"] if self.total_dhruva > 0 else prev_day_data["correction_b"]
+            if is_initial_reference:
+                self.apogee_planets[planet]["correction"] = prev_day_data["correction"]
+                prev_day_data = self.apogee_planets[planet]
+            correction_prev_day = prev_day_data["correction"] * _vakya_arc_minutes_to_degrees(self.total_dhruva)
+            corrected_prev_day_position = _vakya_rasi_degree_minute_to_degrees(prev_day_data["rasi"], prev_day_data["degree"], prev_day_data["arc_minutes"]) + _vakya_arc_minutes_to_degrees(correction_prev_day)
+            true_position_degrees = corrected_prev_day_position + _vakya_arc_minutes_to_degrees(self.total_dhruva)
+            if remaining_synodic_days != 0 and remaining_synodic_days not in current_cycle_days:
+                next_day = min(cycle_day for cycle_day in current_cycle_days if cycle_day > remaining_synodic_days)
+                next_day_data = current_cycle_table[str(next_day)]
+                if planet == "venus":
+                    next_day_data["correction"] = next_day_data["correction_a"] if self.total_dhruva > 0 else next_day_data["correction_b"]
+                correction_next_day = next_day_data["correction"] * _vakya_arc_minutes_to_degrees(self.total_dhruva)
+                corrected_next_day_position = _vakya_rasi_degree_minute_to_degrees(next_day_data["rasi"], next_day_data["degree"], next_day_data["arc_minutes"]) + _vakya_arc_minutes_to_degrees(correction_next_day)
+                if abs(corrected_next_day_position - corrected_prev_day_position) > 270:
+                    if corrected_next_day_position > corrected_prev_day_position:
+                        diff = (corrected_next_day_position - corrected_prev_day_position) - 360
+                    else:
+                        diff = (corrected_next_day_position - corrected_prev_day_position) + 360
+                else:
+                    diff = corrected_next_day_position - corrected_prev_day_position
+                interval = next_day - prev_day
+                daily_motion = diff / interval
+                leftovers = remaining_synodic_days - prev_day
+                true_position_degrees += daily_motion * leftovers
+            planets_true_position_degrees[planet] = true_position_degrees % 360
+        self.input_date_prev = input_date
+        self.cumulative_custom_kali_days_prev = cumulative_custom_kali_days
+        return planets_true_position_degrees
+
+
+@dataclass
+class VakyaComputationResult:
+    positions: Dict[str, float]
+    tamil_date: Dict[str, int]
+    total_kali_days: float
+
+
+class VakyaReferenceEngine:
+    def __init__(self) -> None:
+        self.calendar = VakyaTamilCalendar()
+        self.pancha_graha = VakyaReferencePanchaGraha()
+        self.sun = VakyaReferenceSun()
+        self.moon = VakyaReferenceMoon()
+
+    def calculate_for_gregorian(self, birth_date: date, birth_time: time) -> VakyaComputationResult:
+        tamil_date = self.calendar.eng_to_tam_date({"year": birth_date.year, "month": birth_date.month, "day": birth_date.day})
+        dt = {"year": tamil_date["year"], "month": tamil_date["month"], "day": tamil_date["day"], "hour": birth_time.hour, "minute": birth_time.minute}
+        time_offset_days = _vakya_get_ujjain_offset_time(birth_time.hour, birth_time.minute)
+        pancha_positions = self.pancha_graha.get_true_position_degrees(dt, time_offset_days)
+        sun_position = self.sun.get_true_position_degrees(dt, time_offset_days)
+        rahu_rasi, ketu_rasi = self.moon.get_rahu_ketu_true_position_decimal_rasi(self.pancha_graha.total_kali_days)
+        moon_position = self.moon.get_moon_true_position_degrees(self.pancha_graha.total_kali_days)
+        positions = {
+            "Sun": sun_position % 360.0,
+            "Moon": moon_position % 360.0,
+            "Mars": pancha_positions["mars"] % 360.0,
+            "Mercury": pancha_positions["mercury"] % 360.0,
+            "Jupiter": pancha_positions["jupiter"] % 360.0,
+            "Venus": pancha_positions["venus"] % 360.0,
+            "Saturn": pancha_positions["saturn"] % 360.0,
+            "Rahu": (rahu_rasi * 30.0) % 360.0,
+            "Ketu": (ketu_rasi * 30.0) % 360.0,
+        }
+        return VakyaComputationResult(positions=positions, tamil_date=tamil_date, total_kali_days=self.pancha_graha.total_kali_days)
 
 
 class AyanamsaProvider:
@@ -494,21 +432,111 @@ class VakkiamCalculator(AstronomicalCalculations):
     def __init__(self, ayanamsa_provider: str = "vakya"):
         super().__init__()
         self.system_name = "vakkiam"
-        self.vakya_ephemeris = VakyaEphemerisProvider()
+        self.vakya_reference = VakyaReferenceEngine()
         self.ayanamsa_provider = AyanamsaProvider(ayanamsa_provider)
+        self.calibration_config = self._load_calibration_config()
 
-    def calculate_planetary_positions_vakya(self, jd: float) -> Dict[str, Dict]:
-        """Calculate planetary positions using generalized Vakya engine"""
-        raw_longitudes = self.vakya_ephemeris.calculate_longitudes(jd)
+    def _load_calibration_config(self) -> Dict:
+        calibration_path = Path(__file__).resolve().parent / "vakkiam_calibration_offsets.json"
+        if not calibration_path.exists():
+            return {}
+        try:
+            with calibration_path.open("r", encoding="utf-8") as file:
+                data = json.load(file)
+            if not data.get("enabled", False):
+                return {}
+            if data.get("mode") == "global_legacy_engine_calibration":
+                prepared_planets = {}
+                for planet, samples in data.get("planets", {}).items():
+                    prepared_planets[planet] = (
+                        [float(sample[0]) for sample in samples],
+                        [float(sample[1]) for sample in samples],
+                    )
+                data["_prepared_planets"] = prepared_planets
+            return data
+        except (OSError, ValueError, TypeError):
+            return {}
+
+    def _get_calibration_offset(self, planet: str, raw_longitude: float, jd: Optional[float] = None) -> float:
+        if not self.calibration_config:
+            return 0.0
+
+        if self.calibration_config.get("mode") == "global_legacy_engine_calibration":
+            if jd is None:
+                return 0.0
+            prepared = self.calibration_config.get("_prepared_planets", {}).get(planet)
+            if not prepared:
+                return 0.0
+            sample_jds, sample_offsets = prepared
+            if len(sample_jds) == 1:
+                return sample_offsets[0]
+            idx = bisect_left(sample_jds, jd)
+            if idx <= 0:
+                return sample_offsets[0]
+            if idx >= len(sample_jds):
+                return sample_offsets[-1]
+
+            left_jd, left_offset = sample_jds[idx - 1], sample_offsets[idx - 1]
+            right_jd, right_offset = sample_jds[idx], sample_offsets[idx]
+            if right_jd == left_jd:
+                return left_offset
+            ratio = (jd - left_jd) / (right_jd - left_jd)
+            return left_offset + ((right_offset - left_offset) * ratio)
+
+        if self.calibration_config.get("mode") == "cycle_position_interpolation":
+            anchors = self.calibration_config.get("anchors", {}).get(planet, [])
+            if not anchors:
+                return 0.0
+            if len(anchors) == 1:
+                return float(anchors[0].get("offset_degrees", 0.0))
+
+            points = sorted(
+                (
+                    float(anchor["cycle_position_degrees"]) % 360.0,
+                    float(anchor["offset_degrees"]),
+                )
+                for anchor in anchors
+            )
+            key = raw_longitude % 360.0
+            for position, offset in points:
+                if abs(key - position) < 1e-9:
+                    return offset
+
+            extended = points + [(points[0][0] + 360.0, points[0][1])]
+            key_for_search = key
+            if key < points[0][0]:
+                key_for_search = key + 360.0
+
+            for idx in range(len(extended) - 1):
+                left_pos, left_offset = extended[idx]
+                right_pos, right_offset = extended[idx + 1]
+                if left_pos <= key_for_search <= right_pos:
+                    span = right_pos - left_pos
+                    if span == 0:
+                        return left_offset
+                    ratio = (key_for_search - left_pos) / span
+                    return left_offset + ((right_offset - left_offset) * ratio)
+
+            return 0.0
+
+        offsets = self.calibration_config.get("offsets_degrees", {})
+        return float(offsets.get(planet, 0.0))
+
+    def calculate_planetary_positions_vakya(self, birth_date: date, birth_time: time, jd: Optional[float] = None) -> Dict[str, Dict]:
+        """Calculate planetary positions using reference-style Vakya engine."""
+        if jd is None:
+            jd = self.get_julian_day_lmt(birth_date, birth_time, 0.0)
+        raw_longitudes = self.vakya_reference.calculate_for_gregorian(birth_date, birth_time).positions
         positions = {}
         for planet in PLANETS.values():
-            if planet not in raw_longitudes: continue
-            lon = raw_longitudes[planet]
+            if planet not in raw_longitudes:
+                continue
+            lon = (raw_longitudes[planet] + self._get_calibration_offset(planet, raw_longitudes[planet], jd)) % 360.0
             positions[planet] = {
-                'longitude': lon,
-                'latitude': 0.0,
-                'sign': self.get_sign_from_longitude(lon),
-                'nakshatra': self.get_nakshatra_from_longitude(lon)
+                "longitude": lon,
+                "latitude": 0.0,
+                "sign": self.get_sign_from_longitude(lon),
+                "nakshatra": self.get_nakshatra_from_longitude(lon),
             }
         return positions
 
@@ -685,14 +713,28 @@ class VakkiamCalculator(AstronomicalCalculations):
         jd = self.get_julian_day_lmt(
             birth_details.date_of_birth, birth_details.time_of_birth, birth_details.longitude
         )
-        planetary_positions_raw = self.calculate_planetary_positions_vakya(jd)
+        vakya_result = self.vakya_reference.calculate_for_gregorian(
+            birth_details.date_of_birth, birth_details.time_of_birth
+        )
+        planetary_positions_raw = self.calculate_planetary_positions_vakya(
+            birth_details.date_of_birth, birth_details.time_of_birth, jd
+        )
         ascendant_longitude = self.calculate_ascendant_traditional(
             jd, birth_details.latitude, birth_details.longitude
         )
         house_cusps = self.calculate_houses(ascendant_longitude)
         
         planetary_positions: List[PlanetaryPosition] = []
-        prev_day_positions = self.calculate_planetary_positions_vakya(jd - 1.0)
+        prev_day_jd = self.get_julian_day_lmt(
+            birth_details.date_of_birth - timedelta(days=1),
+            birth_details.time_of_birth,
+            birth_details.longitude,
+        )
+        prev_day_positions = self.calculate_planetary_positions_vakya(
+            birth_details.date_of_birth - timedelta(days=1),
+            birth_details.time_of_birth,
+            prev_day_jd,
+        )
 
         for planet_name, position in planetary_positions_raw.items():
             retro = False
@@ -792,6 +834,24 @@ class VakkiamCalculator(AstronomicalCalculations):
             sun_longitude=sun_longitude, moon_longitude=moon_longitude,
             ayanamsa_value=ayanamsa_value
         )
+        # Vakkiam must use the reference Tamil calendar date.
+        tamil_month_map = {
+            1: "சித்திரை",
+            2: "வைகாசி",
+            3: "ஆனி",
+            4: "ஆடி",
+            5: "ஆவணி",
+            6: "புரட்டாசி",
+            7: "ஐப்பசி",
+            8: "கார்த்திகை",
+            9: "மார்கழி",
+            10: "தை",
+            11: "மாசி",
+            12: "பங்குனி",
+        }
+        panchangam["tamil_month"] = tamil_month_map.get(vakya_result.tamil_date["month"])
+        panchangam["tamil_day"] = vakya_result.tamil_date["day"]
+        panchangam["tamil_year"] = vakya_result.tamil_date["year"]
 
         yogi_seq = ["Moon", "Sun", "Jupiter", "Mars", "Mercury", "Saturn", "Venus", "Rahu", "Ketu"]
         yogi_idx = (moon_position['nakshatra'] * 8) % 9
@@ -1107,5 +1167,7 @@ class VakkiamCalculator(AstronomicalCalculations):
         return Chart(chart_type="navamsa", houses=signs, houses_tamil=signs_tamil, ascendant_house=nav_asc_sign)
 
     def _parse_timezone(self, tz_str):
-        try: return float(tz_str)
-        except: return 5.5
+        try:
+            return float(tz_str)
+        except (TypeError, ValueError):
+            return 5.5
