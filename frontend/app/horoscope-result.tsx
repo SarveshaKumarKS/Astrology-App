@@ -634,7 +634,7 @@ export default function HoroscopeResultPage() {
           horoscopeData.karu_udayam_rasi_chart,
           'Karu Udayam Rasi Chart',
           'கரு உதயம் ராசி கட்டம்',
-          `${getText('தமிழ் தேதி', 'Tamil Date')}: ${horoscopeData.karu_udayam_tamil_month || 'N/A'} ${horoscopeData.karu_udayam_tamil_day ?? ''} | ${getText('தேதி', 'Date')}: ${formatDateDDMMYYYY(horoscopeData.karu_udayam_date_of_birth || '')} | ${getText('நேரம்', 'Time')}: ${horoscopeData.karu_udayam_time_of_birth || horoscopeData.birth_details.time_of_birth || 'N/A'}`
+          `${getText('தமிழ் தேதி', 'Tamil Date')}: ${horoscopeData.karu_udayam_tamil_month || 'N/A'} ${horoscopeData.karu_udayam_tamil_day ?? ''} | ${getText('நேரம்', 'Time')}: ${horoscopeData.karu_udayam_time_of_birth || horoscopeData.birth_details.time_of_birth || 'N/A'}`
         )}
         {renderDasaPeriods()}
       </ScrollView>
