@@ -12,7 +12,11 @@ from datetime import datetime, date, time
 from astrology.vakkiam_system import VakkiamCalculator
 from astrology.thirukkanitham_system import ThirukkanithamCalculator
 from astrology.models import BirthDetails, HoroscopeResult, CompatibilityResult
-from astrology.nkv_palan import compute_nkv_context, generate_nkv_predictions
+from astrology.nkv_palan import (
+    compute_nkv_context,
+    compute_saturn_transit_result,
+    generate_nkv_predictions,
+)
 from astrology.palan_pdf_generator import generate_palan_pdf
 from astrology.karu_udayam import (
     get_karu_udayam_tamil_date,
@@ -320,7 +324,8 @@ async def generate_palan_pdf_endpoint(request: HoroscopeRequest):
         horoscope = calculator.generate_horoscope(birth_details, request.language)
 
         context = compute_nkv_context(horoscope)
-        palan_result = generate_nkv_predictions(context)
+        saturn_transit = compute_saturn_transit_result(horoscope, calculator)
+        palan_result = generate_nkv_predictions(context, saturn_transit=saturn_transit)
 
         pdf_bytes = generate_palan_pdf(palan_result, name=birth_details.name)
 

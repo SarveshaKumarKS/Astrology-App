@@ -1,10 +1,8 @@
 """
 NKV Palan PDF Generator — "Cosmic Blueprint" Edition
 
-Generates a standalone Palan (prediction) PDF with three sections:
-  1. The Karmic Blueprint (Rahu-Ketu)
-  2. The Mental Filter (Saturn-Moon)
-  3. The NKV Key Advice
+Generates a standalone Palan (prediction) PDF focused on current Saturn transit
+results from the rasi square.
 
 Header and colour palette are now unified with pdf_generator.py.
 """
@@ -153,6 +151,45 @@ def _birth_summary_table(summary: Dict[str, str]) -> Table:
     return tbl
 
 
+def _saturn_transit_table(palan: NKVPalanResult) -> Table:
+    """Render current Saturn transit targets in a compact note-style table."""
+    transit = palan.saturn_transit
+    if not transit:
+        return _placement_box("தற்போதைய சனி பார்வை பலன் கணிக்கப்படவில்லை.")
+
+    rows = [[
+        tamil_image_flowable("பார்வை", font_size=11, is_bold=True, text_color=PIL_WHITE_TEXT),
+        tamil_image_flowable("ராசி / இடம்", font_size=11, is_bold=True, text_color=PIL_WHITE_TEXT),
+        tamil_image_flowable("உள்ள கிரகங்கள்", font_size=11, is_bold=True, text_color=PIL_WHITE_TEXT),
+        tamil_image_flowable("பலன் பொருள்", font_size=11, is_bold=True, text_color=PIL_WHITE_TEXT),
+    ]]
+
+    for item in transit.affected_houses:
+        rows.append([
+            tamil_image_flowable(f"{item.get('aspect')}ஆம்", font_size=10, text_color=PIL_TEXT_NAVY),
+            tamil_image_flowable(
+                f"{item.get('sign_tamil')} / {item.get('house')}ஆம் இடம்",
+                font_size=10,
+                text_color=PIL_TEXT_NAVY,
+            ),
+            tamil_image_flowable(str(item.get("planets_tamil", "")), font_size=10, text_color=PIL_TEXT_NAVY),
+            tamil_image_flowable(str(item.get("topics_tamil", "")), font_size=10, text_color=PIL_TEXT_NAVY),
+        ])
+
+    tbl = Table(rows, colWidths=[0.7 * inch, 1.35 * inch, 1.35 * inch, CONTENT_W - 3.4 * inch])
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), TEXT_NAVY),
+        ("BACKGROUND", (0, 1), (-1, -1), BG_IVORY),
+        ("GRID", (0, 0), (-1, -1), 0.4, ACCENT_GOLD),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    return tbl
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Main PDF entry point
 # ──────────────────────────────────────────────────────────────────────────────
@@ -206,13 +243,18 @@ def generate_palan_pdf(palan: NKVPalanResult, name: str = "") -> bytes:
     story.append(_birth_summary_table(palan.birth_summary))
     story.append(Spacer(1, 0.14 * inch))
 
-    # ── 5. Section 1: Karmic Blueprint ───────────────────────────────────────
-    story.append(_section_heading(palan.section1_title_tamil))
-    story.append(Spacer(1, 0.05 * inch))
-    story.append(_placement_box(palan.section1_placement_tamil))
-    story.append(Spacer(1, 0.05 * inch))
-    story.append(_palan_body(palan.section1_palan_tamil))
-    story.append(Spacer(1, 0.14 * inch))
+    # ── 5. Current Saturn transit from rasi square ────────────────────────────
+    if palan.saturn_transit:
+        story.append(_section_heading("தற்போதைய சனி பார்வை பலன்"))
+        story.append(Spacer(1, 0.05 * inch))
+        story.append(_placement_box(palan.saturn_transit.placement_tamil))
+        story.append(Spacer(1, 0.05 * inch))
+        story.append(_placement_box(palan.saturn_transit.aspect_summary_tamil))
+        story.append(Spacer(1, 0.05 * inch))
+        story.append(_saturn_transit_table(palan))
+        story.append(Spacer(1, 0.05 * inch))
+        story.append(_palan_body(" ".join(palan.saturn_transit.result_lines_tamil)))
+        story.append(Spacer(1, 0.14 * inch))
 
     # ── 6. Section 2: Mental Filter ───────────────────────────────────────────
     story.append(_section_heading(palan.section2_title_tamil))
@@ -220,18 +262,6 @@ def generate_palan_pdf(palan: NKVPalanResult, name: str = "") -> bytes:
     story.append(_placement_box(palan.section2_placement_tamil))
     story.append(Spacer(1, 0.05 * inch))
     story.append(_palan_body(palan.section2_palan_tamil))
-    story.append(Spacer(1, 0.14 * inch))
-
-    # ── 7. Section 3: Key Advice ──────────────────────────────────────────────
-    story.append(_section_heading(palan.section3_title_tamil))
-    story.append(Spacer(1, 0.05 * inch))
-
-    disp_text_ta = f"ராகுவின் அதிபதி: {palan.rahu_dispositor_tamil}"
-    if palan.rahu_dispositor_strong:
-        disp_text_ta += " (வலிமையானது — அரசனை உருவாக்குபவர்)"
-    story.append(_placement_box(disp_text_ta))
-    story.append(Spacer(1, 0.05 * inch))
-    story.append(_palan_body(palan.section3_advice_tamil))
 
     # ── Build ─────────────────────────────────────────────────────────────────
     doc.build(story)
