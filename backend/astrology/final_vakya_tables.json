@@ -8,11 +8,11 @@
         "type": "aryabhatiya_epicycle"
     },
     "Moon": {
-        "epoch_l0": 187.942798383107,
+        "epoch_l0": 187.74279838310702,
         "mean_motion": 13.17635489,
-        "apogee_l0": 71.41144336209877,
+        "apogee_l0": 61.911443362098765,
         "apogee_rate": 0.11138658,
-        "amplitude": 4.200035797040596,
+        "amplitude": 4.956042240728303,
         "is_synodic": false,
         "type": "aryabhatiya_epicycle"
     },

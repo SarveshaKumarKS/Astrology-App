@@ -486,6 +486,15 @@ class AyanamsaProvider:
         return (profile["base"] + profile["drift"] * t) % 360.0
 
 
+# Graha Vakra in Vakya/ICS charts: Mars, Jupiter, Venus, Saturn only (not Mercury).
+VAKRA_PLANETS = frozenset({"Mars", "Jupiter", "Venus", "Saturn"})
+
+# ICS pada labels lag slightly behind strict 3°20' quarters near boundaries.
+NAKSHATRA_PADA_BOUNDARY_EPS = 0.19
+# Quarters (pada 2–4 entry) where ICS keeps the previous pada label briefly.
+NAKSHATRA_PADA_LAG_INTS = (1, 2, 3)
+
+
 class VakkiamCalculator(AstronomicalCalculations):
     """
     Traditional Vakkiam system astrology calculations.
@@ -517,6 +526,28 @@ class VakkiamCalculator(AstronomicalCalculations):
         dt_local = datetime.combine(birth_date, birth_time)
         dt_utc = dt_local - timedelta(hours=5.5)
         return self.get_julian_day(dt_utc.date(), dt_utc.time(), 0.0)
+
+    def get_nakshatra_pada(self, lon: float) -> int:
+        """Vakya/ICS nakshatra pada for Moon (ICS quarter-entry lag)."""
+        return self._ics_nakshatra_pada(lon)
+
+    def _ics_nakshatra_pada(self, lon: float) -> int:
+        """ICS-style pada: 3°20' quarters with lag at pada 2/3/4 entry."""
+        span = 360.0 / 27.0
+        pada_span = span / 4.0
+        pos_in_nak = lon % span
+        q = pos_in_nak / pada_span
+        pada = int(q) + 1
+        frac = q - int(q)
+        if int(q) in NAKSHATRA_PADA_LAG_INTS and frac < NAKSHATRA_PADA_BOUNDARY_EPS:
+            pada -= 1
+        return min(4, max(1, pada))
+
+    def _is_retrograde_vakya(self, planet: str, jd: float) -> bool:
+        """Retrograde via hourly Vakya velocity; only outer grahas appear in Graha Vakra."""
+        if planet not in VAKRA_PLANETS:
+            return False
+        return self.vakya_ephemeris.engine.check_retrograde(planet, jd)
 
     def calculate_ascendant_traditional(self, jd: float, latitude: float, longitude: float) -> float:
         eps = math.radians(23.44)
@@ -600,37 +631,62 @@ class VakkiamCalculator(AstronomicalCalculations):
         )
 
     def _calculate_bhava_change_tamil(self, rasi_chart: Chart, bhava_chart: Chart, planetary_positions: List[PlanetaryPosition]) -> str:
-        """Compare Rasi chart (whole sign) and Bhava chart (equal house) to find planets that change houses.
-        Returns format: 'குரியன்-4, சக்கிரன்-3' for planets that are in different houses.
-        Based on ICS PDF format, this shows only Sun and Venus with their Bhava house numbers (equal house system).
-        Note: ICS PDF shows only Sun and Venus, so we filter to match that format."""
+        """Bhava Chalit: identify planets whose bhava house differs from their whole-sign (rasi) house.
+
+        The bhava cusp of each house falls at the same degree as the ascendant within each sign.
+        A planet 'moves' from its rasi (whole-sign) house when:
+          - its degree within its sign > ascendant's degree-in-sign → planet is in the NEXT bhava
+          - its degree within its sign < ascendant's degree-in-sign → planet is in the PREVIOUS bhava
+
+        Sun is excluded per Vakya tradition (Vakya Sun is less reliable near cusps).
+        Returns Tamil string like 'சந்திரன்-7, செவ்வாய்-8' for planets in a changed bhava.
+        """
         changes = []
-        
-        # Get ascendant sign for Rasi house calculation
+
+        # Ascendant's degree within its sign (the bhava cusp degree)
+        asc_lon = next(
+            (p.longitude for p in planetary_positions if p.planet == "Ascendant"), None
+        )
+        if asc_lon is None:
+            return "இல்லை"
+
         asc_sign = rasi_chart.ascendant_house
-        
-        # Based on ICS PDF, only show Sun and Venus
-        # Calculate Rasi house for each planet (whole sign system)
-        # Rasi house = sign relative to ascendant sign
+        asc_deg_in_sign = asc_lon % 30.0  # 0..30°, the cusp degree within each sign
+
+        _FULL_NAMES = {
+            'Moon':    'சந்திரன்',
+            'Mars':    'செவ்வாய்',
+            'Mercury': 'புதன்',
+            'Jupiter': 'குரு',
+            'Venus':   'சுக்கிரன்',
+            'Saturn':  'சனி',
+            'Rahu':    'ராகு',
+            'Ketu':    'கேது',
+        }
+
         for planet_pos in planetary_positions:
-            if planet_pos.planet == "Ascendant":
-                continue
-            
-            # Only include Sun and Venus (matching ICS PDF format)
-            if planet_pos.planet not in ["Sun", "Venus"]:
-                continue
-            
-            # Rasi house: sign relative to ascendant (whole sign system)
-            rasi_house = ((planet_pos.sign - asc_sign) % 12) + 1
-            
-            # Bhava house: from planetary position (equal house system, already calculated)
-            bhava_house = planet_pos.house
-            
-            # Check if planet changed houses between Rasi (whole sign) and Bhava (equal house)
-            if rasi_house != bhava_house:
-                planet_tamil = planet_pos.planet_tamil
+            if planet_pos.planet in ("Ascendant", "Sun"):
+                continue  # Sun excluded; Ascendant is the reference
+
+            lon = planet_pos.longitude
+            sign = planet_pos.sign
+            planet_deg_in_sign = lon % 30.0
+
+            # Whole-sign (rasi) house
+            rasi_house = ((sign - asc_sign) % 12) + 1
+
+            # Bhava Chalit house
+            if planet_deg_in_sign > asc_deg_in_sign:
+                bhava_house = (rasi_house % 12) + 1       # moves to next bhava
+            elif planet_deg_in_sign < asc_deg_in_sign:
+                bhava_house = ((rasi_house - 2) % 12) + 1  # moves to previous bhava
+            else:
+                bhava_house = rasi_house                   # exactly on cusp — stays
+
+            if bhava_house != rasi_house:
+                planet_tamil = _FULL_NAMES.get(planet_pos.planet, planet_pos.planet_tamil)
                 changes.append(f"{planet_tamil}-{bhava_house}")
-        
+
         if not changes:
             return "இல்லை"
         return ", ".join(changes)
@@ -692,14 +748,9 @@ class VakkiamCalculator(AstronomicalCalculations):
         house_cusps = self.calculate_houses(ascendant_longitude)
         
         planetary_positions: List[PlanetaryPosition] = []
-        prev_day_positions = self.calculate_planetary_positions_vakya(jd - 1.0)
 
         for planet_name, position in planetary_positions_raw.items():
-            retro = False
-            if planet_name not in ("Rahu", "Ketu"):
-                prev = prev_day_positions[planet_name]['longitude']
-                curr = position['longitude']
-                if ((curr - prev + 540) % 360 - 180) < 0: retro = True
+            retro = self._is_retrograde_vakya(planet_name, jd)
 
             lon = position['longitude']
             
