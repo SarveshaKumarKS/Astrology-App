@@ -5,6 +5,7 @@ import math
 import json
 import os
 from astrology.calculations import AstronomicalCalculations
+from astrology.vakya_table_engine import VakyaTableEngine
 from astrology.models import (
     BirthDetails, HoroscopeResult, CompatibilityResult, PlanetaryPosition,
     DasaPeriod, Chart, CompatibilityFactor
@@ -505,6 +506,8 @@ class VakkiamCalculator(AstronomicalCalculations):
         self.system_name = "vakkiam"
         self.vakya_ephemeris = VakyaEphemerisProvider()
         self.ayanamsa_provider = AyanamsaProvider(ayanamsa_provider)
+        _data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'vakya')
+        self._vakya_engine = VakyaTableEngine(_data_dir)
 
     def calculate_planetary_positions_vakya(self, jd: float) -> Dict[str, Dict]:
         """Calculate planetary positions using generalized Vakya engine"""

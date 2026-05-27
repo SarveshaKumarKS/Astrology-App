@@ -240,18 +240,24 @@ class VakyaTableEngine:
 
     # ── Moon ──────────────────────────────────────────────────────────────────
 
-    def _calc_moon(self, ky_C: int, month: int, day_in_month: int) -> float:
-        # Use total KY days to birth (same pattern as planets).
-        # moon_low cum values are in arcminutes (wraps at 21600); multiply × 60 → arcsec.
-        total_days = ky_C + SAKA_MONTHS[month - 1][0] + day_in_month - 1
-        v14_1 = total_days
+    def _calc_moon(self, ky_C: int, ky_D: int, ky_E: int,
+                   month: int, day_in_month: int) -> float:
+        # Reduction input: Tamil New Year KY days only (NOT total days to birth).
+        # +1 if ghatika fraction (D*60+E) >= 1845 vinadis.
+        v14_1 = ky_C
+        if ky_D * 60 + ky_E >= 1845:
+            v14_1 += 1
+
         v30 = 0
         for i in range(38):
-            if v14_1 >= MOON_KHANDAS[i]:
+            while v14_1 >= MOON_KHANDAS[i]:
                 v14_1 -= MOON_KHANDAS[i]
                 v30 += MOON_ANCHORS[i]
 
-        v14_3 = v14_1
+        # Vakya index = reduced_C + days from Tamil New Year to START of birth month.
+        # day_in_month is NOT part of the vakya index; it only indexes into lagna_aux.
+        v6_4 = SAKA_MONTHS[month - 1][0]
+        v14_3 = v14_1 + v6_4
         while v14_3 > 248:
             v14_3 -= 248
             v30 += 99846
@@ -259,15 +265,14 @@ class VakyaTableEngine:
         vak_row = self._tables['moon_low.txt'].get(v14_3)
         if vak_row is None:
             return 0.0
-        m_base = int(vak_row[1])  # arcminutes → convert to arcsec × 60
+        m_base = int(vak_row[1]) * 60  # arcminutes → arcseconds
 
         hsg_row = self._tables['lagna_aux.txt'].get(day_in_month)
         if hsg_row is None:
             return 0.0
         daily_motion = int(hsg_row[month - 1])
 
-        # MOON_BIJA = 37600 arcsec (10.44°) — epoch correction calibrated from 729-case dataset
-        moon_arcsec = (v30 + m_base * 60 + daily_motion + 37600) % FULL_CIRCLE_ARCSEC
+        moon_arcsec = (daily_motion + v30 + m_base) % FULL_CIRCLE_ARCSEC
         return moon_arcsec / 3600.0
 
     # ── Rahu ──────────────────────────────────────────────────────────────────
@@ -322,24 +327,27 @@ class VakyaTableEngine:
 
     # ── Outer/inner planets (table reduction + interpolation) ─────────────────
 
-    def _calc_planet(self, planet: str, ky_C: int, ky_D: int, ky_E: int,
-                     month: int, day_in_month: int, ghatika: int) -> Tuple[float, bool]:
+    def _next_tamil_day(self, month: int, day_in_month: int) -> Tuple[int, int]:
+        """Returns (month, day_in_month) for the next Tamil calendar day."""
+        tomorrow = SAKA_MONTHS[month - 1][0] + day_in_month  # tomorrow's 0-indexed day from TNY
+        for m in range(12):
+            if SAKA_MONTHS[m][0] <= tomorrow < SAKA_MONTHS[m + 1][0]:
+                return m + 1, tomorrow - SAKA_MONTHS[m][0] + 1
+        return 12, tomorrow - SAKA_MONTHS[11][0] + 1
+
+    def _planet_raw_arcsec(self, planet: str, ky_C: int, ky_D: int, ky_E: int,
+                            month: int, day_in_month: int) -> Optional[float]:
+        """Planet longitude in arcseconds at ghatika=0 (sunrise) for the given Tamil calendar day."""
         desc   = PLANET_DESC[planet]
         period = desc['period']
         rows   = desc['rows']
         split  = desc['split']
 
-        sm       = SAKA_MONTHS[month - 1]
-        d_days   = sm[0]
-        e_arcmin = sm[1]
-        f_arcsec = sm[2]
-
-        v10_0 = ky_C + d_days + day_in_month - 1
-        v12   = ky_D + e_arcmin
-        v14   = ky_E + f_arcsec
+        sm    = SAKA_MONTHS[month - 1]
+        v10_0 = ky_C + sm[0] + day_in_month - 1
+        v12   = ky_D + sm[1]
 
         accumulated_bija = 0
-
         for khanda, gh, bija in zip(desc['khandas'], desc['gh'], desc['bija']):
             while v10_0 >= khanda:
                 v10_0 -= khanda
@@ -351,11 +359,8 @@ class VakyaTableEngine:
 
         G         = v10_0 % period
         cycle_num = v10_0 // period
-
-        if desc['cycle_mod'] is not None:
-            expected_cycle = (cycle_num % desc['cycle_mod']) + 1
-        else:
-            expected_cycle = cycle_num + 1
+        expected_cycle = ((cycle_num % desc['cycle_mod']) + 1
+                          if desc['cycle_mod'] is not None else cycle_num + 1)
 
         seq_found: Optional[int] = None
         for row_idx in range(1, rows + 1):
@@ -381,12 +386,10 @@ class VakyaTableEngine:
 
         row2 = self._tables[fname2].get(seq_found)
         row1 = self._tables[fname1].get(seq_prev)
-
         if row2 is None or row1 is None:
-            return 0.0, False
+            return None
 
         bija_arcsec = accumulated_bija * 60
-
         pos1 = int(row1[2]) * 3600 + int(row1[3]) * 60 + bija_arcsec
         pos2 = int(row2[2]) * 3600 + int(row2[3]) * 60 + bija_arcsec
 
@@ -400,13 +403,44 @@ class VakyaTableEngine:
         if day_span <= 0:
             day_span = 1
 
-        pos = pos1 + (pos2 - pos1) * ghatika / (day_span * 60.0)
-        pos = pos % FULL_CIRCLE_ARCSEC
+        G_offset = G - int(row1[1])  # days since row1 entry
+        pos = pos1 + (pos2 - pos1) * G_offset / day_span
+        return pos % FULL_CIRCLE_ARCSEC
 
-        # Retrograde when planet moves backward (pos decreases between bracket rows)
-        retrograde = pos2 < pos1
+    def _calc_planet(self, planet: str, ky_C: int, ky_D: int, ky_E: int,
+                     month: int, day_in_month: int, ghatika: int) -> Tuple[float, bool]:
+        today_arcsec = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, month, day_in_month)
+        if today_arcsec is None:
+            return 0.0, False
 
-        return pos / 3600.0, retrograde
+        t_month, t_day = self._next_tamil_day(month, day_in_month)
+        tomorrow_arcsec = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, t_month, t_day)
+        if tomorrow_arcsec is None:
+            return today_arcsec / 3600.0, False
+
+        retrograde = today_arcsec > tomorrow_arcsec
+        daily_motion = abs(today_arcsec - tomorrow_arcsec)
+
+        if daily_motion > 180000:  # > 50° wrap-around
+            retrograde = not retrograde
+            if retrograde:
+                daily_motion = (FULL_CIRCLE_ARCSEC - tomorrow_arcsec) + today_arcsec
+            else:
+                daily_motion = (FULL_CIRCLE_ARCSEC - today_arcsec) + tomorrow_arcsec
+
+        vinadi = ghatika * 60  # vinadi_since_sunrise = ghatika × 60
+        frac_arcsec = (daily_motion / 3600.0) * vinadi
+
+        if not retrograde:
+            result_arcsec = today_arcsec + frac_arcsec
+        else:
+            result_arcsec = today_arcsec - frac_arcsec
+
+        if result_arcsec < 0:
+            result_arcsec += FULL_CIRCLE_ARCSEC
+        result_arcsec = result_arcsec % FULL_CIRCLE_ARCSEC
+
+        return result_arcsec / 3600.0, retrograde
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -434,7 +468,7 @@ class VakyaTableEngine:
         sun_lon = self._calc_sun(gy, tamil_month, day_in_month, ghatika)
         result['Sun'] = {'longitude': sun_lon, 'retrograde': False}
 
-        moon_lon = self._calc_moon(C, tamil_month, day_in_month)
+        moon_lon = self._calc_moon(C, D, E, tamil_month, day_in_month)
         result['Moon'] = {'longitude': moon_lon, 'retrograde': False}
 
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
