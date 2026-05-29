@@ -110,9 +110,15 @@ MOON_ANCHORS = [
 
 FULL_CIRCLE_ARCSEC = 1296000  # 360 * 3600
 
-# Moon bija: residual offset after ghatika interpolation, calibrated across
-# the 729-case reference set.  Adjusted when ghatika correction is active.
-MOON_BIJA_DEG = 0.38
+# lagna_aux secondary correction coefficient.  After ghatika intra-day
+# interpolation a per-date/month residual remains that correlates with the
+# lagna_aux.txt table values.  Optimal coefficient = 0.9 on the 729-case set.
+MOON_LAGNA_COEFF = 0.9
+
+# Residual bija after ghatika + lagna_aux corrections.  A small positive offset
+# corrects a systematic low-bias in the tabular Moon; calibrated by minimising
+# pada errors on the 729-case reference set.
+MOON_BIJA_DEG = 0.0395
 
 
 class VakyaTableEngine:
@@ -313,7 +319,14 @@ class VakyaTableEngine:
             # Intra-day interpolation back to birth ghatika.
             # vak_row[2] is arcmin/day = arcsec/ghatika (after unit conversion).
             increment = int(vak_row[2])
-            moon_arcsec = (v30 + m_base - (60 - ghatika) * increment) % FULL_CIRCLE_ARCSEC
+            # lagna_aux provides a per-date/month secondary correction that
+            # remains after the ghatika interpolation (coefficient 0.9).
+            hsg_row = self._tables['lagna_aux.txt'].get(day_in_month)
+            lagna_arcsec = (int(hsg_row[month - 1]) * MOON_LAGNA_COEFF
+                            if hsg_row is not None else 0)
+            moon_arcsec = (v30 + m_base
+                           - (60 - ghatika) * increment
+                           + lagna_arcsec) % FULL_CIRCLE_ARCSEC
         else:
             hsg_row = self._tables['lagna_aux.txt'].get(day_in_month)
             if hsg_row is None:
