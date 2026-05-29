@@ -172,6 +172,34 @@ def get_expected_moon_pada(expected: dict):
     return 0, "none"
 
 
+# Tamil digit (௦-௯) → ASCII digit translation table
+_TAMIL_DIGITS = str.maketrans("௦௧௨௩௪௫௬௭௮௯", "0123456789")
+# U+0BCD = Tamil sign virama (pulli)
+_VIRAMA = "்"
+
+def normalize_source_text(s: str) -> str:
+    """Standardize decompilation/OCR artefacts in the reference JSON so that
+    downstream name lookups are consistent.
+
+    Fixes:
+      - Doubled Tamil virama (e.g. 'செவ்்' → 'செவ்') seen in graha_vakra.
+      - Tamil numerals (௦-௯) → ASCII digits.
+      - Letter 'O'/'o' used in place of zero inside numeric runs.
+      - Missing space before the Tamil word 'திசை' (e.g. 'சனிதிசை').
+    """
+    if not s:
+        return s
+    # Collapse any run of 2+ viramas down to a single one.
+    while _VIRAMA + _VIRAMA in s:
+        s = s.replace(_VIRAMA + _VIRAMA, _VIRAMA)
+    # Normalize Tamil numerals to ASCII.
+    s = s.translate(_TAMIL_DIGITS)
+    # Letter O/o standing in for zero between/adjacent to digits or spaces.
+    s = re.sub(r'(?<=\s)[Oo](?=\s)', '0', s)
+    # Ensure 'திசை' (dasa) is space-separated from a preceding planet name.
+    s = re.sub(r'(?<=\S)திசை', ' திசை', s)
+    return s
+
 def clean_tamil_string(s: str) -> str:
     if not s:
         return ""
@@ -181,7 +209,7 @@ def clean_tamil_string(s: str) -> str:
 def parse_rasi(rasi_str: str) -> int:
     if not rasi_str:
         return 0
-    norm = clean_tamil_string(rasi_str).lower()
+    norm = clean_tamil_string(normalize_source_text(rasi_str)).lower()
     return RASI_NAME_TO_NUM.get(norm, 0)
 
 def parse_nakshatra(nak_str: str):
@@ -196,6 +224,8 @@ def parse_nakshatra(nak_str: str):
     """
     if not nak_str:
         return 0, 0
+
+    nak_str = normalize_source_text(nak_str)
 
     # Handle known corruptions first
     _KNOWN_CORRUPTIONS = {
@@ -267,6 +297,7 @@ def parse_nakshatra(nak_str: str):
 def parse_retrograde(vakra_str: str) -> set:
     if not vakra_str or "இல்லை" in vakra_str:
         return set()
+    vakra_str = normalize_source_text(vakra_str)
     parts = re.split(r'[,/ ]+', vakra_str)
     planets = set()
     for p in parts:
@@ -278,13 +309,18 @@ def parse_retrograde(vakra_str: str) -> set:
 def parse_pavaka_maatram(pm_str: str) -> dict:
     if not pm_str or "இல்லை" in pm_str:
         return {}
-    
+
+    pm_str = normalize_source_text(pm_str)
     changes = {}
     parts = re.split(r'[,/ ]+', pm_str)
     for part in parts:
-        if "-" in part:
-            p_name, house_str = part.split("-", 1)
+        # Planet and house are joined by '-' (e.g. 'புதன்-3') or, inconsistently,
+        # by '.' (e.g. 'சனி.5').  Split on whichever separator is present.
+        m = re.split(r'[-.]', part, 1)
+        if len(m) == 2:
+            p_name, house_str = m
             p_clean = clean_tamil_string(p_name)
+            house_str = house_str.strip()
             if p_clean in PLANET_TAMIL_TO_ENG and house_str.isdigit():
                 changes[PLANET_TAMIL_TO_ENG[p_clean]] = int(house_str)
     return changes
@@ -292,10 +328,11 @@ def parse_pavaka_maatram(pm_str: str) -> dict:
 def parse_dasa_balance(db_str: str):
     if not db_str:
         return None, 0
+    db_str = normalize_source_text(db_str)
     parts = db_str.split()
     lord_name = clean_tamil_string(parts[0])
     lord = PLANET_TAMIL_TO_ENG.get(lord_name, lord_name)
-    
+
     years = 0
     for idx, part in enumerate(parts):
         if "வருடம்" in part or "year" in part:
@@ -333,14 +370,35 @@ def parse_time(tob_str: str) -> dtime:
         
     return dtime(hour, minute, second)
 
+_NAK_SPAN  = 360.0 / 27.0
+_PADA_SPAN = _NAK_SPAN / 4.0
+# Nakshatra → Dasa lord (indices 0-26 map to nakshatras 1-27)
+_DASA_LORDS = (
+    ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'] * 3
+)
+
+def _moon_rasi(lon: float) -> int:
+    return int(lon / 30.0) + 1
+
+def _moon_nakshatra(lon: float) -> int:
+    return int(lon / _NAK_SPAN) + 1
+
+def _moon_pada(lon: float) -> int:
+    pos_in_nak = lon % _NAK_SPAN
+    return int(pos_in_nak / _PADA_SPAN) + 1
+
+def _dasa_lord_from_nak(nak_num: int) -> str:
+    return _DASA_LORDS[nak_num - 1]
+
+
 def test_single_case(idx, expected):
     dob_str = expected["date_of_birth"]
     tob_str = expected["time_of_birth"]
     place = expected["place_of_birth"]
-    
+
     dob = parse_date(dob_str)
     tob = parse_time(tob_str)
-    
+
     bd = BirthDetails(
         name=f"T{idx}",
         date_of_birth=dob,
@@ -351,46 +409,48 @@ def test_single_case(idx, expected):
         timezone="IST",
         time_correction=0
     )
-    
+
     calc = VakkiamCalculator()
     try:
         res = calc.generate_horoscope(bd, language="tamil")
     except Exception as e:
         return idx, False, f"Exception during calculation: {e}"
-        
-    # 1. Check Lagnam (using lower English ascendant to map stably)
+
+    # Compute VakyaTableEngine results directly — this is what we are testing.
+    dt_ist = datetime.combine(dob, tob)
+    try:
+        vakya_raw = calc._vakya_engine.compute(dt_ist, 11.6643, 78.146, 5.5)
+    except Exception as e:
+        return idx, False, f"VakyaTableEngine error: {e}"
+
+    moon_lon = vakya_raw['Moon']['longitude']
+
+    # 1. Lagnam — keep from old engine (VakyaTableEngine does not compute ascendant)
     exp_lag_num = parse_rasi(expected.get("lagnam"))
     calc_lag_num = parse_rasi(res.ascendant.lower())
     lagnam_match = (exp_lag_num == calc_lag_num)
-    
-    # 2. Check Rasi (using lower English moon sign)
+
+    # 2. Rasi from VakyaTableEngine Moon longitude
     exp_rasi_num = parse_rasi(expected.get("rasi"))
-    calc_rasi_num = parse_rasi(res.moon_sign.lower())
+    calc_rasi_num = _moon_rasi(moon_lon)
     rasi_match = (exp_rasi_num == calc_rasi_num)
-    
-    # 3. Check Nakshatra & Pada (ICS Moon.pada preferred over parsed nakshatram)
+
+    # 3. Nakshatra & Pada from VakyaTableEngine Moon longitude
     exp_nak_num, _ = parse_nakshatra(expected.get("nakshatram"))
     exp_pada, exp_pada_src = get_expected_moon_pada(expected)
-    calc_nak_num = 0
-    calc_pada = 0
-    for p in res.planetary_positions:
-        if p.planet == "Moon":
-            calc_nak_num = p.nakshatra
-            calc_pada = p.nakshatra_pada
-            break
-            
-    nak_match = (exp_nak_num == calc_nak_num)
+    calc_nak_num = _moon_nakshatra(moon_lon)
+    calc_pada    = _moon_pada(moon_lon)
+    nak_match  = (exp_nak_num == calc_nak_num)
     pada_match = (exp_pada == calc_pada) if exp_pada > 0 else True
-    
-    # 4. Check Retrograde status (Graha Vakra)
-    exp_vakra = parse_retrograde(expected.get("graha_vakra"))
-    calc_vakra = {p for p in res.retrograde_planets if p in GRAHA_VAKRA_PLANETS}
+
+    # 4. Graha Vakra from VakyaTableEngine retrograde flags
+    exp_vakra  = parse_retrograde(expected.get("graha_vakra"))
+    calc_vakra = {p for p, d in vakya_raw.items()
+                  if d.get('retrograde') and p in GRAHA_VAKRA_PLANETS}
     jd = calc.get_julian_day_lmt(dob, tob, bd.longitude)
-    vakra_match = vakra_matches_tolerant(
-        exp_vakra, calc_vakra, calc, jd
-    )
-    
-    # 5. Check Bhava Change (Pavaka Maatram)
+    vakra_match = vakra_matches_tolerant(exp_vakra, calc_vakra, calc, jd)
+
+    # 5. Pavaka Maatram — keep from old engine
     exp_pm = parse_pavaka_maatram(expected.get("pavaka_maatram"))
     calc_pm = parse_pavaka_maatram(res.bhava_change_tamil)
     pm_match = True
@@ -398,14 +458,14 @@ def test_single_case(idx, expected):
         if p != "Sun" and calc_pm.get(p) != h:
             pm_match = False
             break
-            
-    # 6. Check Dasa Balance
+
+    # 6. Dasa Lord derived from VakyaTableEngine Moon nakshatra
     exp_dasa_lord, exp_dasa_years = parse_dasa_balance(expected.get("dasa_balance"))
-    calc_dasa_lord = res.current_dasa.first_dasha_planet
+    calc_dasa_lord  = _dasa_lord_from_nak(calc_nak_num)
     calc_dasa_years = res.current_dasa.balance_years or 0
     dasa_lord_match = (exp_dasa_lord == calc_dasa_lord)
     dasa_years_match = (abs(exp_dasa_years - calc_dasa_years) <= 1)
-    
+
     case_results = {
         "lagnam_match": lagnam_match,
         "rasi_match": rasi_match,
@@ -419,15 +479,15 @@ def test_single_case(idx, expected):
             "dob": dob_str,
             "tob": tob_str,
             "exp_lagnam": expected.get("lagnam"), "calc_lagnam": res.ascendant,
-            "exp_rasi": expected.get("rasi"), "calc_rasi": res.moon_sign,
-            "exp_nak": expected.get("nakshatram"), "calc_nak": f"{res.nakshatra} {calc_pada}",
+            "exp_rasi": expected.get("rasi"), "calc_rasi": str(calc_rasi_num),
+            "exp_nak": expected.get("nakshatram"), "calc_nak": f"{calc_nak_num} {calc_pada}",
             "exp_pada_src": exp_pada_src,
             "exp_vakra": list(exp_vakra), "calc_vakra": list(calc_vakra),
             "exp_pm": exp_pm, "calc_pm": calc_pm,
-            "exp_dasa": expected.get("dasa_balance"), "calc_dasa": res.dasa_balance_tamil
+            "exp_dasa": expected.get("dasa_balance"), "calc_dasa": calc_dasa_lord
         }
     }
-    
+
     return idx, True, case_results
 
 def main():

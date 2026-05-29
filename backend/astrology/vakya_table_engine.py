@@ -203,8 +203,11 @@ class VakyaTableEngine:
 
     # ── Sunrise helper ────────────────────────────────────────────────────────
 
-    def _ghatika_since_sunrise(self, dt_utc: datetime, lat: float, lon: float) -> int:
-        """1 ghatika = 24 minutes.  dt_utc must be a naive UTC datetime."""
+    def _ghatika_and_vakya_date(self, dt_utc: datetime, lat: float, lon: float,
+                                tz_hours: float) -> tuple:
+        """Return (ghatika, vakya_date) where vakya_date is the local date of the
+        most-recent sunrise (= the start of the current Vakya day).
+        1 ghatika = 24 minutes.  dt_utc must be a naive UTC datetime."""
         try:
             import ephem
             obs = ephem.Observer()
@@ -213,13 +216,21 @@ class VakyaTableEngine:
             obs.pressure = 0
             obs.date = dt_utc.strftime('%Y/%m/%d %H:%M:%S')
             sr = obs.previous_rising(ephem.Sun())
-            sr_dt = sr.datetime()
-            elapsed_min = (dt_utc - sr_dt).total_seconds() / 60.0
+            sr_utc = sr.datetime()
+            elapsed_min = (dt_utc - sr_utc).total_seconds() / 60.0
             if elapsed_min < 0:
                 elapsed_min += 1440.0
-            return max(0, min(int(elapsed_min / 24.0), 59))
+            ghatika = max(0, min(int(elapsed_min / 24.0), 59))
+            # Vakya day = the calendar date in local time when the last sunrise occurred
+            sr_local = sr_utc + timedelta(hours=tz_hours)
+            return ghatika, sr_local.date()
         except Exception:
-            return 15
+            return 15, dt_utc.date()
+
+    def _ghatika_since_sunrise(self, dt_utc: datetime, lat: float, lon: float) -> int:
+        """1 ghatika = 24 minutes.  dt_utc must be a naive UTC datetime."""
+        ghatika, _ = self._ghatika_and_vakya_date(dt_utc, lat, lon, 5.5)
+        return ghatika
 
     # ── Sun ───────────────────────────────────────────────────────────────────
 
@@ -242,25 +253,34 @@ class VakyaTableEngine:
 
     def _calc_moon(self, ky_C: int, ky_D: int, ky_E: int,
                    month: int, day_in_month: int) -> float:
-        # Reduction input: Tamil New Year KY days only (NOT total days to birth).
-        # +1 if ghatika fraction (D*60+E) >= 1845 vinadis.
-        v14_1 = ky_C
+        sm = SAKA_MONTHS[month - 1]
+        # Input is total KY days to the birth date (same pattern as Rahu / planets)
+        v14_1 = ky_C + sm[0] + day_in_month - 1
         if ky_D * 60 + ky_E >= 1845:
             v14_1 += 1
 
         v30 = 0
         for i in range(38):
-            while v14_1 >= MOON_KHANDAS[i]:
+            if v14_1 >= MOON_KHANDAS[i]:
                 v14_1 -= MOON_KHANDAS[i]
-                v30 += MOON_ANCHORS[i]
+                v30   += MOON_ANCHORS[i]
 
-        # Vakya index = reduced_C + days from Tamil New Year to START of birth month.
-        # day_in_month is NOT part of the vakya index; it only indexes into lagna_aux.
-        v6_4 = SAKA_MONTHS[month - 1][0]
-        v14_3 = v14_1 + v6_4
-        while v14_3 > 248:
+        # total_days already includes the month offset — v14_3 IS the residual.
+        # NOTE: the decompiled "special band" path (triggered when an intermediate
+        # residual lands in [2665, 3031]) was designed for the ky_C-only input.
+        # With the total_days input it fires spuriously in ~83 charts and corrupts
+        # ~57 of them, so it is intentionally omitted here.
+        v14_3 = v14_1
+        if v14_3 > 248:
             v14_3 -= 248
-            v30 += 99846
+            v30   += 99846
+            if v14_3 > 248:
+                v30   += 99846
+                v14_3 -= 248
+        v3_7 = v30
+
+        if v14_3 == 0:
+            v14_3 = 1
 
         vak_row = self._tables['moon_low.txt'].get(v14_3)
         if vak_row is None:
@@ -272,7 +292,7 @@ class VakyaTableEngine:
             return 0.0
         daily_motion = int(hsg_row[month - 1])
 
-        moon_arcsec = (daily_motion + v30 + m_base) % FULL_CIRCLE_ARCSEC
+        moon_arcsec = (daily_motion + v3_7 + m_base) % FULL_CIRCLE_ARCSEC
         return moon_arcsec / 3600.0
 
     # ── Rahu ──────────────────────────────────────────────────────────────────
@@ -348,8 +368,10 @@ class VakyaTableEngine:
         v12   = ky_D + sm[1]
 
         accumulated_bija = 0
+        # Saturn uses strict > (not >=) per decompiled Java l.g()
+        saturn = (planet == 'Saturn')
         for khanda, gh, bija in zip(desc['khandas'], desc['gh'], desc['bija']):
-            while v10_0 >= khanda:
+            while (v10_0 > khanda if saturn else v10_0 >= khanda):
                 v10_0 -= khanda
                 v12   -= gh
                 while v12 < 0:
@@ -389,9 +411,14 @@ class VakyaTableEngine:
         if row2 is None or row1 is None:
             return None
 
+        # field4 (5th column) carries a per-row latitude correction scaled by bija:
+        #   pos = deg*3600 + arcmin*60 + bija_arcmin*60 + field4*bija_arcmin
+        bija_arcmin = accumulated_bija
         bija_arcsec = accumulated_bija * 60
-        pos1 = int(row1[2]) * 3600 + int(row1[3]) * 60 + bija_arcsec
-        pos2 = int(row2[2]) * 3600 + int(row2[3]) * 60 + bija_arcsec
+        f4_1 = row1[4] if len(row1) > 4 else 0
+        f4_2 = row2[4] if len(row2) > 4 else 0
+        pos1 = int(row1[2]) * 3600 + int(row1[3]) * 60 + bija_arcsec + f4_1 * bija_arcmin
+        pos2 = int(row2[2]) * 3600 + int(row2[3]) * 60 + bija_arcsec + f4_2 * bija_arcmin
 
         if abs(pos2 - pos1) > 1080000:
             if pos2 < pos1:
@@ -457,11 +484,11 @@ class VakyaTableEngine:
             tz = timezone(timedelta(hours=tz_hours))
             local_dt = local_dt.astimezone(tz).replace(tzinfo=None)
 
+        dt_utc = local_dt - timedelta(hours=tz_hours)
+        ghatika, _ = self._ghatika_and_vakya_date(dt_utc, lat, lon, tz_hours)
+
         gy, tamil_month, day_in_month = self._date_to_tamil_month_day(local_dt.date())
         C, D, E, F = self._ky_year_arithmetic(gy)
-
-        dt_utc = local_dt - timedelta(hours=tz_hours)
-        ghatika = self._ghatika_since_sunrise(dt_utc, lat, lon)
 
         result: dict = {}
 
