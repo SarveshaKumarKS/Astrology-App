@@ -110,9 +110,9 @@ MOON_ANCHORS = [
 
 FULL_CIRCLE_ARCSEC = 1296000  # 360 * 3600
 
-# Constant Moon bija (correction) recentring the tabular position on the true
-# Nirayana Moon.  Empirically -2.8° across the 729-case reference set.
-MOON_BIJA_DEG = -2.8
+# Moon bija: residual offset after ghatika interpolation, calibrated across
+# the 729-case reference set.  Adjusted when ghatika correction is active.
+MOON_BIJA_DEG = 0.38
 
 
 class VakyaTableEngine:
@@ -272,9 +272,16 @@ class VakyaTableEngine:
     # ── Moon ──────────────────────────────────────────────────────────────────
 
     def _moon_for_total_days(self, total_days: int, month: int,
-                             day_in_month: int) -> float:
-        """Tabular Vakya Moon longitude (decimal degrees) for an exact KY day
-        count.  No bias applied — that is added by the caller."""
+                             day_in_month: int,
+                             ghatika: Optional[int] = None) -> float:
+        """Tabular Vakya Moon longitude (decimal degrees).
+
+        When ghatika is supplied the table value (which represents the Moon at
+        the *next* sunrise, i.e. ghatika 60) is interpolated back to the birth
+        ghatika by subtracting (60 − ghatika) × daily_increment.
+        When ghatika is None the legacy lagna_aux correction is used instead.
+        No bija is applied here — that is added by the caller.
+        """
         v14_1 = total_days
         v30 = 0
         for i in range(38):
@@ -282,11 +289,10 @@ class VakyaTableEngine:
                 v14_1 -= MOON_KHANDAS[i]
                 v30   += MOON_ANCHORS[i]
 
-        # total_days already includes the month offset — v14_3 IS the residual.
         # NOTE: the decompiled "special band" path (triggered when an intermediate
         # residual lands in [2665, 3031]) was designed for the ky_C-only input.
-        # With the total_days input it fires spuriously in ~83 charts and corrupts
-        # ~57 of them, so it is intentionally omitted here.
+        # With the total_days input it fires spuriously and corrupts results,
+        # so it is intentionally omitted here.
         v14_3 = v14_1
         if v14_3 > 248:
             v14_3 -= 248
@@ -303,26 +309,29 @@ class VakyaTableEngine:
             return 0.0
         m_base = int(vak_row[1]) * 60  # arcminutes → arcseconds
 
-        hsg_row = self._tables['lagna_aux.txt'].get(day_in_month)
-        if hsg_row is None:
-            return 0.0
-        daily_motion = int(hsg_row[month - 1])
+        if ghatika is not None:
+            # Intra-day interpolation back to birth ghatika.
+            # vak_row[2] is arcmin/day = arcsec/ghatika (after unit conversion).
+            increment = int(vak_row[2])
+            moon_arcsec = (v30 + m_base - (60 - ghatika) * increment) % FULL_CIRCLE_ARCSEC
+        else:
+            hsg_row = self._tables['lagna_aux.txt'].get(day_in_month)
+            if hsg_row is None:
+                return 0.0
+            daily_motion = int(hsg_row[month - 1])
+            moon_arcsec = (daily_motion + v30 + m_base) % FULL_CIRCLE_ARCSEC
 
-        moon_arcsec = (daily_motion + v30 + m_base) % FULL_CIRCLE_ARCSEC
         return moon_arcsec / 3600.0
 
     def _calc_moon(self, ky_C: int, ky_D: int, ky_E: int,
                    month: int, day_in_month: int,
-                   ref_moon_lon: Optional[float] = None) -> float:
+                   ref_moon_lon: Optional[float] = None,
+                   ghatika: Optional[int] = None) -> float:
         """Vakya Moon longitude (Nirayana, decimal degrees).
 
-        The tabular value is computed at sunrise of the Vakya day.  Births in
-        this dataset are pre-sunrise (1:38 AM), so the integer KY day count can
-        legitimately be off by ±1 — the classical ghatika-bump rule resolves
-        most but not all of these.  When a reference (astronomical) Moon
-        longitude is supplied, we pick whichever of the neighbouring KY days
-        lands closest to it; this cleanly settles the day boundary.  A constant
-        -2.8° bija recentres the tabular value on the true position.
+        The tabular value represents the Moon at *next sunrise* (ghatika 60).
+        When ghatika is provided, intra-day interpolation corrects to birth time.
+        Ephemeris disambiguation resolves ±1-day ambiguity at day boundaries.
         """
         sm = SAKA_MONTHS[month - 1]
         base_days = ky_C + sm[0] + day_in_month - 1
@@ -332,15 +341,23 @@ class VakyaTableEngine:
             chosen = base_days + default_bump
         else:
             best = None
-            for bump in (default_bump - 1, default_bump, default_bump + 1):
-                lon = self._moon_for_total_days(base_days + bump, month, day_in_month)
-                diff = abs((lon - ref_moon_lon + 180.0) % 360.0 - 180.0)
+            # With ghatika correction the optimal day can be up to +2 above
+            # default_bump for PM/evening births where default_bump=0.
+            bump_range = (range(default_bump - 1, default_bump + 3)
+                          if ghatika is not None
+                          else range(default_bump - 1, default_bump + 2))
+            for bump in bump_range:
+                # Use ghatika-corrected value for disambiguation so the right
+                # day is selected for both AM and PM births.
+                clon = self._moon_for_total_days(
+                    base_days + bump, month, day_in_month, ghatika)
+                diff = abs((clon - ref_moon_lon + 180.0) % 360.0 - 180.0)
                 if best is None or diff < best[0]:
                     best = (diff, base_days + bump)
             chosen = best[1]
 
-        lon = self._moon_for_total_days(chosen, month, day_in_month)
-        return (lon + MOON_BIJA_DEG) % 360.0
+        moon_deg = self._moon_for_total_days(chosen, month, day_in_month, ghatika)
+        return (moon_deg + MOON_BIJA_DEG) % 360.0
 
     # ── Rahu ──────────────────────────────────────────────────────────────────
 
@@ -542,10 +559,11 @@ class VakyaTableEngine:
         sun_lon = self._calc_sun(gy, tamil_month, day_in_month, ghatika)
         result['Sun'] = {'longitude': sun_lon, 'retrograde': False}
 
-        # An approximate astronomical Moon longitude settles the ±1-day
-        # ambiguity in the tabular day count (births here are pre-sunrise).
+        # Approximate astronomical Moon settles the ±1-day day-count ambiguity.
+        # Ghatika enables intra-day interpolation (critical for PM/non-AM births).
         ref_moon = self._astronomical_moon_sidereal(dt_utc)
-        moon_lon = self._calc_moon(C, D, E, tamil_month, day_in_month, ref_moon)
+        moon_lon = self._calc_moon(C, D, E, tamil_month, day_in_month,
+                                   ref_moon, ghatika)
         result['Moon'] = {'longitude': moon_lon, 'retrograde': False}
 
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
