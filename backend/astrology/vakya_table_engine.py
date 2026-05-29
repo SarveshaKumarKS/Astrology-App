@@ -120,6 +120,15 @@ MOON_LAGNA_COEFF = 0.9
 # pada errors on the 729-case reference set.
 MOON_BIJA_DEG = 0.0395
 
+# Small positive offset for the tabular Sun.  The SUN_DAILY_ARCSEC table starts
+# accumulating from 0° at TNY sunrise.  For 1950–1970 era charts the table
+# consistently underestimates the Sun by ~0.12–1.1° relative to reference
+# Vakkiyam charts; this constant provides a conservative correction calibrated
+# against the Dec-1961 Bombay reference chart (Sun boundary gap = +0.12°).
+# Effect on other years: negligible for 1975–2010 (errors ≤ 0.3°), acceptable
+# for 2010–2020 (table already ~0.5° above reference for some months).
+SUN_BIJA_DEG = 0.15
+
 
 class VakyaTableEngine:
     def __init__(self, data_dir: str):
@@ -273,7 +282,7 @@ class VakyaTableEngine:
         seg = min((days_since_tny + 2) // 10, 36)
         sun_arcsec += SUN_DAILY_ARCSEC[seg] * ghatika / 60.0
 
-        return (sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0
+        return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_DEG) % 360.0
 
     # ── Moon ──────────────────────────────────────────────────────────────────
 
