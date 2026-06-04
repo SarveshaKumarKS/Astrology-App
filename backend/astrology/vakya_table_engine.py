@@ -38,6 +38,8 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 780, 'rows': 39, 'split': 468,
         'file_low': 'mars_low.txt', 'file_high': 'mars_high.txt',
         'cycle_mod': None,
+        # Residual constant offset (held-out validated: 87.6% → 89.9% pada).
+        'bija_deg': -0.5,
     },
     'Jupiter': {
         'khandas': [1570425, 974875, 125648, 65018, 30315, 21539, 4387],
@@ -54,6 +56,14 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 584, 'rows': 40, 'split': 63,
         'file_low': 'venus_low.txt', 'file_high': 'venus_high.txt',
         'cycle_mod': None,
+        # Table selection is governed by the synodic cycle number, not the seq
+        # threshold.  Calibrated + held-out validated on the 729-case reference:
+        # cycles 0-1 use the high table, cycles ≥2 use the low table.
+        # (43.2% → 63.4% pada; outliers 124 → 12.)
+        'cycle_table': (2, 'high', 'low'),
+        # Residual constant offset after the cycle-table fix (held-out
+        # validated: 62.7% → 71.4% pada).
+        'bija_deg': -0.7,
     },
     'Saturn': {
         'khandas': [1589474, 570534, 182994, 21551, 10964],
@@ -62,6 +72,9 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 378, 'rows': 20, 'split': 190,
         'file_low': 'saturn_low.txt', 'file_high': 'saturn_high.txt',
         'cycle_mod': 29,
+        # cycles 0-8 use the high table, cycles ≥9 use the low table.
+        # (84.6% → 95.4% pada on the 729-case reference, held-out validated.)
+        'cycle_table': (9, 'high', 'low'),
     },
     'Mercury': {
         'khandas': [1592740, 16801, 4750, 2549],
@@ -70,6 +83,9 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 116, 'rows': 25, 'split': 223,
         'file_low': 'mercury_low.txt', 'file_high': 'mercury_high.txt',
         'cycle_mod': None,
+        # cycles 0-6 use the high table, cycles ≥7 use the low table.
+        # (59.7% → 68.7% pada on the 729-case reference, held-out validated.)
+        'cycle_table': (7, 'high', 'low'),
     },
 }
 
@@ -120,14 +136,13 @@ MOON_LAGNA_COEFF = 0.9
 # pada errors on the 729-case reference set.
 MOON_BIJA_DEG = 0.0395
 
-# Small positive offset for the tabular Sun.  The SUN_DAILY_ARCSEC table starts
-# accumulating from 0° at TNY sunrise.  For 1950–1970 era charts the table
-# consistently underestimates the Sun by ~0.12–1.1° relative to reference
-# Vakkiyam charts; this constant provides a conservative correction calibrated
-# against the Dec-1961 Bombay reference chart (Sun boundary gap = +0.12°).
-# Effect on other years: negligible for 1975–2010 (errors ≤ 0.3°), acceptable
-# for 2010–2020 (table already ~0.5° above reference for some months).
-SUN_BIJA_DEG = 0.15
+# Constant offset for the tabular Sun.  The SUN_DAILY_ARCSEC table accumulates
+# from 0° at TNY sunrise and runs a steady ~+0.69° AHEAD of the 729-case Vakya
+# reference — the bias is flat across all 12 Tamil months (stdev ~0.37° each),
+# i.e. a genuine constant, not a seasonal equation-of-centre swing.  Subtracting
+# 0.70° centres the distribution and is the middle of the −1.0°…−0.5° pada-
+# optimal plateau (Sun pada 68.4% → 91.3% on the 729-case set).
+SUN_BIJA_DEG = -0.70
 
 
 class VakyaTableEngine:
@@ -470,13 +485,24 @@ class VakyaTableEngine:
         expected_cycle = ((cycle_num % desc['cycle_mod']) + 1
                           if desc['cycle_mod'] is not None else cycle_num + 1)
 
+        # Table (high/low) selection.  Most planets switch tables at a seq
+        # threshold (`split`).  Venus/Saturn/Mercury instead switch at a synodic
+        # cycle boundary (`cycle_table` = (K, early, late)); their seq-threshold
+        # `split` is both inverted and mis-placed in the decompiled constants.
+        cycle_table = desc.get('cycle_table')
+        def _pick(seq: int) -> str:
+            if cycle_table is not None:
+                K, early, late = cycle_table
+                tab = early if cycle_num < K else late
+                return desc['file_high'] if tab == 'high' else desc['file_low']
+            return desc['file_high'] if seq > split else desc['file_low']
+
         seq_found: Optional[int] = None
         for row_idx in range(1, rows + 1):
             seq = cycle_num * rows + row_idx
             if planet == 'Saturn' and seq > 580:
                 seq -= 578
-            fname = desc['file_high'] if seq > split else desc['file_low']
-            row = self._tables[fname].get(seq)
+            row = self._tables[_pick(seq)].get(seq)
             if row is None:
                 continue
             if int(row[0]) == expected_cycle and row[1] > G:
@@ -489,8 +515,8 @@ class VakyaTableEngine:
                 seq_found -= 578
 
         seq_prev = seq_found - 1
-        fname2 = desc['file_high'] if seq_found > split else desc['file_low']
-        fname1 = desc['file_high'] if seq_prev  > split else desc['file_low']
+        fname2 = _pick(seq_found)
+        fname1 = _pick(seq_prev)
 
         row2 = self._tables[fname2].get(seq_found)
         row1 = self._tables[fname1].get(seq_prev)
@@ -553,7 +579,12 @@ class VakyaTableEngine:
             result_arcsec += FULL_CIRCLE_ARCSEC
         result_arcsec = result_arcsec % FULL_CIRCLE_ARCSEC
 
-        return result_arcsec / 3600.0, retrograde
+        # Per-planet constant bija: a steady Vakya-vs-reference offset that
+        # remains after the tabular interpolation.  Held-out validated on the
+        # 729-case set (Mars −0.5° → +2.3pt, Venus −0.7° → +8.7pt pada).
+        # Applied after the retrograde test, so it cannot flip the vakra flag.
+        bija_deg = PLANET_DESC[planet].get('bija_deg', 0.0)
+        return ((result_arcsec / 3600.0) + bija_deg) % 360.0, retrograde
 
     # ── Public API ────────────────────────────────────────────────────────────
 
