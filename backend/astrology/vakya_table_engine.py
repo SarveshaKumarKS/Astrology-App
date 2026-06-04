@@ -31,15 +31,23 @@ PY_TO_VAKYA = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY
 
 # ── Per-planet reduction constants ────────────────────────────────────────────
 PLANET_DESC: Dict[str, dict] = {
+    # Per-planet constants ported verbatim from decompiled class k methods
+    #   a()=Mars  b()=Jupiter  c()=Venus  d()=Saturn  h()=Mercury
+    # 'col'   = correction column used in the position formula (4 for most,
+    #           5 for Venus whose row parser carries a 6th field).
+    # 'swap'  = the extracted _low/_high files are reversed vs the app's
+    #           `seq > split` branch (true for Venus/Saturn/Mercury).
+    # 'search'= row-match comparison ('gt' = row.day > G, 'ge' = >=, Saturn).
+    # 'strict'= khanda reduction uses strict > (Saturn) instead of >=.
+    # 'special'= (deg,arcmin,col) used when the reduced day count is exactly 0.
     'Mars': {
         'khandas': [1552827, 634089, 132589, 28857, 17158, 11699],
         'gh':      [35, 9, 21, 41, 37, 4],
         'bija':    [-402, 5, 27, 133, -504, 638],
         'period': 780, 'rows': 39, 'split': 468,
         'file_low': 'mars_low.txt', 'file_high': 'mars_high.txt',
-        'cycle_mod': None,
-        # Residual constant offset (held-out validated: 87.6% → 89.9% pada).
-        'bija_deg': -0.5,
+        'cycle_mod': None, 'col': 4, 'swap': False, 'search': 'gt',
+        'strict': False, 'special': (118, 0, -6),
     },
     'Jupiter': {
         'khandas': [1570425, 974875, 125648, 65018, 30315, 21539, 4387],
@@ -47,7 +55,8 @@ PLANET_DESC: Dict[str, dict] = {
         'bija':    [-261, 1, -9, 133, -71, -619, 274],
         'period': 399, 'rows': 22, 'split': 168,
         'file_low': 'jupiter_low.txt', 'file_high': 'jupiter_high.txt',
-        'cycle_mod': None,
+        'cycle_mod': None, 'col': 4, 'swap': False, 'search': 'gt',
+        'strict': False, 'special': (180, 0, -4),
     },
     'Venus': {
         'khandas': [1561937, 437945, 174594, 88756, 44962, 2919],
@@ -55,15 +64,8 @@ PLANET_DESC: Dict[str, dict] = {
         'bija':    [18, 0, 28, -57, 2102, -144],
         'period': 584, 'rows': 40, 'split': 63,
         'file_low': 'venus_low.txt', 'file_high': 'venus_high.txt',
-        'cycle_mod': None,
-        # Table selection is governed by the synodic cycle number, not the seq
-        # threshold.  Calibrated + held-out validated on the 729-case reference:
-        # cycles 0-1 use the high table, cycles ≥2 use the low table.
-        # (43.2% → 63.4% pada; outliers 124 → 12.)
-        'cycle_table': (2, 'high', 'low'),
-        # Residual constant offset after the cycle-table fix (held-out
-        # validated: 62.7% → 71.4% pada).
-        'bija_deg': -0.7,
+        'cycle_mod': None, 'col': 5, 'swap': True, 'search': 'gt',
+        'strict': False, 'special': (93, 0, -1),
     },
     'Saturn': {
         'khandas': [1589474, 570534, 182994, 21551, 10964],
@@ -71,10 +73,8 @@ PLANET_DESC: Dict[str, dict] = {
         'bija':    [-326, 5, -13, 43, 401],
         'period': 378, 'rows': 20, 'split': 190,
         'file_low': 'saturn_low.txt', 'file_high': 'saturn_high.txt',
-        'cycle_mod': 29,
-        # cycles 0-8 use the high table, cycles ≥9 use the low table.
-        # (84.6% → 95.4% pada on the 729-case reference, held-out validated.)
-        'cycle_table': (9, 'high', 'low'),
+        'cycle_mod': 29, 'col': 4, 'swap': True, 'search': 'ge',
+        'strict': True, 'special': (236, 0, -6),
     },
     'Mercury': {
         'khandas': [1592740, 16801, 4750, 2549],
@@ -82,10 +82,8 @@ PLANET_DESC: Dict[str, dict] = {
         'bija':    [-33, -1, 149, -446],
         'period': 116, 'rows': 25, 'split': 223,
         'file_low': 'mercury_low.txt', 'file_high': 'mercury_high.txt',
-        'cycle_mod': None,
-        # cycles 0-6 use the high table, cycles ≥7 use the low table.
-        # (59.7% → 68.7% pada on the 729-case reference, held-out validated.)
-        'cycle_table': (7, 'high', 'low'),
+        'cycle_mod': None, 'col': 4, 'swap': True, 'search': 'gt',
+        'strict': False, 'special': (240, 0, -3),
     },
 }
 
@@ -457,46 +455,63 @@ class VakyaTableEngine:
         return 12, tomorrow - SAKA_MONTHS[11][0] + 1
 
     def _planet_raw_arcsec(self, planet: str, ky_C: int, ky_D: int, ky_E: int,
-                            month: int, day_in_month: int) -> Optional[float]:
-        """Planet longitude in arcseconds at ghatika=0 (sunrise) for the given Tamil calendar day."""
+                            ky_F: int, month: int, day_in_month: int) -> Optional[float]:
+        """Faithful port of decompiled class k methods a/b/c/d/h.
+
+        Returns the planet's Vakya longitude (arcseconds) at the Tamil-day
+        reference moment.  The whole reduction + bracket interpolation matches
+        the original app's integer arithmetic, including the day/ghatika/vinadi
+        triple-borrow and the sub-day fraction carried into the interpolation.
+        """
         desc   = PLANET_DESC[planet]
         period = desc['period']
         rows   = desc['rows']
         split  = desc['split']
+        col    = desc['col']
+        strict = desc['strict']
 
-        sm    = SAKA_MONTHS[month - 1]
-        v10_0 = ky_C + sm[0] + day_in_month - 1
-        v12   = ky_D + sm[1]
+        sm = SAKA_MONTHS[month - 1]
+        # day / ghatika / vinadi at the Tamil day, seeded from the KY year values
+        day = ky_C + sm[0] + day_in_month - 1
+        gha = ky_D + sm[1]
+        vin = ky_E + sm[2]
+        if (ky_F + sm[3]) > 29:        # prati rounding (k constant 29.0)
+            vin += 1
+        if vin >= 60:
+            vin -= 60; gha += 1
+        if gha >= 60:
+            gha -= 60; day += 1
+        init_gha, init_vin = gha, vin
 
-        accumulated_bija = 0
-        # Saturn uses strict > (not >=) per decompiled Java l.g()
-        saturn = (planet == 'Saturn')
+        # ── khanda reduction with day/ghatika borrow (prati column is all-zero,
+        #    so the vinadi is carried unchanged) ──
+        acc_bija = 0
         for khanda, gh, bija in zip(desc['khandas'], desc['gh'], desc['bija']):
-            while (v10_0 > khanda if saturn else v10_0 >= khanda):
-                v10_0 -= khanda
-                v12   -= gh
-                while v12 < 0:
-                    v12   += 60
-                    v10_0 -= 1
-                accumulated_bija += bija
+            while (day - khanda > 0) if strict else (day - khanda >= 0):
+                gha -= gh
+                if gha >= 0 or day > 0:
+                    if gha < 0 and day > 0:
+                        gha += 60; day -= 1
+                    day -= khanda
+                    acc_bija += bija
+                else:
+                    gha += gh   # restore; this khanda level is exhausted
+                    break
+        if day < 0:
+            day = 0
 
-        G         = v10_0 % period
-        cycle_num = v10_0 // period
+        G = day % period
+        cycle_num = day // period
         expected_cycle = ((cycle_num % desc['cycle_mod']) + 1
                           if desc['cycle_mod'] is not None else cycle_num + 1)
 
-        # Table (high/low) selection.  Most planets switch tables at a seq
-        # threshold (`split`).  Venus/Saturn/Mercury instead switch at a synodic
-        # cycle boundary (`cycle_table` = (K, early, late)); their seq-threshold
-        # `split` is both inverted and mis-placed in the decompiled constants.
-        cycle_table = desc.get('cycle_table')
         def _pick(seq: int) -> str:
-            if cycle_table is not None:
-                K, early, late = cycle_table
-                tab = early if cycle_num < K else late
-                return desc['file_high'] if tab == 'high' else desc['file_low']
-            return desc['file_high'] if seq > split else desc['file_low']
+            hi = seq > split
+            if desc['swap']:           # extracted _low/_high are reversed
+                hi = not hi
+            return desc['file_high'] if hi else desc['file_low']
 
+        ge = (desc['search'] == 'ge')
         seq_found: Optional[int] = None
         for row_idx in range(1, rows + 1):
             seq = cycle_num * rows + row_idx
@@ -505,86 +520,87 @@ class VakyaTableEngine:
             row = self._tables[_pick(seq)].get(seq)
             if row is None:
                 continue
-            if int(row[0]) == expected_cycle and row[1] > G:
+            if int(row[0]) == expected_cycle and (row[1] >= G if ge else row[1] > G):
                 seq_found = seq
                 break
-
         if seq_found is None:
             seq_found = cycle_num * rows + rows
             if planet == 'Saturn' and seq_found > 580:
                 seq_found -= 578
 
-        seq_prev = seq_found - 1
-        fname2 = _pick(seq_found)
-        fname1 = _pick(seq_prev)
-
-        row2 = self._tables[fname2].get(seq_found)
-        row1 = self._tables[fname1].get(seq_prev)
+        row2 = self._tables[_pick(seq_found)].get(seq_found)
+        row1 = self._tables[_pick(seq_found - 1)].get(seq_found - 1)
         if row2 is None or row1 is None:
             return None
 
-        # field4 (5th column) carries a per-row latitude correction scaled by bija:
-        #   pos = deg*3600 + arcmin*60 + bija_arcmin*60 + field4*bija_arcmin
-        bija_arcmin = accumulated_bija
-        bija_arcsec = accumulated_bija * 60
-        f4_1 = row1[4] if len(row1) > 4 else 0
-        f4_2 = row2[4] if len(row2) > 4 else 0
-        pos1 = int(row1[2]) * 3600 + int(row1[3]) * 60 + bija_arcsec + f4_1 * bija_arcmin
-        pos2 = int(row2[2]) * 3600 + int(row2[3]) * 60 + bija_arcsec + f4_2 * bija_arcmin
+        deg2, am2 = int(row2[2]), int(row2[3])
+        deg1, am1 = int(row1[2]), int(row1[3])
+        c2 = row2[col] if len(row2) > col else 0
+        c1 = row1[col] if len(row1) > col else 0
+        day2, day1 = int(row2[1]), int(row1[1])
 
-        if abs(pos2 - pos1) > 1080000:
-            if pos2 < pos1:
-                pos2 += FULL_CIRCLE_ARCSEC
-            else:
-                pos1 += FULL_CIRCLE_ARCSEC
+        # unwrap degrees across the 0/360 seam
+        if deg1 < deg2 and (deg2 - deg1) > 300:
+            deg1 += 360
+        if deg1 > deg2 and (deg1 - deg2) > 300:
+            deg2 += 360
 
-        day_span = int(row2[1]) - int(row1[1])
-        if day_span <= 0:
-            day_span = 1
+        b_arcsec = acc_bija * 60
+        pos1 = (c1 * acc_bija + b_arcsec) + ((deg1 * 60 + am1) * 60)
+        pos2 = (b_arcsec + acc_bija * c2) + ((deg2 * 60 + am2) * 60)
+        if pos1 < 0 or pos2 < 0:
+            pos1 += FULL_CIRCLE_ARCSEC; pos2 += FULL_CIRCLE_ARCSEC
 
-        G_offset = G - int(row1[1])  # days since row1 entry
-        pos = pos1 + (pos2 - pos1) * G_offset / day_span
-        return pos % FULL_CIRCLE_ARCSEC
+        if (abs(pos2) - abs(pos1)) <= 1080000:
+            diff = abs(pos2 - pos1); wrapped = False
+        else:
+            diff = (pos1 + FULL_CIRCLE_ARCSEC) - pos2; wrapped = True
+        diff = abs(diff)
 
-    def _calc_planet(self, planet: str, ky_C: int, ky_D: int, ky_E: int,
+        day_span = day2 - day1 or 1
+        # sub-day fraction: (G - row1.day) expressed in day/ghatika/vinadi units
+        doff = G - day1
+        vin_off = vin - init_vin
+        if vin_off < 0:
+            vin_off += 60; gha -= 1
+        gha_off = gha - init_gha
+        if gha_off < 0:
+            gha_off += 60; doff -= 1
+        if init_gha >= 30:
+            doff += 1
+        frac_num = ((doff * 60 + gha_off) * 60) + vin_off
+        interp = (diff / (day_span * 60 * 60)) * frac_num
+
+        if wrapped:
+            pos1 += FULL_CIRCLE_ARCSEC
+        result = (pos1 - interp) if pos1 > pos2 else (pos1 + interp)
+        return float(int(result)) % FULL_CIRCLE_ARCSEC
+
+    def _calc_planet(self, planet: str, ky_C: int, ky_D: int, ky_E: int, ky_F: int,
                      month: int, day_in_month: int, ghatika: int) -> Tuple[float, bool]:
-        today_arcsec = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, month, day_in_month)
-        if today_arcsec is None:
+        """Vakya longitude (deg) and retrograde flag for a table planet.
+
+        The reference Vakya positions are the Tamil-day values straight from the
+        table reduction; no birth-time interpolation is applied to the planets
+        (only the Moon and Lagna vary intra-day in the app).  The retrograde
+        flag is taken from the sign of the day-over-day motion.
+        """
+        today = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, ky_F, month, day_in_month)
+        if today is None:
             return 0.0, False
 
         t_month, t_day = self._next_tamil_day(month, day_in_month)
-        tomorrow_arcsec = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, t_month, t_day)
-        if tomorrow_arcsec is None:
-            return today_arcsec / 3600.0, False
+        tomorrow = self._planet_raw_arcsec(planet, ky_C, ky_D, ky_E, ky_F, t_month, t_day)
 
-        retrograde = today_arcsec > tomorrow_arcsec
-        daily_motion = abs(today_arcsec - tomorrow_arcsec)
-
-        if daily_motion > 180000:  # > 50° wrap-around
-            retrograde = not retrograde
-            if retrograde:
-                daily_motion = (FULL_CIRCLE_ARCSEC - tomorrow_arcsec) + today_arcsec
+        retrograde = False
+        if tomorrow is not None:
+            motion = abs(today - tomorrow)
+            if motion > 180000:                       # 50° wrap
+                retrograde = not (today > tomorrow)
             else:
-                daily_motion = (FULL_CIRCLE_ARCSEC - today_arcsec) + tomorrow_arcsec
+                retrograde = today > tomorrow
 
-        vinadi = ghatika * 60  # vinadi_since_sunrise = ghatika × 60
-        frac_arcsec = (daily_motion / 3600.0) * vinadi
-
-        if not retrograde:
-            result_arcsec = today_arcsec + frac_arcsec
-        else:
-            result_arcsec = today_arcsec - frac_arcsec
-
-        if result_arcsec < 0:
-            result_arcsec += FULL_CIRCLE_ARCSEC
-        result_arcsec = result_arcsec % FULL_CIRCLE_ARCSEC
-
-        # Per-planet constant bija: a steady Vakya-vs-reference offset that
-        # remains after the tabular interpolation.  Held-out validated on the
-        # 729-case set (Mars −0.5° → +2.3pt, Venus −0.7° → +8.7pt pada).
-        # Applied after the retrograde test, so it cannot flip the vakra flag.
-        bija_deg = PLANET_DESC[planet].get('bija_deg', 0.0)
-        return ((result_arcsec / 3600.0) + bija_deg) % 360.0, retrograde
+        return (today / 3600.0) % 360.0, retrograde
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -620,7 +636,7 @@ class VakyaTableEngine:
         result['Moon'] = {'longitude': moon_lon, 'retrograde': False}
 
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
-            lon_deg, retro = self._calc_planet(pname, C, D, E, tamil_month, day_in_month, ghatika)
+            lon_deg, retro = self._calc_planet(pname, C, D, E, F, tamil_month, day_in_month, ghatika)
             result[pname] = {'longitude': lon_deg, 'retrograde': retro}
 
         rahu_lon = self._calc_rahu(C, D, E, tamil_month, day_in_month)
