@@ -744,16 +744,33 @@ class VakkiamCalculator(AstronomicalCalculations):
         jd = self.get_julian_day_lmt(
             birth_details.date_of_birth, birth_details.time_of_birth, birth_details.longitude
         )
-        planetary_positions_raw = self.calculate_planetary_positions_vakya(jd)
+        tz_hours = self._parse_timezone(birth_details.timezone)
+        birth_dt_local = datetime.combine(birth_details.date_of_birth, birth_details.time_of_birth)
+        table_result = self._vakya_engine.compute(
+            birth_dt_local, birth_details.latitude, birth_details.longitude, tz_hours
+        )
+        planetary_positions_raw = {}
+        _retro_flags: Dict[str, bool] = {}
+        for pname, pdata in table_result.items():
+            if pname == 'Lagnam':
+                continue
+            lon = pdata['longitude']
+            planetary_positions_raw[pname] = {
+                'longitude': lon,
+                'latitude': 0.0,
+                'sign': self.get_sign_from_longitude(lon),
+                'nakshatra': self.get_nakshatra_from_longitude(lon),
+            }
+            _retro_flags[pname] = pdata['retrograde']
         ascendant_longitude = self.calculate_ascendant_traditional(
             jd, birth_details.latitude, birth_details.longitude
         )
         house_cusps = self.calculate_houses(ascendant_longitude)
-        
+
         planetary_positions: List[PlanetaryPosition] = []
 
         for planet_name, position in planetary_positions_raw.items():
-            retro = self._is_retrograde_vakya(planet_name, jd)
+            retro = _retro_flags.get(planet_name, False)
 
             lon = position['longitude']
             
