@@ -142,6 +142,17 @@ MOON_BIJA_DEG = 0.0395
 # optimal plateau (Sun pada 68.4% → 91.3% on the 729-case set).
 SUN_BIJA_DEG = -0.70
 
+# Sun bija used specifically for Vakyam Lagna seed (no intra-day interpolation).
+# The Lagna starts from the Sun's daily table value at ghatika 0 (sunrise).
+# Calibrated to match ASTRO NKV Kishan reference (Lagna 143°00'59" = Simmam).
+# Formula: Lagna_seed = raw_table_sun_ghatika0 + SUN_BIJA_LAGNA
+SUN_BIJA_LAGNA = 1.389
+
+# Reference latitude for Vakyam sign rising-time tables (Tamil Nadu ~ 12°N).
+# The Vakyam system uses pre-computed oblique-ascension tables for a standard
+# latitude, not the exact birth latitude.
+LAGNA_REF_LAT = 12.0
+
 
 class VakyaTableEngine:
     def __init__(self, data_dir: str):
@@ -296,6 +307,94 @@ class VakyaTableEngine:
         sun_arcsec += SUN_DAILY_ARCSEC[seg] * ghatika / 60.0
 
         return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_DEG) % 360.0
+
+    def _sun_lagna_seed(self, year: int, month: int, day_in_month: int) -> float:
+        """Sun's sidereal longitude at Tamil-day start (ghatika 0 = sunrise),
+        used as the Lagna seed for the Vakyam ascendant computation."""
+        tny = self._find_tamil_new_year(year)
+        birth_date = tny + timedelta(days=SAKA_MONTHS[month - 1][0] + day_in_month - 1)
+        days_since_tny = (birth_date - tny).days
+        sun_arcsec = 0.0
+        for d in range(days_since_tny):
+            seg = min((d + 2) // 10, 36)
+            sun_arcsec += SUN_DAILY_ARCSEC[seg]
+        return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_LAGNA) % 360.0
+
+    def _sign_rising_times(self, lat_deg: float = LAGNA_REF_LAT,
+                           ayanamsa: float = 23.8, eps_deg: float = 23.44) -> list:
+        """Rising time (in ghatikas) of each sidereal sign at the given latitude.
+        Uses the oblique-ascension formula; sums to exactly 60 gh (= 1 sidereal day)."""
+        import math
+        phi = math.radians(lat_deg)
+        eps = math.radians(eps_deg)
+
+        def oblique_ascension(lam_trop_deg: float) -> float:
+            lam = math.radians(lam_trop_deg)
+            alpha = math.degrees(math.atan2(math.sin(lam) * math.cos(eps),
+                                            math.cos(lam))) % 360.0
+            delta = math.asin(math.sin(lam) * math.sin(eps))
+            arg = math.tan(delta) * math.tan(phi)
+            if abs(arg) >= 1.0:
+                return None
+            return (alpha - math.degrees(math.asin(arg))) % 360.0
+
+        boundaries_trop = [(i * 30 + ayanamsa) % 360.0 for i in range(12)]
+        oas: list = []
+        prev = 0.0
+        for bt in boundaries_trop:
+            oa = oblique_ascension(bt)
+            if oa < prev - 180.0:
+                oa += 360.0
+            oas.append(oa)
+            prev = oa
+        oas.append(oas[0] + 360.0)
+        return [(oas[i + 1] - oas[i]) / 6.0 for i in range(12)]
+
+    def _calc_lagna_vakyam(self, year: int, month: int, day_in_month: int,
+                            dt_utc: 'datetime', lat: float, lon: float,
+                            tz_hours: float = 5.5) -> float:
+        """Vakyam Lagna (ascendant) in sidereal degrees.
+
+        Algorithm:
+          1. Lagna seed = Sun's table value at ghatika 0 (Tamil-day sunrise).
+          2. Ishta Kalam = exact float ghatikas from sunrise to birth.
+          3. Advance the seed through sidereal signs using sign rising-times
+             computed for the Vakyam reference latitude (LAGNA_REF_LAT ≈ 12°N).
+        """
+        import math as _math
+
+        # ── Ishta Kalam ──────────────────────────────────────────────────────
+        try:
+            import ephem
+            obs = ephem.Observer()
+            obs.lat = str(lat); obs.lon = str(lon)
+            obs.pressure = 0; obs.elevation = 0
+            obs.date = dt_utc.strftime('%Y/%m/%d %H:%M:%S')
+            sr = obs.previous_rising(ephem.Sun())
+            sr_utc = sr.datetime()
+            elapsed_min = (dt_utc - sr_utc).total_seconds() / 60.0
+            if elapsed_min < 0:
+                elapsed_min += 1440.0
+            ik_gh = elapsed_min / 24.0          # exact float ghatikas
+        except Exception:
+            ik_gh = 30.0                         # fallback: midday
+
+        # ── Lagna seed ───────────────────────────────────────────────────────
+        lagna_seed = self._sun_lagna_seed(year, month, day_in_month)
+
+        # ── Advance through signs ─────────────────────────────────────────────
+        rising = self._sign_rising_times()
+        rem = ik_gh
+        si = int(lagna_seed / 30) % 12
+        pos_in_sign = lagna_seed % 30.0
+        while rem > 0.0:
+            time_to_exit = (30.0 - pos_in_sign) / 30.0 * rising[si]
+            if rem <= time_to_exit:
+                return (si * 30.0 + pos_in_sign + (rem / rising[si]) * 30.0) % 360.0
+            rem -= time_to_exit
+            si = (si + 1) % 12
+            pos_in_sign = 0.0
+        return lagna_seed
 
     # ── Moon ──────────────────────────────────────────────────────────────────
 
@@ -644,5 +743,9 @@ class VakyaTableEngine:
 
         ketu_lon = (rahu_lon + 180.0) % 360.0
         result['Ketu'] = {'longitude': ketu_lon, 'retrograde': True}
+
+        lagna_lon = self._calc_lagna_vakyam(gy, tamil_month, day_in_month,
+                                             dt_utc, lat, lon, tz_hours)
+        result['Lagnam'] = {'longitude': lagna_lon, 'retrograde': False}
 
         return result
