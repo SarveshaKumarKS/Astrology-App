@@ -425,9 +425,14 @@ def test_single_case(idx, expected):
 
     moon_lon = vakya_raw['Moon']['longitude']
 
-    # 1. Lagnam — keep from old engine (VakyaTableEngine does not compute ascendant)
+    # 1. Lagnam — from VakyaTableEngine (vakya_raw['Lagnam']) when available,
+    #    falling back to the old engine if the key is absent.
     exp_lag_num = parse_rasi(expected.get("lagnam"))
-    calc_lag_num = parse_rasi(res.ascendant.lower())
+    if 'Lagnam' in vakya_raw:
+        lag_lon = vakya_raw['Lagnam']['longitude']
+        calc_lag_num = int(lag_lon / 30) + 1
+    else:
+        calc_lag_num = parse_rasi(res.ascendant.lower())
     lagnam_match = (exp_lag_num == calc_lag_num)
 
     # 2. Rasi from VakyaTableEngine Moon longitude
@@ -478,7 +483,9 @@ def test_single_case(idx, expected):
         "details": {
             "dob": dob_str,
             "tob": tob_str,
-            "exp_lagnam": expected.get("lagnam"), "calc_lagnam": res.ascendant,
+            "exp_lagnam": expected.get("lagnam"),
+            "calc_lagnam": str(calc_lag_num),
+            "calc_lagnam_lon": round(vakya_raw['Lagnam']['longitude'], 3) if 'Lagnam' in vakya_raw else None,
             "exp_rasi": expected.get("rasi"), "calc_rasi": str(calc_rasi_num),
             "exp_nak": expected.get("nakshatram"), "calc_nak": f"{calc_nak_num} {calc_pada}",
             "exp_pada_src": exp_pada_src,

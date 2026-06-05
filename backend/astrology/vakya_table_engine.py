@@ -714,9 +714,11 @@ class VakyaTableEngine:
             local_dt = local_dt.astimezone(tz).replace(tzinfo=None)
 
         dt_utc = local_dt - timedelta(hours=tz_hours)
-        ghatika, _ = self._ghatika_and_vakya_date(dt_utc, lat, lon, tz_hours)
+        # vakya_date = local date of the most-recent sunrise = correct Tamil day.
+        # For births before sunrise (e.g. 1:38 AM) this differs from local_dt.date().
+        ghatika, vakya_date = self._ghatika_and_vakya_date(dt_utc, lat, lon, tz_hours)
 
-        gy, tamil_month, day_in_month = self._date_to_tamil_month_day(local_dt.date())
+        gy, tamil_month, day_in_month = self._date_to_tamil_month_day(vakya_date)
         C, D, E, F = self._ky_year_arithmetic(gy)
 
         result: dict = {}
