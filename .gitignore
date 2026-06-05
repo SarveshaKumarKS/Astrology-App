@@ -90,6 +90,9 @@ NKV_Palan_Logic_Summary.docx
 
 # Cursor
 .cursor/
+
+# Claude Code worktree metadata
+.claude/
 -e 
 # Environment files
 *.env
