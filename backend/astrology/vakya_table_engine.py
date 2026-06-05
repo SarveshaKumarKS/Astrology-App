@@ -135,12 +135,9 @@ MOON_LAGNA_COEFF = 0.9
 MOON_BIJA_DEG = 0.0395
 
 # Constant offset for the tabular Sun.  The SUN_DAILY_ARCSEC table accumulates
-# from 0° at TNY sunrise and runs a steady ~+0.69° AHEAD of the 729-case Vakya
-# reference — the bias is flat across all 12 Tamil months (stdev ~0.37° each),
-# i.e. a genuine constant, not a seasonal equation-of-centre swing.  Subtracting
-# 0.70° centres the distribution and is the middle of the −1.0°…−0.5° pada-
-# optimal plateau (Sun pada 68.4% → 91.3% on the 729-case set).
-SUN_BIJA_DEG = -0.70
+# Calibrated against ASTRO NKV reference charts.  The raw table Sun at ghatika g
+# needs +0.675° to match birth-time Sun values shown by ASTRO NKV.
+SUN_BIJA_DEG = 0.675
 
 # Sun bija used specifically for Vakyam Lagna seed (no intra-day interpolation).
 # The Lagna starts from the Sun's daily table value at ghatika 0 (sunrise).
