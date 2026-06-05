@@ -1,0 +1,2832 @@
+{
+  "jupiter_high.txt:171": {
+    "file": "jupiter_high.txt",
+    "seq": 171,
+    "old_deg": 69,
+    "old_am": 44,
+    "new_deg": 71,
+    "new_am": 50,
+    "delta_arcsec": 7565.0273224044995,
+    "n_cases": 1
+  },
+  "jupiter_high.txt:192": {
+    "file": "jupiter_high.txt",
+    "seq": 192,
+    "old_deg": 103,
+    "old_am": 11,
+    "new_deg": 105,
+    "new_am": 16,
+    "delta_arcsec": 7501.849568434098,
+    "n_cases": 1
+  },
+  "jupiter_high.txt:194": {
+    "file": "jupiter_high.txt",
+    "seq": 194,
+    "old_deg": 103,
+    "old_am": 54,
+    "new_deg": 107,
+    "new_am": 33,
+    "delta_arcsec": 13150.554675118963,
+    "n_cases": 1
+  },
+  "jupiter_low.txt:68": {
+    "file": "jupiter_low.txt",
+    "seq": 68,
+    "old_deg": 281,
+    "old_am": 11,
+    "new_deg": 283,
+    "new_am": 27,
+    "delta_arcsec": 8166.826347305387,
+    "n_cases": 1
+  },
+  "jupiter_low.txt:120": {
+    "file": "jupiter_low.txt",
+    "seq": 120,
+    "old_deg": 4,
+    "old_am": 27,
+    "new_deg": 8,
+    "new_am": 44,
+    "delta_arcsec": 15394.160583941646,
+    "n_cases": 1
+  },
+  "jupiter_low.txt:129": {
+    "file": "jupiter_low.txt",
+    "seq": 129,
+    "old_deg": 1,
+    "old_am": 50,
+    "new_deg": 6,
+    "new_am": 7,
+    "delta_arcsec": 15427.92452830191,
+    "n_cases": 1
+  },
+  "jupiter_low.txt:150": {
+    "file": "jupiter_low.txt",
+    "seq": 150,
+    "old_deg": 35,
+    "old_am": 35,
+    "new_deg": 37,
+    "new_am": 0,
+    "delta_arcsec": 5115.254237288141,
+    "n_cases": 1
+  },
+  "jupiter_low.txt:162": {
+    "file": "jupiter_low.txt",
+    "seq": 162,
+    "old_deg": 78,
+    "old_am": 45,
+    "new_deg": 82,
+    "new_am": 58,
+    "delta_arcsec": 15173.645320197154,
+    "n_cases": 1
+  },
+  "mars_high.txt:524": {
+    "file": "mars_high.txt",
+    "seq": 524,
+    "old_deg": 209,
+    "old_am": 23,
+    "new_deg": 207,
+    "new_am": 58,
+    "delta_arcsec": -5120.022099447609,
+    "n_cases": 1
+  },
+  "mars_high.txt:545": {
+    "file": "mars_high.txt",
+    "seq": 545,
+    "old_deg": 58,
+    "old_am": 47,
+    "new_deg": 60,
+    "new_am": 29,
+    "delta_arcsec": 6116.042360060581,
+    "n_cases": 1
+  },
+  "mars_low.txt:33": {
+    "file": "mars_low.txt",
+    "seq": 33,
+    "old_deg": 31,
+    "old_am": 41,
+    "new_deg": 32,
+    "new_am": 55,
+    "delta_arcsec": 4468.947075208949,
+    "n_cases": 1
+  },
+  "mars_low.txt:36": {
+    "file": "mars_low.txt",
+    "seq": 36,
+    "old_deg": 85,
+    "old_am": 35,
+    "new_deg": 87,
+    "new_am": 35,
+    "delta_arcsec": 7194.974496644337,
+    "n_cases": 1
+  },
+  "mars_low.txt:59": {
+    "file": "mars_low.txt",
+    "seq": 59,
+    "old_deg": 46,
+    "old_am": 6,
+    "new_deg": 58,
+    "new_am": 1,
+    "delta_arcsec": 42917.08235294088,
+    "n_cases": 1
+  },
+  "mars_low.txt:84": {
+    "file": "mars_low.txt",
+    "seq": 84,
+    "old_deg": 343,
+    "old_am": 57,
+    "new_deg": 347,
+    "new_am": 40,
+    "delta_arcsec": 13355.86617100343,
+    "n_cases": 1
+  },
+  "mars_low.txt:100": {
+    "file": "mars_low.txt",
+    "seq": 100,
+    "old_deg": 78,
+    "old_am": 51,
+    "new_deg": 77,
+    "new_am": 40,
+    "delta_arcsec": -4252.510067114077,
+    "n_cases": 1
+  },
+  "mars_low.txt:110": {
+    "file": "mars_low.txt",
+    "seq": 110,
+    "old_deg": 106,
+    "old_am": 16,
+    "new_deg": 107,
+    "new_am": 19,
+    "delta_arcsec": 3765.3465838509096,
+    "n_cases": 1
+  },
+  "mars_low.txt:139": {
+    "file": "mars_low.txt",
+    "seq": 139,
+    "old_deg": 105,
+    "old_am": 47,
+    "new_deg": 104,
+    "new_am": 42,
+    "delta_arcsec": -3910.3015384615132,
+    "n_cases": 1
+  },
+  "mars_low.txt:159": {
+    "file": "mars_low.txt",
+    "seq": 159,
+    "old_deg": 16,
+    "old_am": 38,
+    "new_deg": 18,
+    "new_am": 49,
+    "delta_arcsec": 7852.928213689441,
+    "n_cases": 2
+  },
+  "mars_low.txt:174": {
+    "file": "mars_low.txt",
+    "seq": 174,
+    "old_deg": 146,
+    "old_am": 27,
+    "new_deg": 144,
+    "new_am": 3,
+    "delta_arcsec": -8622.050420168141,
+    "n_cases": 1
+  },
+  "mars_low.txt:175": {
+    "file": "mars_low.txt",
+    "seq": 175,
+    "old_deg": 142,
+    "old_am": 48,
+    "new_deg": 140,
+    "new_am": 57,
+    "delta_arcsec": -6643.867549668936,
+    "n_cases": 1
+  },
+  "mars_low.txt:176": {
+    "file": "mars_low.txt",
+    "seq": 176,
+    "old_deg": 139,
+    "old_am": 38,
+    "new_deg": 138,
+    "new_am": 24,
+    "delta_arcsec": -4415.275471698428,
+    "n_cases": 1
+  },
+  "mars_low.txt:191": {
+    "file": "mars_low.txt",
+    "seq": 191,
+    "old_deg": 253,
+    "old_am": 31,
+    "new_deg": 252,
+    "new_am": 4,
+    "delta_arcsec": -5227.878419453085,
+    "n_cases": 1
+  },
+  "mars_low.txt:199": {
+    "file": "mars_low.txt",
+    "seq": 199,
+    "old_deg": 90,
+    "old_am": 32,
+    "new_deg": 92,
+    "new_am": 21,
+    "delta_arcsec": 6547.95813510938,
+    "n_cases": 1
+  },
+  "mars_low.txt:214": {
+    "file": "mars_low.txt",
+    "seq": 214,
+    "old_deg": 173,
+    "old_am": 43,
+    "new_deg": 172,
+    "new_am": 50,
+    "delta_arcsec": -3156.000000000049,
+    "n_cases": 1
+  },
+  "mars_low.txt:234": {
+    "file": "mars_low.txt",
+    "seq": 234,
+    "old_deg": 57,
+    "old_am": 18,
+    "new_deg": 60,
+    "new_am": 30,
+    "delta_arcsec": 11497.795013850266,
+    "n_cases": 1
+  },
+  "mars_low.txt:237": {
+    "file": "mars_low.txt",
+    "seq": 237,
+    "old_deg": 108,
+    "old_am": 44,
+    "new_deg": 135,
+    "new_am": 7,
+    "delta_arcsec": 94989.02068965566,
+    "n_cases": 2
+  },
+  "mars_low.txt:238": {
+    "file": "mars_low.txt",
+    "seq": 238,
+    "old_deg": 133,
+    "old_am": 58,
+    "new_deg": 136,
+    "new_am": 6,
+    "delta_arcsec": 7701.2557172556835,
+    "n_cases": 2
+  },
+  "mars_low.txt:242": {
+    "file": "mars_low.txt",
+    "seq": 242,
+    "old_deg": 198,
+    "old_am": 25,
+    "new_deg": 200,
+    "new_am": 28,
+    "delta_arcsec": 7401.668246445352,
+    "n_cases": 1
+  },
+  "mars_low.txt:252": {
+    "file": "mars_low.txt",
+    "seq": 252,
+    "old_deg": 232,
+    "old_am": 1,
+    "new_deg": 231,
+    "new_am": 26,
+    "delta_arcsec": -2106.7306273063236,
+    "n_cases": 1
+  },
+  "mars_low.txt:272": {
+    "file": "mars_low.txt",
+    "seq": 272,
+    "old_deg": 75,
+    "old_am": 45,
+    "new_deg": 75,
+    "new_am": 5,
+    "delta_arcsec": -2400.088806660478,
+    "n_cases": 1
+  },
+  "mars_low.txt:309": {
+    "file": "mars_low.txt",
+    "seq": 309,
+    "old_deg": 69,
+    "old_am": 0,
+    "new_deg": 70,
+    "new_am": 6,
+    "delta_arcsec": 3975.004341533988,
+    "n_cases": 1
+  },
+  "mars_low.txt:311": {
+    "file": "mars_low.txt",
+    "seq": 311,
+    "old_deg": 119,
+    "old_am": 16,
+    "new_deg": 121,
+    "new_am": 45,
+    "delta_arcsec": 8964.142517814733,
+    "n_cases": 1
+  },
+  "mars_low.txt:316": {
+    "file": "mars_low.txt",
+    "seq": 316,
+    "old_deg": 223,
+    "old_am": 43,
+    "new_deg": 224,
+    "new_am": 41,
+    "delta_arcsec": 3495.7966695881623,
+    "n_cases": 1
+  },
+  "mars_low.txt:318": {
+    "file": "mars_low.txt",
+    "seq": 318,
+    "old_deg": 266,
+    "old_am": 46,
+    "new_deg": 267,
+    "new_am": 53,
+    "delta_arcsec": 4046.0271270036496,
+    "n_cases": 1
+  },
+  "mars_low.txt:321": {
+    "file": "mars_low.txt",
+    "seq": 321,
+    "old_deg": 317,
+    "old_am": 20,
+    "new_deg": 319,
+    "new_am": 50,
+    "delta_arcsec": 8987.352697095406,
+    "n_cases": 1
+  },
+  "mars_low.txt:348": {
+    "file": "mars_low.txt",
+    "seq": 348,
+    "old_deg": 112,
+    "old_am": 13,
+    "new_deg": 120,
+    "new_am": 13,
+    "delta_arcsec": 28814.51933701613,
+    "n_cases": 1
+  },
+  "mars_low.txt:353": {
+    "file": "mars_low.txt",
+    "seq": 353,
+    "old_deg": 217,
+    "old_am": 9,
+    "new_deg": 215,
+    "new_am": 21,
+    "delta_arcsec": -6489.947511312247,
+    "n_cases": 1
+  },
+  "mars_low.txt:384": {
+    "file": "mars_low.txt",
+    "seq": 384,
+    "old_deg": 101,
+    "old_am": 8,
+    "new_deg": 104,
+    "new_am": 45,
+    "delta_arcsec": 13021.09090909123,
+    "n_cases": 1
+  },
+  "mars_low.txt:386": {
+    "file": "mars_low.txt",
+    "seq": 386,
+    "old_deg": 136,
+    "old_am": 52,
+    "new_deg": 138,
+    "new_am": 24,
+    "delta_arcsec": 5510.245322245411,
+    "n_cases": 1
+  },
+  "mars_low.txt:393": {
+    "file": "mars_low.txt",
+    "seq": 393,
+    "old_deg": 301,
+    "old_am": 21,
+    "new_deg": 302,
+    "new_am": 31,
+    "delta_arcsec": 4203.596844872966,
+    "n_cases": 1
+  },
+  "mars_low.txt:394": {
+    "file": "mars_low.txt",
+    "seq": 394,
+    "old_deg": 332,
+    "old_am": 12,
+    "new_deg": 344,
+    "new_am": 46,
+    "delta_arcsec": 45238.2202247184,
+    "n_cases": 1
+  },
+  "mars_low.txt:395": {
+    "file": "mars_low.txt",
+    "seq": 395,
+    "old_deg": 355,
+    "old_am": 17,
+    "new_deg": 357,
+    "new_am": 3,
+    "delta_arcsec": 6355.040280210072,
+    "n_cases": 1
+  },
+  "mars_low.txt:411": {
+    "file": "mars_low.txt",
+    "seq": 411,
+    "old_deg": 98,
+    "old_am": 34,
+    "new_deg": 97,
+    "new_am": 1,
+    "delta_arcsec": -5584.624390243823,
+    "n_cases": 1
+  },
+  "mars_low.txt:414": {
+    "file": "mars_low.txt",
+    "seq": 414,
+    "old_deg": 89,
+    "old_am": 56,
+    "new_deg": 88,
+    "new_am": 47,
+    "delta_arcsec": -4116.407547169934,
+    "n_cases": 1
+  },
+  "mars_low.txt:418": {
+    "file": "mars_low.txt",
+    "seq": 418,
+    "old_deg": 97,
+    "old_am": 43,
+    "new_deg": 100,
+    "new_am": 39,
+    "delta_arcsec": 10589.083056478457,
+    "n_cases": 1
+  },
+  "mars_low.txt:450": {
+    "file": "mars_low.txt",
+    "seq": 450,
+    "old_deg": 125,
+    "old_am": 56,
+    "new_deg": 124,
+    "new_am": 53,
+    "delta_arcsec": -3788.9006622516713,
+    "n_cases": 1
+  },
+  "mars_low.txt:468": {
+    "file": "mars_low.txt",
+    "seq": 468,
+    "old_deg": 348,
+    "old_am": 35,
+    "new_deg": 350,
+    "new_am": 56,
+    "delta_arcsec": 8467.082311733691,
+    "n_cases": 1
+  },
+  "mercury_high.txt:4": {
+    "file": "mercury_high.txt",
+    "seq": 4,
+    "old_deg": 249,
+    "old_am": 29,
+    "new_deg": 248,
+    "new_am": 29,
+    "delta_arcsec": -3575.6149732619756,
+    "n_cases": 4
+  },
+  "mercury_high.txt:5": {
+    "file": "mercury_high.txt",
+    "seq": 5,
+    "old_deg": 257,
+    "old_am": 31,
+    "new_deg": 256,
+    "new_am": 6,
+    "delta_arcsec": -5105.806451612947,
+    "n_cases": 5
+  },
+  "mercury_high.txt:12": {
+    "file": "mercury_high.txt",
+    "seq": 12,
+    "old_deg": 264,
+    "old_am": 40,
+    "new_deg": 255,
+    "new_am": 15,
+    "delta_arcsec": -33891.42857142844,
+    "n_cases": 1
+  },
+  "mercury_high.txt:14": {
+    "file": "mercury_high.txt",
+    "seq": 14,
+    "old_deg": 259,
+    "old_am": 16,
+    "new_deg": 257,
+    "new_am": 36,
+    "delta_arcsec": -6012.605042016756,
+    "n_cases": 1
+  },
+  "mercury_high.txt:21": {
+    "file": "mercury_high.txt",
+    "seq": 21,
+    "old_deg": 271,
+    "old_am": 25,
+    "new_deg": 273,
+    "new_am": 42,
+    "delta_arcsec": 8235.555555555948,
+    "n_cases": 1
+  },
+  "mercury_high.txt:22": {
+    "file": "mercury_high.txt",
+    "seq": 22,
+    "old_deg": 280,
+    "old_am": 0,
+    "new_deg": 281,
+    "new_am": 20,
+    "delta_arcsec": 4790.000000000282,
+    "n_cases": 2
+  },
+  "mercury_high.txt:24": {
+    "file": "mercury_high.txt",
+    "seq": 24,
+    "old_deg": 307,
+    "old_am": 14,
+    "new_deg": 308,
+    "new_am": 24,
+    "delta_arcsec": 4192.577319587782,
+    "n_cases": 3
+  },
+  "mercury_high.txt:25": {
+    "file": "mercury_high.txt",
+    "seq": 25,
+    "old_deg": 321,
+    "old_am": 53,
+    "new_deg": 323,
+    "new_am": 45,
+    "delta_arcsec": 6738.897637795205,
+    "n_cases": 3
+  },
+  "mercury_high.txt:27": {
+    "file": "mercury_high.txt",
+    "seq": 27,
+    "old_deg": 336,
+    "old_am": 43,
+    "new_deg": 344,
+    "new_am": 4,
+    "delta_arcsec": 26436.36363636291,
+    "n_cases": 1
+  },
+  "mercury_high.txt:29": {
+    "file": "mercury_high.txt",
+    "seq": 29,
+    "old_deg": 3,
+    "old_am": 50,
+    "new_deg": 3,
+    "new_am": 0,
+    "delta_arcsec": -3019.0045248868355,
+    "n_cases": 3
+  },
+  "mercury_high.txt:30": {
+    "file": "mercury_high.txt",
+    "seq": 30,
+    "old_deg": 12,
+    "old_am": 4,
+    "new_deg": 11,
+    "new_am": 22,
+    "delta_arcsec": -2531.771117166185,
+    "n_cases": 3
+  },
+  "mercury_high.txt:36": {
+    "file": "mercury_high.txt",
+    "seq": 36,
+    "old_deg": 24,
+    "old_am": 47,
+    "new_deg": 23,
+    "new_am": 17,
+    "delta_arcsec": -5386.056338028155,
+    "n_cases": 2
+  },
+  "mercury_high.txt:38": {
+    "file": "mercury_high.txt",
+    "seq": 38,
+    "old_deg": 19,
+    "old_am": 58,
+    "new_deg": 14,
+    "new_am": 36,
+    "delta_arcsec": -19328.108108108034,
+    "n_cases": 1
+  },
+  "mercury_high.txt:39": {
+    "file": "mercury_high.txt",
+    "seq": 39,
+    "old_deg": 16,
+    "old_am": 19,
+    "new_deg": 13,
+    "new_am": 20,
+    "delta_arcsec": -10738.208955223918,
+    "n_cases": 1
+  },
+  "mercury_high.txt:46": {
+    "file": "mercury_high.txt",
+    "seq": 46,
+    "old_deg": 29,
+    "old_am": 33,
+    "new_deg": 30,
+    "new_am": 35,
+    "delta_arcsec": 3710.4950495048583,
+    "n_cases": 2
+  },
+  "mercury_high.txt:47": {
+    "file": "mercury_high.txt",
+    "seq": 47,
+    "old_deg": 38,
+    "old_am": 29,
+    "new_deg": 37,
+    "new_am": 39,
+    "delta_arcsec": -3027.7524429967884,
+    "n_cases": 3
+  },
+  "mercury_high.txt:48": {
+    "file": "mercury_high.txt",
+    "seq": 48,
+    "old_deg": 51,
+    "old_am": 48,
+    "new_deg": 50,
+    "new_am": 18,
+    "delta_arcsec": -5406.527196652665,
+    "n_cases": 2
+  },
+  "mercury_high.txt:50": {
+    "file": "mercury_high.txt",
+    "seq": 50,
+    "old_deg": 81,
+    "old_am": 2,
+    "new_deg": 84,
+    "new_am": 23,
+    "delta_arcsec": 12074.09395973133,
+    "n_cases": 3
+  },
+  "mercury_high.txt:55": {
+    "file": "mercury_high.txt",
+    "seq": 55,
+    "old_deg": 131,
+    "old_am": 48,
+    "new_deg": 132,
+    "new_am": 47,
+    "delta_arcsec": 3549.160305343517,
+    "n_cases": 3
+  },
+  "mercury_high.txt:57": {
+    "file": "mercury_high.txt",
+    "seq": 57,
+    "old_deg": 142,
+    "old_am": 46,
+    "new_deg": 141,
+    "new_am": 56,
+    "delta_arcsec": -3020.0000000001182,
+    "n_cases": 1
+  },
+  "mercury_high.txt:58": {
+    "file": "mercury_high.txt",
+    "seq": 58,
+    "old_deg": 144,
+    "old_am": 54,
+    "new_deg": 142,
+    "new_am": 59,
+    "delta_arcsec": -6919.3220338982555,
+    "n_cases": 1
+  },
+  "mercury_high.txt:65": {
+    "file": "mercury_high.txt",
+    "seq": 65,
+    "old_deg": 135,
+    "old_am": 57,
+    "new_deg": 135,
+    "new_am": 0,
+    "delta_arcsec": -3408.8659793814127,
+    "n_cases": 2
+  },
+  "mercury_high.txt:66": {
+    "file": "mercury_high.txt",
+    "seq": 66,
+    "old_deg": 133,
+    "old_am": 48,
+    "new_deg": 132,
+    "new_am": 57,
+    "delta_arcsec": -3065.66929133855,
+    "n_cases": 1
+  },
+  "mercury_high.txt:72": {
+    "file": "mercury_high.txt",
+    "seq": 72,
+    "old_deg": 154,
+    "old_am": 18,
+    "new_deg": 155,
+    "new_am": 26,
+    "delta_arcsec": 4102.57425742578,
+    "n_cases": 2
+  },
+  "mercury_high.txt:73": {
+    "file": "mercury_high.txt",
+    "seq": 73,
+    "old_deg": 166,
+    "old_am": 43,
+    "new_deg": 168,
+    "new_am": 16,
+    "delta_arcsec": 5588.987854250966,
+    "n_cases": 3
+  },
+  "mercury_high.txt:74": {
+    "file": "mercury_high.txt",
+    "seq": 74,
+    "old_deg": 180,
+    "old_am": 11,
+    "new_deg": 177,
+    "new_am": 2,
+    "delta_arcsec": -11358.655462185,
+    "n_cases": 1
+  },
+  "mercury_high.txt:77": {
+    "file": "mercury_high.txt",
+    "seq": 77,
+    "old_deg": 208,
+    "old_am": 14,
+    "new_deg": 207,
+    "new_am": 22,
+    "delta_arcsec": -3098.7755102040474,
+    "n_cases": 3
+  },
+  "mercury_high.txt:78": {
+    "file": "mercury_high.txt",
+    "seq": 78,
+    "old_deg": 221,
+    "old_am": 28,
+    "new_deg": 222,
+    "new_am": 37,
+    "delta_arcsec": 4157.377049180349,
+    "n_cases": 3
+  },
+  "mercury_high.txt:79": {
+    "file": "mercury_high.txt",
+    "seq": 79,
+    "old_deg": 233,
+    "old_am": 30,
+    "new_deg": 227,
+    "new_am": 12,
+    "delta_arcsec": -22673.898305084935,
+    "n_cases": 1
+  },
+  "mercury_high.txt:81": {
+    "file": "mercury_high.txt",
+    "seq": 81,
+    "old_deg": 247,
+    "old_am": 44,
+    "new_deg": 246,
+    "new_am": 50,
+    "delta_arcsec": -3254.7761194029567,
+    "n_cases": 1
+  },
+  "mercury_high.txt:91": {
+    "file": "mercury_high.txt",
+    "seq": 91,
+    "old_deg": 240,
+    "old_am": 11,
+    "new_deg": 235,
+    "new_am": 22,
+    "delta_arcsec": -17344.285714285506,
+    "n_cases": 1
+  },
+  "mercury_high.txt:92": {
+    "file": "mercury_high.txt",
+    "seq": 92,
+    "old_deg": 240,
+    "old_am": 28,
+    "new_deg": 235,
+    "new_am": 56,
+    "delta_arcsec": -16294.28571428522,
+    "n_cases": 1
+  },
+  "mercury_high.txt:98": {
+    "file": "mercury_high.txt",
+    "seq": 98,
+    "old_deg": 276,
+    "old_am": 24,
+    "new_deg": 277,
+    "new_am": 27,
+    "delta_arcsec": 3758.110236220492,
+    "n_cases": 3
+  },
+  "mercury_high.txt:99": {
+    "file": "mercury_high.txt",
+    "seq": 99,
+    "old_deg": 290,
+    "old_am": 28,
+    "new_deg": 291,
+    "new_am": 41,
+    "delta_arcsec": 4368.524590163808,
+    "n_cases": 3
+  },
+  "mercury_high.txt:100": {
+    "file": "mercury_high.txt",
+    "seq": 100,
+    "old_deg": 305,
+    "old_am": 10,
+    "new_deg": 298,
+    "new_am": 30,
+    "delta_arcsec": -24016.27118644048,
+    "n_cases": 1
+  },
+  "mercury_high.txt:102": {
+    "file": "mercury_high.txt",
+    "seq": 102,
+    "old_deg": 319,
+    "old_am": 45,
+    "new_deg": 321,
+    "new_am": 12,
+    "delta_arcsec": 5231.854103343583,
+    "n_cases": 3
+  },
+  "mercury_high.txt:103": {
+    "file": "mercury_high.txt",
+    "seq": 103,
+    "old_deg": 333,
+    "old_am": 38,
+    "new_deg": 338,
+    "new_am": 39,
+    "delta_arcsec": 18043.464566929222,
+    "n_cases": 2
+  },
+  "mercury_high.txt:104": {
+    "file": "mercury_high.txt",
+    "seq": 104,
+    "old_deg": 346,
+    "old_am": 2,
+    "new_deg": 349,
+    "new_am": 7,
+    "delta_arcsec": 11112.000000000535,
+    "n_cases": 2
+  },
+  "mercury_high.txt:107": {
+    "file": "mercury_high.txt",
+    "seq": 107,
+    "old_deg": 4,
+    "old_am": 56,
+    "new_deg": 4,
+    "new_am": 14,
+    "delta_arcsec": -2521.1538461538753,
+    "n_cases": 1
+  },
+  "mercury_high.txt:108": {
+    "file": "mercury_high.txt",
+    "seq": 108,
+    "old_deg": 6,
+    "old_am": 27,
+    "new_deg": 5,
+    "new_am": 47,
+    "delta_arcsec": -2408.9361702127953,
+    "n_cases": 1
+  },
+  "mercury_high.txt:123": {
+    "file": "mercury_high.txt",
+    "seq": 123,
+    "old_deg": 34,
+    "old_am": 11,
+    "new_deg": 33,
+    "new_am": 15,
+    "delta_arcsec": -3350.1285347043536,
+    "n_cases": 1
+  },
+  "mercury_high.txt:124": {
+    "file": "mercury_high.txt",
+    "seq": 124,
+    "old_deg": 48,
+    "old_am": 26,
+    "new_deg": 46,
+    "new_am": 36,
+    "delta_arcsec": -6607.761194029868,
+    "n_cases": 3
+  },
+  "mercury_high.txt:125": {
+    "file": "mercury_high.txt",
+    "seq": 125,
+    "old_deg": 63,
+    "old_am": 50,
+    "new_deg": 65,
+    "new_am": 40,
+    "delta_arcsec": 6609.23076923078,
+    "n_cases": 1
+  },
+  "mercury_high.txt:133": {
+    "file": "mercury_high.txt",
+    "seq": 133,
+    "old_deg": 127,
+    "old_am": 35,
+    "new_deg": 126,
+    "new_am": 58,
+    "delta_arcsec": -2225.4545454545187,
+    "n_cases": 1
+  },
+  "mercury_high.txt:137": {
+    "file": "mercury_high.txt",
+    "seq": 137,
+    "old_deg": 125,
+    "old_am": 56,
+    "new_deg": 123,
+    "new_am": 22,
+    "delta_arcsec": -9222.985074626906,
+    "n_cases": 1
+  },
+  "mercury_high.txt:145": {
+    "file": "mercury_high.txt",
+    "seq": 145,
+    "old_deg": 123,
+    "old_am": 11,
+    "new_deg": 118,
+    "new_am": 27,
+    "delta_arcsec": -17057.142857142837,
+    "n_cases": 1
+  },
+  "mercury_high.txt:149": {
+    "file": "mercury_high.txt",
+    "seq": 149,
+    "old_deg": 164,
+    "old_am": 4,
+    "new_deg": 165,
+    "new_am": 13,
+    "delta_arcsec": 4140.314136125703,
+    "n_cases": 3
+  },
+  "mercury_high.txt:150": {
+    "file": "mercury_high.txt",
+    "seq": 150,
+    "old_deg": 179,
+    "old_am": 49,
+    "new_deg": 181,
+    "new_am": 18,
+    "delta_arcsec": 5359.175257732148,
+    "n_cases": 1
+  },
+  "mercury_high.txt:156": {
+    "file": "mercury_high.txt",
+    "seq": 156,
+    "old_deg": 231,
+    "old_am": 50,
+    "new_deg": 229,
+    "new_am": 53,
+    "delta_arcsec": -7047.000000000037,
+    "n_cases": 1
+  },
+  "mercury_high.txt:161": {
+    "file": "mercury_high.txt",
+    "seq": 161,
+    "old_deg": 234,
+    "old_am": 8,
+    "new_deg": 233,
+    "new_am": 25,
+    "delta_arcsec": -2561.8309859155406,
+    "n_cases": 1
+  },
+  "mercury_high.txt:163": {
+    "file": "mercury_high.txt",
+    "seq": 163,
+    "old_deg": 228,
+    "old_am": 51,
+    "new_deg": 225,
+    "new_am": 58,
+    "delta_arcsec": -10354.864864865152,
+    "n_cases": 1
+  },
+  "mercury_high.txt:164": {
+    "file": "mercury_high.txt",
+    "seq": 164,
+    "old_deg": 226,
+    "old_am": 20,
+    "new_deg": 223,
+    "new_am": 23,
+    "delta_arcsec": -10636.11940298484,
+    "n_cases": 1
+  },
+  "mercury_high.txt:171": {
+    "file": "mercury_high.txt",
+    "seq": 171,
+    "old_deg": 238,
+    "old_am": 25,
+    "new_deg": 239,
+    "new_am": 7,
+    "delta_arcsec": 2499.3103448277125,
+    "n_cases": 3
+  },
+  "mercury_high.txt:175": {
+    "file": "mercury_high.txt",
+    "seq": 175,
+    "old_deg": 288,
+    "old_am": 30,
+    "new_deg": 289,
+    "new_am": 28,
+    "delta_arcsec": 3466.6666666666224,
+    "n_cases": 3
+  },
+  "mercury_high.txt:177": {
+    "file": "mercury_high.txt",
+    "seq": 177,
+    "old_deg": 302,
+    "old_am": 57,
+    "new_deg": 304,
+    "new_am": 3,
+    "delta_arcsec": 3943.6619718310117,
+    "n_cases": 2
+  },
+  "mercury_high.txt:180": {
+    "file": "mercury_high.txt",
+    "seq": 180,
+    "old_deg": 337,
+    "old_am": 26,
+    "new_deg": 340,
+    "new_am": 0,
+    "delta_arcsec": 9216.818181818171,
+    "n_cases": 4
+  },
+  "mercury_high.txt:188": {
+    "file": "mercury_high.txt",
+    "seq": 188,
+    "old_deg": 341,
+    "old_am": 24,
+    "new_deg": 338,
+    "new_am": 54,
+    "delta_arcsec": -9013.170731707505,
+    "n_cases": 1
+  },
+  "mercury_high.txt:189": {
+    "file": "mercury_high.txt",
+    "seq": 189,
+    "old_deg": 338,
+    "old_am": 47,
+    "new_deg": 336,
+    "new_am": 3,
+    "delta_arcsec": -9852.000000000044,
+    "n_cases": 1
+  },
+  "mercury_high.txt:196": {
+    "file": "mercury_high.txt",
+    "seq": 196,
+    "old_deg": 353,
+    "old_am": 30,
+    "new_deg": 354,
+    "new_am": 34,
+    "delta_arcsec": 3866.9856459327875,
+    "n_cases": 1
+  },
+  "mercury_high.txt:197": {
+    "file": "mercury_high.txt",
+    "seq": 197,
+    "old_deg": 2,
+    "old_am": 41,
+    "new_deg": 8,
+    "new_am": 55,
+    "delta_arcsec": 22442.666666666628,
+    "n_cases": 4
+  },
+  "mercury_high.txt:198": {
+    "file": "mercury_high.txt",
+    "seq": 198,
+    "old_deg": 16,
+    "old_am": 20,
+    "new_deg": 21,
+    "new_am": 39,
+    "delta_arcsec": 19129.999999999927,
+    "n_cases": 4
+  },
+  "mercury_high.txt:202": {
+    "file": "mercury_high.txt",
+    "seq": 202,
+    "old_deg": 61,
+    "old_am": 29,
+    "new_deg": 63,
+    "new_am": 33,
+    "delta_arcsec": 7455.999999999895,
+    "n_cases": 4
+  },
+  "mercury_high.txt:203": {
+    "file": "mercury_high.txt",
+    "seq": 203,
+    "old_deg": 75,
+    "old_am": 52,
+    "new_deg": 74,
+    "new_am": 59,
+    "delta_arcsec": -3198.4725536993446,
+    "n_cases": 3
+  },
+  "mercury_high.txt:205": {
+    "file": "mercury_high.txt",
+    "seq": 205,
+    "old_deg": 97,
+    "old_am": 37,
+    "new_deg": 98,
+    "new_am": 36,
+    "delta_arcsec": 3539.776951672838,
+    "n_cases": 1
+  },
+  "mercury_high.txt:206": {
+    "file": "mercury_high.txt",
+    "seq": 206,
+    "old_deg": 104,
+    "old_am": 45,
+    "new_deg": 103,
+    "new_am": 50,
+    "delta_arcsec": -3275.8620689655486,
+    "n_cases": 1
+  },
+  "mercury_high.txt:208": {
+    "file": "mercury_high.txt",
+    "seq": 208,
+    "old_deg": 110,
+    "old_am": 12,
+    "new_deg": 112,
+    "new_am": 12,
+    "delta_arcsec": 7209.000000000196,
+    "n_cases": 1
+  },
+  "mercury_high.txt:219": {
+    "file": "mercury_high.txt",
+    "seq": 219,
+    "old_deg": 102,
+    "old_am": 12,
+    "new_deg": 101,
+    "new_am": 38,
+    "delta_arcsec": -2041.3407821229348,
+    "n_cases": 1
+  },
+  "mercury_low.txt:227": {
+    "file": "mercury_low.txt",
+    "seq": 227,
+    "old_deg": 176,
+    "old_am": 42,
+    "new_deg": 178,
+    "new_am": 30,
+    "delta_arcsec": 6475.539033457263,
+    "n_cases": 2
+  },
+  "mercury_low.txt:228": {
+    "file": "mercury_low.txt",
+    "seq": 228,
+    "old_deg": 189,
+    "old_am": 51,
+    "new_deg": 191,
+    "new_am": 30,
+    "delta_arcsec": 5943.307086614311,
+    "n_cases": 4
+  },
+  "mercury_low.txt:229": {
+    "file": "mercury_low.txt",
+    "seq": 229,
+    "old_deg": 203,
+    "old_am": 30,
+    "new_deg": 209,
+    "new_am": 2,
+    "delta_arcsec": 19927.272727272215,
+    "n_cases": 2
+  },
+  "mercury_low.txt:234": {
+    "file": "mercury_low.txt",
+    "seq": 234,
+    "old_deg": 220,
+    "old_am": 13,
+    "new_deg": 218,
+    "new_am": 53,
+    "delta_arcsec": -4811.351351351373,
+    "n_cases": 1
+  },
+  "mercury_low.txt:244": {
+    "file": "mercury_low.txt",
+    "seq": 244,
+    "old_deg": 211,
+    "old_am": 33,
+    "new_deg": 210,
+    "new_am": 17,
+    "delta_arcsec": -4585.135135135361,
+    "n_cases": 1
+  },
+  "mercury_low.txt:248": {
+    "file": "mercury_low.txt",
+    "seq": 248,
+    "old_deg": 243,
+    "old_am": 34,
+    "new_deg": 244,
+    "new_am": 27,
+    "delta_arcsec": 3177.556561085935,
+    "n_cases": 2
+  },
+  "mercury_low.txt:249": {
+    "file": "mercury_low.txt",
+    "seq": 249,
+    "old_deg": 257,
+    "old_am": 28,
+    "new_deg": 259,
+    "new_am": 12,
+    "delta_arcsec": 6239.999999999996,
+    "n_cases": 3
+  },
+  "mercury_low.txt:250": {
+    "file": "mercury_low.txt",
+    "seq": 250,
+    "old_deg": 271,
+    "old_am": 58,
+    "new_deg": 293,
+    "new_am": 37,
+    "delta_arcsec": 77949.09090909097,
+    "n_cases": 3
+  },
+  "mercury_low.txt:253": {
+    "file": "mercury_low.txt",
+    "seq": 253,
+    "old_deg": 299,
+    "old_am": 52,
+    "new_deg": 300,
+    "new_am": 59,
+    "delta_arcsec": 4007.120418848123,
+    "n_cases": 2
+  },
+  "mercury_low.txt:254": {
+    "file": "mercury_low.txt",
+    "seq": 254,
+    "old_deg": 312,
+    "old_am": 15,
+    "new_deg": 313,
+    "new_am": 15,
+    "delta_arcsec": 3625.5040871933747,
+    "n_cases": 2
+  },
+  "mercury_low.txt:255": {
+    "file": "mercury_low.txt",
+    "seq": 255,
+    "old_deg": 320,
+    "old_am": 15,
+    "new_deg": 321,
+    "new_am": 30,
+    "delta_arcsec": 4488.938547486066,
+    "n_cases": 3
+  },
+  "mercury_low.txt:262": {
+    "file": "mercury_low.txt",
+    "seq": 262,
+    "old_deg": 325,
+    "old_am": 26,
+    "new_deg": 324,
+    "new_am": 18,
+    "delta_arcsec": -4060.5586592176824,
+    "n_cases": 1
+  },
+  "mercury_low.txt:269": {
+    "file": "mercury_low.txt",
+    "seq": 269,
+    "old_deg": 323,
+    "old_am": 51,
+    "new_deg": 322,
+    "new_am": 22,
+    "delta_arcsec": -5314.090909090681,
+    "n_cases": 2
+  },
+  "mercury_low.txt:270": {
+    "file": "mercury_low.txt",
+    "seq": 270,
+    "old_deg": 328,
+    "old_am": 0,
+    "new_deg": 327,
+    "new_am": 12,
+    "delta_arcsec": -2896.0824742267864,
+    "n_cases": 2
+  },
+  "mercury_low.txt:271": {
+    "file": "mercury_low.txt",
+    "seq": 271,
+    "old_deg": 335,
+    "old_am": 56,
+    "new_deg": 336,
+    "new_am": 51,
+    "delta_arcsec": 3322.50000000015,
+    "n_cases": 3
+  },
+  "mercury_low.txt:272": {
+    "file": "mercury_low.txt",
+    "seq": 272,
+    "old_deg": 345,
+    "old_am": 0,
+    "new_deg": 340,
+    "new_am": 41,
+    "delta_arcsec": -15528.813559322061,
+    "n_cases": 1
+  },
+  "mercury_low.txt:274": {
+    "file": "mercury_low.txt",
+    "seq": 274,
+    "old_deg": 13,
+    "old_am": 23,
+    "new_deg": 15,
+    "new_am": 55,
+    "delta_arcsec": 9096.23762376237,
+    "n_cases": 5
+  },
+  "mercury_low.txt:275": {
+    "file": "mercury_low.txt",
+    "seq": 275,
+    "old_deg": 29,
+    "old_am": 53,
+    "new_deg": 32,
+    "new_am": 0,
+    "delta_arcsec": 7638.930481283303,
+    "n_cases": 3
+  },
+  "mercury_low.txt:279": {
+    "file": "mercury_low.txt",
+    "seq": 279,
+    "old_deg": 71,
+    "old_am": 31,
+    "new_deg": 72,
+    "new_am": 40,
+    "delta_arcsec": 4153.600000000064,
+    "n_cases": 4
+  },
+  "mercury_low.txt:280": {
+    "file": "mercury_low.txt",
+    "seq": 280,
+    "old_deg": 80,
+    "old_am": 11,
+    "new_deg": 79,
+    "new_am": 21,
+    "delta_arcsec": -3008.2352941176396,
+    "n_cases": 4
+  },
+  "mercury_low.txt:286": {
+    "file": "mercury_low.txt",
+    "seq": 286,
+    "old_deg": 91,
+    "old_am": 52,
+    "new_deg": 93,
+    "new_am": 25,
+    "delta_arcsec": 5597.872340425579,
+    "n_cases": 1
+  },
+  "mercury_low.txt:287": {
+    "file": "mercury_low.txt",
+    "seq": 287,
+    "old_deg": 88,
+    "old_am": 53,
+    "new_deg": 86,
+    "new_am": 42,
+    "delta_arcsec": -7871.351351351244,
+    "n_cases": 1
+  },
+  "mercury_low.txt:296": {
+    "file": "mercury_low.txt",
+    "seq": 296,
+    "old_deg": 94,
+    "old_am": 33,
+    "new_deg": 84,
+    "new_am": 21,
+    "delta_arcsec": -36720.00000000009,
+    "n_cases": 1
+  },
+  "mercury_low.txt:298": {
+    "file": "mercury_low.txt",
+    "seq": 298,
+    "old_deg": 117,
+    "old_am": 14,
+    "new_deg": 111,
+    "new_am": 17,
+    "delta_arcsec": -21412.881355931597,
+    "n_cases": 1
+  },
+  "mercury_low.txt:300": {
+    "file": "mercury_low.txt",
+    "seq": 300,
+    "old_deg": 145,
+    "old_am": 46,
+    "new_deg": 147,
+    "new_am": 19,
+    "delta_arcsec": 5566.476190476169,
+    "n_cases": 5
+  },
+  "mercury_low.txt:302": {
+    "file": "mercury_low.txt",
+    "seq": 302,
+    "old_deg": 160,
+    "old_am": 0,
+    "new_deg": 163,
+    "new_am": 42,
+    "delta_arcsec": 13341.732283464162,
+    "n_cases": 2
+  },
+  "mercury_low.txt:305": {
+    "file": "mercury_low.txt",
+    "seq": 305,
+    "old_deg": 194,
+    "old_am": 7,
+    "new_deg": 195,
+    "new_am": 15,
+    "delta_arcsec": 4107.692307692413,
+    "n_cases": 6
+  },
+  "mercury_low.txt:306": {
+    "file": "mercury_low.txt",
+    "seq": 306,
+    "old_deg": 200,
+    "old_am": 29,
+    "new_deg": 199,
+    "new_am": 43,
+    "delta_arcsec": -2772.941176470514,
+    "n_cases": 1
+  },
+  "mercury_low.txt:312": {
+    "file": "mercury_low.txt",
+    "seq": 312,
+    "old_deg": 200,
+    "old_am": 32,
+    "new_deg": 198,
+    "new_am": 18,
+    "delta_arcsec": -8043.37078651685,
+    "n_cases": 1
+  },
+  "mercury_low.txt:314": {
+    "file": "mercury_low.txt",
+    "seq": 314,
+    "old_deg": 195,
+    "old_am": 12,
+    "new_deg": 185,
+    "new_am": 13,
+    "delta_arcsec": -35931.42857142805,
+    "n_cases": 2
+  },
+  "mercury_low.txt:322": {
+    "file": "mercury_low.txt",
+    "seq": 322,
+    "old_deg": 214,
+    "old_am": 52,
+    "new_deg": 214,
+    "new_am": 1,
+    "delta_arcsec": -3071.464968152888,
+    "n_cases": 5
+  },
+  "mercury_low.txt:323": {
+    "file": "mercury_low.txt",
+    "seq": 323,
+    "old_deg": 227,
+    "old_am": 30,
+    "new_deg": 226,
+    "new_am": 36,
+    "delta_arcsec": -3221.3842482099853,
+    "n_cases": 3
+  },
+  "mercury_low.txt:325": {
+    "file": "mercury_low.txt",
+    "seq": 325,
+    "old_deg": 255,
+    "old_am": 35,
+    "new_deg": 256,
+    "new_am": 47,
+    "delta_arcsec": 4337.275064267111,
+    "n_cases": 1
+  },
+  "mercury_low.txt:328": {
+    "file": "mercury_low.txt",
+    "seq": 328,
+    "old_deg": 283,
+    "old_am": 15,
+    "new_deg": 284,
+    "new_am": 40,
+    "delta_arcsec": 5080.936454849477,
+    "n_cases": 2
+  },
+  "mercury_low.txt:331": {
+    "file": "mercury_low.txt",
+    "seq": 331,
+    "old_deg": 309,
+    "old_am": 24,
+    "new_deg": 307,
+    "new_am": 46,
+    "delta_arcsec": -5866.478873239462,
+    "n_cases": 1
+  },
+  "mercury_low.txt:332": {
+    "file": "mercury_low.txt",
+    "seq": 332,
+    "old_deg": 311,
+    "old_am": 31,
+    "new_deg": 309,
+    "new_am": 31,
+    "delta_arcsec": -7225.94594594579,
+    "n_cases": 1
+  },
+  "mercury_low.txt:338": {
+    "file": "mercury_low.txt",
+    "seq": 338,
+    "old_deg": 304,
+    "old_am": 34,
+    "new_deg": 300,
+    "new_am": 11,
+    "delta_arcsec": -15773.258426966295,
+    "n_cases": 1
+  },
+  "mercury_low.txt:339": {
+    "file": "mercury_low.txt",
+    "seq": 339,
+    "old_deg": 302,
+    "old_am": 33,
+    "new_deg": 301,
+    "new_am": 19,
+    "delta_arcsec": -4422.676056337897,
+    "n_cases": 1
+  },
+  "mercury_low.txt:340": {
+    "file": "mercury_low.txt",
+    "seq": 340,
+    "old_deg": 301,
+    "old_am": 21,
+    "new_deg": 299,
+    "new_am": 40,
+    "delta_arcsec": -6071.9999999995525,
+    "n_cases": 1
+  },
+  "mercury_low.txt:348": {
+    "file": "mercury_low.txt",
+    "seq": 348,
+    "old_deg": 341,
+    "old_am": 31,
+    "new_deg": 340,
+    "new_am": 19,
+    "delta_arcsec": -4335.286624203737,
+    "n_cases": 3
+  },
+  "mercury_low.txt:349": {
+    "file": "mercury_low.txt",
+    "seq": 349,
+    "old_deg": 355,
+    "old_am": 51,
+    "new_deg": 354,
+    "new_am": 15,
+    "delta_arcsec": -5766.025104602198,
+    "n_cases": 3
+  },
+  "mercury_low.txt:352": {
+    "file": "mercury_low.txt",
+    "seq": 352,
+    "old_deg": 27,
+    "old_am": 13,
+    "new_deg": 30,
+    "new_am": 10,
+    "delta_arcsec": 10617.98657718122,
+    "n_cases": 1
+  },
+  "mercury_low.txt:356": {
+    "file": "mercury_low.txt",
+    "seq": 356,
+    "old_deg": 69,
+    "old_am": 25,
+    "new_deg": 73,
+    "new_am": 45,
+    "delta_arcsec": 15579.904306220027,
+    "n_cases": 1
+  },
+  "mercury_low.txt:357": {
+    "file": "mercury_low.txt",
+    "seq": 357,
+    "old_deg": 72,
+    "old_am": 48,
+    "new_deg": 72,
+    "new_am": 5,
+    "delta_arcsec": -2569.5522388059135,
+    "n_cases": 3
+  },
+  "mercury_low.txt:359": {
+    "file": "mercury_low.txt",
+    "seq": 359,
+    "old_deg": 74,
+    "old_am": 40,
+    "new_deg": 73,
+    "new_am": 17,
+    "delta_arcsec": -4997.014925372988,
+    "n_cases": 1
+  },
+  "mercury_low.txt:365": {
+    "file": "mercury_low.txt",
+    "seq": 365,
+    "old_deg": 64,
+    "old_am": 3,
+    "new_deg": 63,
+    "new_am": 23,
+    "delta_arcsec": -2426.9798657718707,
+    "n_cases": 1
+  },
+  "mercury_low.txt:373": {
+    "file": "mercury_low.txt",
+    "seq": 373,
+    "old_deg": 110,
+    "old_am": 25,
+    "new_deg": 114,
+    "new_am": 41,
+    "delta_arcsec": 15334.736842105258,
+    "n_cases": 2
+  },
+  "mercury_low.txt:374": {
+    "file": "mercury_low.txt",
+    "seq": 374,
+    "old_deg": 114,
+    "old_am": 30,
+    "new_deg": 113,
+    "new_am": 57,
+    "delta_arcsec": -1960.99999999999,
+    "n_cases": 1
+  },
+  "mercury_low.txt:375": {
+    "file": "mercury_low.txt",
+    "seq": 375,
+    "old_deg": 129,
+    "old_am": 10,
+    "new_deg": 125,
+    "new_am": 54,
+    "delta_arcsec": -11749.915966386598,
+    "n_cases": 1
+  },
+  "mercury_low.txt:378": {
+    "file": "mercury_low.txt",
+    "seq": 378,
+    "old_deg": 157,
+    "old_am": 22,
+    "new_deg": 158,
+    "new_am": 9,
+    "delta_arcsec": 2818.267716535491,
+    "n_cases": 2
+  },
+  "mercury_low.txt:379": {
+    "file": "mercury_low.txt",
+    "seq": 379,
+    "old_deg": 169,
+    "old_am": 50,
+    "new_deg": 175,
+    "new_am": 3,
+    "delta_arcsec": 18771.891891892294,
+    "n_cases": 2
+  },
+  "mercury_low.txt:380": {
+    "file": "mercury_low.txt",
+    "seq": 380,
+    "old_deg": 177,
+    "old_am": 56,
+    "new_deg": 173,
+    "new_am": 20,
+    "delta_arcsec": -16566.10169491517,
+    "n_cases": 1
+  },
+  "mercury_low.txt:396": {
+    "file": "mercury_low.txt",
+    "seq": 396,
+    "old_deg": 190,
+    "old_am": 53,
+    "new_deg": 189,
+    "new_am": 52,
+    "delta_arcsec": -3656.999999999948,
+    "n_cases": 2
+  },
+  "mercury_low.txt:399": {
+    "file": "mercury_low.txt",
+    "seq": 399,
+    "old_deg": 225,
+    "old_am": 14,
+    "new_deg": 227,
+    "new_am": 21,
+    "delta_arcsec": 7622.970297029739,
+    "n_cases": 4
+  },
+  "mercury_low.txt:400": {
+    "file": "mercury_low.txt",
+    "seq": 400,
+    "old_deg": 239,
+    "old_am": 27,
+    "new_deg": 238,
+    "new_am": 37,
+    "delta_arcsec": -2972.1920668058424,
+    "n_cases": 3
+  },
+  "mercury_low.txt:405": {
+    "file": "mercury_low.txt",
+    "seq": 405,
+    "old_deg": 286,
+    "old_am": 28,
+    "new_deg": 289,
+    "new_am": 29,
+    "delta_arcsec": 10842.985074626535,
+    "n_cases": 2
+  },
+  "mercury_low.txt:406": {
+    "file": "mercury_low.txt",
+    "seq": 406,
+    "old_deg": 292,
+    "old_am": 21,
+    "new_deg": 287,
+    "new_am": 57,
+    "delta_arcsec": -15815.593220338335,
+    "n_cases": 1
+  },
+  "mercury_low.txt:410": {
+    "file": "mercury_low.txt",
+    "seq": 410,
+    "old_deg": 294,
+    "old_am": 18,
+    "new_deg": 290,
+    "new_am": 23,
+    "delta_arcsec": -14083.448275862385,
+    "n_cases": 1
+  },
+  "mercury_low.txt:411": {
+    "file": "mercury_low.txt",
+    "seq": 411,
+    "old_deg": 292,
+    "old_am": 16,
+    "new_deg": 291,
+    "new_am": 1,
+    "delta_arcsec": -4474.4680851063185,
+    "n_cases": 1
+  },
+  "mercury_low.txt:412": {
+    "file": "mercury_low.txt",
+    "seq": 412,
+    "old_deg": 289,
+    "old_am": 29,
+    "new_deg": 287,
+    "new_am": 55,
+    "delta_arcsec": -5655.2238805971865,
+    "n_cases": 1
+  },
+  "mercury_low.txt:414": {
+    "file": "mercury_low.txt",
+    "seq": 414,
+    "old_deg": 284,
+    "old_am": 51,
+    "new_deg": 282,
+    "new_am": 15,
+    "delta_arcsec": -9343.636363636238,
+    "n_cases": 2
+  },
+  "mercury_low.txt:420": {
+    "file": "mercury_low.txt",
+    "seq": 420,
+    "old_deg": 294,
+    "old_am": 9,
+    "new_deg": 308,
+    "new_am": 49,
+    "delta_arcsec": 52821.81818181925,
+    "n_cases": 1
+  },
+  "mercury_low.txt:424": {
+    "file": "mercury_low.txt",
+    "seq": 424,
+    "old_deg": 338,
+    "old_am": 37,
+    "new_deg": 340,
+    "new_am": 6,
+    "delta_arcsec": 5348.571428571341,
+    "n_cases": 1
+  },
+  "mercury_low.txt:425": {
+    "file": "mercury_low.txt",
+    "seq": 425,
+    "old_deg": 353,
+    "old_am": 43,
+    "new_deg": 355,
+    "new_am": 21,
+    "delta_arcsec": 5874.649681528324,
+    "n_cases": 2
+  },
+  "mercury_low.txt:427": {
+    "file": "mercury_low.txt",
+    "seq": 427,
+    "old_deg": 8,
+    "old_am": 33,
+    "new_deg": 7,
+    "new_am": 28,
+    "delta_arcsec": -3898.8300835657437,
+    "n_cases": 4
+  },
+  "mercury_low.txt:429": {
+    "file": "mercury_low.txt",
+    "seq": 429,
+    "old_deg": 35,
+    "old_am": 46,
+    "new_deg": 39,
+    "new_am": 35,
+    "delta_arcsec": 13730.683229813632,
+    "n_cases": 2
+  },
+  "mercury_low.txt:430": {
+    "file": "mercury_low.txt",
+    "seq": 430,
+    "old_deg": 44,
+    "old_am": 10,
+    "new_deg": 58,
+    "new_am": 29,
+    "delta_arcsec": 51565.71428571358,
+    "n_cases": 2
+  },
+  "mercury_low.txt:431": {
+    "file": "mercury_low.txt",
+    "seq": 431,
+    "old_deg": 51,
+    "old_am": 12,
+    "new_deg": 53,
+    "new_am": 44,
+    "delta_arcsec": 9147.615062761457,
+    "n_cases": 2
+  },
+  "mercury_low.txt:437": {
+    "file": "mercury_low.txt",
+    "seq": 437,
+    "old_deg": 51,
+    "old_am": 45,
+    "new_deg": 49,
+    "new_am": 21,
+    "delta_arcsec": -8655.36585365845,
+    "n_cases": 1
+  },
+  "mercury_low.txt:438": {
+    "file": "mercury_low.txt",
+    "seq": 438,
+    "old_deg": 48,
+    "old_am": 54,
+    "new_deg": 52,
+    "new_am": 43,
+    "delta_arcsec": 13722.222222222172,
+    "n_cases": 2
+  },
+  "mercury_low.txt:450": {
+    "file": "mercury_low.txt",
+    "seq": 450,
+    "old_deg": 112,
+    "old_am": 18,
+    "new_deg": 110,
+    "new_am": 52,
+    "delta_arcsec": -5171.152416356921,
+    "n_cases": 1
+  },
+  "mercury_low.txt:455": {
+    "file": "mercury_low.txt",
+    "seq": 455,
+    "old_deg": 161,
+    "old_am": 26,
+    "new_deg": 162,
+    "new_am": 58,
+    "delta_arcsec": 5544.966442952921,
+    "n_cases": 2
+  },
+  "mercury_low.txt:456": {
+    "file": "mercury_low.txt",
+    "seq": 456,
+    "old_deg": 167,
+    "old_am": 55,
+    "new_deg": 171,
+    "new_am": 55,
+    "delta_arcsec": 14421.333333333407,
+    "n_cases": 2
+  },
+  "mercury_low.txt:463": {
+    "file": "mercury_low.txt",
+    "seq": 463,
+    "old_deg": 165,
+    "old_am": 22,
+    "new_deg": 162,
+    "new_am": 56,
+    "delta_arcsec": -8757.303370786349,
+    "n_cases": 1
+  },
+  "mercury_low.txt:466": {
+    "file": "mercury_low.txt",
+    "seq": 466,
+    "old_deg": 160,
+    "old_am": 4,
+    "new_deg": 152,
+    "new_am": 27,
+    "delta_arcsec": -27437.14285714246,
+    "n_cases": 1
+  },
+  "mercury_low.txt:472": {
+    "file": "mercury_low.txt",
+    "seq": 472,
+    "old_deg": 183,
+    "old_am": 28,
+    "new_deg": 184,
+    "new_am": 25,
+    "delta_arcsec": 3393.8931297710924,
+    "n_cases": 2
+  },
+  "mercury_low.txt:473": {
+    "file": "mercury_low.txt",
+    "seq": 473,
+    "old_deg": 196,
+    "old_am": 0,
+    "new_deg": 197,
+    "new_am": 4,
+    "delta_arcsec": 3842.615803814788,
+    "n_cases": 4
+  },
+  "mercury_low.txt:474": {
+    "file": "mercury_low.txt",
+    "seq": 474,
+    "old_deg": 209,
+    "old_am": 30,
+    "new_deg": 203,
+    "new_am": 26,
+    "delta_arcsec": -21839.99999999978,
+    "n_cases": 3
+  },
+  "mercury_low.txt:477": {
+    "file": "mercury_low.txt",
+    "seq": 477,
+    "old_deg": 237,
+    "old_am": 24,
+    "new_deg": 236,
+    "new_am": 31,
+    "delta_arcsec": -3207.6190476189886,
+    "n_cases": 3
+  },
+  "mercury_low.txt:478": {
+    "file": "mercury_low.txt",
+    "seq": 478,
+    "old_deg": 250,
+    "old_am": 30,
+    "new_deg": 255,
+    "new_am": 56,
+    "delta_arcsec": 19582.70270270259,
+    "n_cases": 1
+  },
+  "mercury_low.txt:497": {
+    "file": "mercury_low.txt",
+    "seq": 497,
+    "old_deg": 293,
+    "old_am": 44,
+    "new_deg": 294,
+    "new_am": 33,
+    "delta_arcsec": 2962.0668693009793,
+    "n_cases": 1
+  },
+  "mercury_low.txt:498": {
+    "file": "mercury_low.txt",
+    "seq": 498,
+    "old_deg": 307,
+    "old_am": 10,
+    "new_deg": 310,
+    "new_am": 7,
+    "delta_arcsec": 10620.84507042279,
+    "n_cases": 3
+  },
+  "mercury_low.txt:503": {
+    "file": "mercury_low.txt",
+    "seq": 503,
+    "old_deg": 5,
+    "old_am": 7,
+    "new_deg": 4,
+    "new_am": 15,
+    "delta_arcsec": -3148.7557603686287,
+    "n_cases": 3
+  },
+  "mercury_low.txt:517": {
+    "file": "mercury_low.txt",
+    "seq": 517,
+    "old_deg": 26,
+    "old_am": 37,
+    "new_deg": 25,
+    "new_am": 56,
+    "delta_arcsec": -2430.6040268455695,
+    "n_cases": 1
+  },
+  "mercury_low.txt:518": {
+    "file": "mercury_low.txt",
+    "seq": 518,
+    "old_deg": 28,
+    "old_am": 25,
+    "new_deg": 27,
+    "new_am": 17,
+    "delta_arcsec": -4093.902439024335,
+    "n_cases": 1
+  },
+  "mercury_low.txt:519": {
+    "file": "mercury_low.txt",
+    "seq": 519,
+    "old_deg": 31,
+    "old_am": 3,
+    "new_deg": 26,
+    "new_am": 20,
+    "delta_arcsec": -16997.142857143186,
+    "n_cases": 1
+  },
+  "mercury_low.txt:520": {
+    "file": "mercury_low.txt",
+    "seq": 520,
+    "old_deg": 35,
+    "old_am": 28,
+    "new_deg": 25,
+    "new_am": 7,
+    "delta_arcsec": -37251.42857142919,
+    "n_cases": 1
+  },
+  "mercury_low.txt:523": {
+    "file": "mercury_low.txt",
+    "seq": 523,
+    "old_deg": 66,
+    "old_am": 17,
+    "new_deg": 67,
+    "new_am": 40,
+    "delta_arcsec": 4995.501519756874,
+    "n_cases": 1
+  },
+  "mercury_low.txt:524": {
+    "file": "mercury_low.txt",
+    "seq": 524,
+    "old_deg": 80,
+    "old_am": 41,
+    "new_deg": 82,
+    "new_am": 43,
+    "delta_arcsec": 7331.464968152819,
+    "n_cases": 2
+  },
+  "mercury_low.txt:528": {
+    "file": "mercury_low.txt",
+    "seq": 528,
+    "old_deg": 124,
+    "old_am": 3,
+    "new_deg": 122,
+    "new_am": 54,
+    "delta_arcsec": -4127.416413373839,
+    "n_cases": 1
+  },
+  "mercury_low.txt:529": {
+    "file": "mercury_low.txt",
+    "seq": 529,
+    "old_deg": 136,
+    "old_am": 36,
+    "new_deg": 135,
+    "new_am": 27,
+    "delta_arcsec": -4162.547770700501,
+    "n_cases": 3
+  },
+  "mercury_low.txt:536": {
+    "file": "mercury_low.txt",
+    "seq": 536,
+    "old_deg": 153,
+    "old_am": 41,
+    "new_deg": 152,
+    "new_am": 31,
+    "delta_arcsec": -4204.477611940277,
+    "n_cases": 1
+  },
+  "mercury_low.txt:544": {
+    "file": "mercury_low.txt",
+    "seq": 544,
+    "old_deg": 147,
+    "old_am": 44,
+    "new_deg": 146,
+    "new_am": 36,
+    "delta_arcsec": -4067.191011235912,
+    "n_cases": 1
+  },
+  "mercury_low.txt:545": {
+    "file": "mercury_low.txt",
+    "seq": 545,
+    "old_deg": 151,
+    "old_am": 33,
+    "new_deg": 150,
+    "new_am": 48,
+    "delta_arcsec": -2717.61194029852,
+    "n_cases": 1
+  },
+  "mercury_low.txt:546": {
+    "file": "mercury_low.txt",
+    "seq": 546,
+    "old_deg": 158,
+    "old_am": 50,
+    "new_deg": 161,
+    "new_am": 24,
+    "delta_arcsec": 9252.97297297302,
+    "n_cases": 1
+  },
+  "saturn_high.txt:45": {
+    "file": "saturn_high.txt",
+    "seq": 45,
+    "old_deg": 266,
+    "old_am": 47,
+    "new_deg": 273,
+    "new_am": 0,
+    "delta_arcsec": 22383.435582822025,
+    "n_cases": 1
+  },
+  "saturn_high.txt:124": {
+    "file": "saturn_high.txt",
+    "seq": 124,
+    "old_deg": 311,
+    "old_am": 25,
+    "new_deg": 320,
+    "new_am": 48,
+    "delta_arcsec": 33770.02967358985,
+    "n_cases": 1
+  },
+  "saturn_high.txt:188": {
+    "file": "saturn_high.txt",
+    "seq": 188,
+    "old_deg": 349,
+    "old_am": 4,
+    "new_deg": 6,
+    "new_am": 22,
+    "delta_arcsec": 62304.123711339234,
+    "n_cases": 2
+  },
+  "saturn_low.txt:199": {
+    "file": "saturn_low.txt",
+    "seq": 199,
+    "old_deg": 351,
+    "old_am": 35,
+    "new_deg": 356,
+    "new_am": 25,
+    "delta_arcsec": 17424.96940024488,
+    "n_cases": 1
+  },
+  "saturn_low.txt:330": {
+    "file": "saturn_low.txt",
+    "seq": 330,
+    "old_deg": 89,
+    "old_am": 40,
+    "new_deg": 91,
+    "new_am": 55,
+    "delta_arcsec": 8115.667311411973,
+    "n_cases": 1
+  },
+  "venus_high.txt:2": {
+    "file": "venus_high.txt",
+    "seq": 2,
+    "old_deg": 139,
+    "old_am": 0,
+    "new_deg": 137,
+    "new_am": 17,
+    "delta_arcsec": -6189.254437869759,
+    "n_cases": 3
+  },
+  "venus_high.txt:3": {
+    "file": "venus_high.txt",
+    "seq": 3,
+    "old_deg": 188,
+    "old_am": 20,
+    "new_deg": 189,
+    "new_am": 35,
+    "delta_arcsec": 4495.265229615801,
+    "n_cases": 4
+  },
+  "venus_high.txt:4": {
+    "file": "venus_high.txt",
+    "seq": 4,
+    "old_deg": 225,
+    "old_am": 5,
+    "new_deg": 224,
+    "new_am": 17,
+    "delta_arcsec": -2890.279569892557,
+    "n_cases": 1
+  },
+  "venus_high.txt:5": {
+    "file": "venus_high.txt",
+    "seq": 5,
+    "old_deg": 261,
+    "old_am": 35,
+    "new_deg": 260,
+    "new_am": 48,
+    "delta_arcsec": -2799.6124567475836,
+    "n_cases": 1
+  },
+  "venus_high.txt:7": {
+    "file": "venus_high.txt",
+    "seq": 7,
+    "old_deg": 309,
+    "old_am": 49,
+    "new_deg": 308,
+    "new_am": 18,
+    "delta_arcsec": -5430.222222222173,
+    "n_cases": 1
+  },
+  "venus_high.txt:9": {
+    "file": "venus_high.txt",
+    "seq": 9,
+    "old_deg": 344,
+    "old_am": 16,
+    "new_deg": 348,
+    "new_am": 19,
+    "delta_arcsec": 14601.931034482894,
+    "n_cases": 1
+  },
+  "venus_high.txt:15": {
+    "file": "venus_high.txt",
+    "seq": 15,
+    "old_deg": 26,
+    "old_am": 0,
+    "new_deg": 28,
+    "new_am": 11,
+    "delta_arcsec": 7842.950649350694,
+    "n_cases": 2
+  },
+  "venus_high.txt:31": {
+    "file": "venus_high.txt",
+    "seq": 31,
+    "old_deg": 43,
+    "old_am": 35,
+    "new_deg": 42,
+    "new_am": 5,
+    "delta_arcsec": -5389.135135135117,
+    "n_cases": 2
+  },
+  "venus_high.txt:35": {
+    "file": "venus_high.txt",
+    "seq": 35,
+    "old_deg": 108,
+    "old_am": 45,
+    "new_deg": 108,
+    "new_am": 2,
+    "delta_arcsec": -2564.8836424957967,
+    "n_cases": 2
+  },
+  "venus_high.txt:39": {
+    "file": "venus_high.txt",
+    "seq": 39,
+    "old_deg": 255,
+    "old_am": 33,
+    "new_deg": 252,
+    "new_am": 27,
+    "delta_arcsec": -11157.276595744832,
+    "n_cases": 3
+  },
+  "venus_high.txt:40": {
+    "file": "venus_high.txt",
+    "seq": 40,
+    "old_deg": 306,
+    "old_am": 18,
+    "new_deg": 307,
+    "new_am": 4,
+    "delta_arcsec": 2730.0221948212,
+    "n_cases": 3
+  },
+  "venus_high.txt:42": {
+    "file": "venus_high.txt",
+    "seq": 42,
+    "old_deg": 356,
+    "old_am": 14,
+    "new_deg": 356,
+    "new_am": 45,
+    "delta_arcsec": 1849.664160400997,
+    "n_cases": 1
+  },
+  "venus_high.txt:43": {
+    "file": "venus_high.txt",
+    "seq": 43,
+    "old_deg": 45,
+    "old_am": 40,
+    "new_deg": 46,
+    "new_am": 18,
+    "delta_arcsec": 2262.588235294131,
+    "n_cases": 4
+  },
+  "venus_high.txt:44": {
+    "file": "venus_high.txt",
+    "seq": 44,
+    "old_deg": 82,
+    "old_am": 5,
+    "new_deg": 82,
+    "new_am": 47,
+    "delta_arcsec": 2498.2600896860768,
+    "n_cases": 6
+  },
+  "venus_high.txt:45": {
+    "file": "venus_high.txt",
+    "seq": 45,
+    "old_deg": 117,
+    "old_am": 31,
+    "new_deg": 116,
+    "new_am": 39,
+    "delta_arcsec": -3113.530864197603,
+    "n_cases": 6
+  },
+  "venus_high.txt:46": {
+    "file": "venus_high.txt",
+    "seq": 46,
+    "old_deg": 140,
+    "old_am": 49,
+    "new_deg": 130,
+    "new_am": 50,
+    "delta_arcsec": -35942.28571428663,
+    "n_cases": 1
+  },
+  "venus_high.txt:48": {
+    "file": "venus_high.txt",
+    "seq": 48,
+    "old_deg": 180,
+    "old_am": 44,
+    "new_deg": 179,
+    "new_am": 44,
+    "delta_arcsec": -3607.041009463732,
+    "n_cases": 1
+  },
+  "venus_high.txt:49": {
+    "file": "venus_high.txt",
+    "seq": 49,
+    "old_deg": 196,
+    "old_am": 53,
+    "new_deg": 195,
+    "new_am": 28,
+    "delta_arcsec": -5083.702702702778,
+    "n_cases": 4
+  },
+  "venus_high.txt:51": {
+    "file": "venus_high.txt",
+    "seq": 51,
+    "old_deg": 216,
+    "old_am": 40,
+    "new_deg": 214,
+    "new_am": 31,
+    "delta_arcsec": -7711.796610169413,
+    "n_cases": 1
+  },
+  "venus_high.txt:55": {
+    "file": "venus_high.txt",
+    "seq": 55,
+    "old_deg": 236,
+    "old_am": 20,
+    "new_deg": 235,
+    "new_am": 7,
+    "delta_arcsec": -4373.7103448276275,
+    "n_cases": 1
+  },
+  "venus_high.txt:60": {
+    "file": "venus_high.txt",
+    "seq": 60,
+    "old_deg": 231,
+    "old_am": 23,
+    "new_deg": 229,
+    "new_am": 25,
+    "delta_arcsec": -7079.91724137943,
+    "n_cases": 1
+  },
+  "venus_low.txt:73": {
+    "file": "venus_low.txt",
+    "seq": 73,
+    "old_deg": 285,
+    "old_am": 57,
+    "new_deg": 284,
+    "new_am": 20,
+    "delta_arcsec": -5838.659999999904,
+    "n_cases": 3
+  },
+  "venus_low.txt:76": {
+    "file": "venus_low.txt",
+    "seq": 76,
+    "old_deg": 349,
+    "old_am": 56,
+    "new_deg": 348,
+    "new_am": 51,
+    "delta_arcsec": -3900.713178294514,
+    "n_cases": 5
+  },
+  "venus_low.txt:77": {
+    "file": "venus_low.txt",
+    "seq": 77,
+    "old_deg": 26,
+    "old_am": 7,
+    "new_deg": 26,
+    "new_am": 43,
+    "delta_arcsec": 2147.189610389453,
+    "n_cases": 7
+  },
+  "venus_low.txt:78": {
+    "file": "venus_low.txt",
+    "seq": 78,
+    "old_deg": 62,
+    "old_am": 27,
+    "new_deg": 61,
+    "new_am": 33,
+    "delta_arcsec": -3261.037656903709,
+    "n_cases": 5
+  },
+  "venus_low.txt:79": {
+    "file": "venus_low.txt",
+    "seq": 79,
+    "old_deg": 110,
+    "old_am": 53,
+    "new_deg": 111,
+    "new_am": 35,
+    "delta_arcsec": 2517.1618828932415,
+    "n_cases": 7
+  },
+  "venus_low.txt:82": {
+    "file": "venus_low.txt",
+    "seq": 82,
+    "old_deg": 210,
+    "old_am": 10,
+    "new_deg": 209,
+    "new_am": 26,
+    "delta_arcsec": -2650.0436974789186,
+    "n_cases": 9
+  },
+  "venus_low.txt:83": {
+    "file": "venus_low.txt",
+    "seq": 83,
+    "old_deg": 259,
+    "old_am": 56,
+    "new_deg": 258,
+    "new_am": 54,
+    "delta_arcsec": -3697.4699646642243,
+    "n_cases": 8
+  },
+  "venus_low.txt:84": {
+    "file": "venus_low.txt",
+    "seq": 84,
+    "old_deg": 297,
+    "old_am": 30,
+    "new_deg": 296,
+    "new_am": 24,
+    "delta_arcsec": -3930.909677419342,
+    "n_cases": 6
+  },
+  "venus_low.txt:85": {
+    "file": "venus_low.txt",
+    "seq": 85,
+    "old_deg": 334,
+    "old_am": 20,
+    "new_deg": 337,
+    "new_am": 57,
+    "delta_arcsec": 12996.34838709669,
+    "n_cases": 2
+  },
+  "venus_low.txt:90": {
+    "file": "venus_low.txt",
+    "seq": 90,
+    "old_deg": 65,
+    "old_am": 26,
+    "new_deg": 64,
+    "new_am": 35,
+    "delta_arcsec": -3067.037974683473,
+    "n_cases": 1
+  },
+  "venus_low.txt:91": {
+    "file": "venus_low.txt",
+    "seq": 91,
+    "old_deg": 75,
+    "old_am": 6,
+    "new_deg": 73,
+    "new_am": 46,
+    "delta_arcsec": -4825.748344370739,
+    "n_cases": 4
+  },
+  "venus_low.txt:100": {
+    "file": "venus_low.txt",
+    "seq": 100,
+    "old_deg": 91,
+    "old_am": 45,
+    "new_deg": 90,
+    "new_am": 52,
+    "delta_arcsec": -3166.6222222222586,
+    "n_cases": 1
+  },
+  "venus_low.txt:103": {
+    "file": "venus_low.txt",
+    "seq": 103,
+    "old_deg": 79,
+    "old_am": 58,
+    "new_deg": 79,
+    "new_am": 3,
+    "delta_arcsec": -3292.543820224655,
+    "n_cases": 2
+  },
+  "venus_low.txt:109": {
+    "file": "venus_low.txt",
+    "seq": 109,
+    "old_deg": 95,
+    "old_am": 36,
+    "new_deg": 92,
+    "new_am": 53,
+    "delta_arcsec": -9759.831578947533,
+    "n_cases": 1
+  },
+  "venus_low.txt:112": {
+    "file": "venus_low.txt",
+    "seq": 112,
+    "old_deg": 123,
+    "old_am": 9,
+    "new_deg": 122,
+    "new_am": 9,
+    "delta_arcsec": -3618.7826086956707,
+    "n_cases": 1
+  },
+  "venus_low.txt:114": {
+    "file": "venus_low.txt",
+    "seq": 114,
+    "old_deg": 156,
+    "old_am": 30,
+    "new_deg": 155,
+    "new_am": 35,
+    "delta_arcsec": -3304.9915966387,
+    "n_cases": 1
+  },
+  "venus_low.txt:116": {
+    "file": "venus_low.txt",
+    "seq": 116,
+    "old_deg": 203,
+    "old_am": 44,
+    "new_deg": 201,
+    "new_am": 52,
+    "delta_arcsec": -6741.670886076031,
+    "n_cases": 1
+  },
+  "venus_low.txt:117": {
+    "file": "venus_low.txt",
+    "seq": 117,
+    "old_deg": 240,
+    "old_am": 31,
+    "new_deg": 239,
+    "new_am": 19,
+    "delta_arcsec": -4292.000000000046,
+    "n_cases": 1
+  },
+  "venus_low.txt:118": {
+    "file": "venus_low.txt",
+    "seq": 118,
+    "old_deg": 278,
+    "old_am": 3,
+    "new_deg": 282,
+    "new_am": 21,
+    "delta_arcsec": 15491.901639344349,
+    "n_cases": 2
+  },
+  "venus_low.txt:119": {
+    "file": "venus_low.txt",
+    "seq": 119,
+    "old_deg": 327,
+    "old_am": 56,
+    "new_deg": 328,
+    "new_am": 38,
+    "delta_arcsec": 2540.901408450845,
+    "n_cases": 3
+  },
+  "venus_low.txt:120": {
+    "file": "venus_low.txt",
+    "seq": 120,
+    "old_deg": 17,
+    "old_am": 40,
+    "new_deg": 24,
+    "new_am": 13,
+    "delta_arcsec": 23583.89999999966,
+    "n_cases": 7
+  },
+  "venus_low.txt:122": {
+    "file": "venus_low.txt",
+    "seq": 122,
+    "old_deg": 67,
+    "old_am": 14,
+    "new_deg": 69,
+    "new_am": 52,
+    "delta_arcsec": 9463.425742574213,
+    "n_cases": 9
+  },
+  "venus_low.txt:123": {
+    "file": "venus_low.txt",
+    "seq": 123,
+    "old_deg": 115,
+    "old_am": 37,
+    "new_deg": 116,
+    "new_am": 36,
+    "delta_arcsec": 3515.568075117314,
+    "n_cases": 8
+  },
+  "venus_low.txt:124": {
+    "file": "venus_low.txt",
+    "seq": 124,
+    "old_deg": 151,
+    "old_am": 58,
+    "new_deg": 154,
+    "new_am": 16,
+    "delta_arcsec": 8273.786802030261,
+    "n_cases": 2
+  },
+  "venus_low.txt:125": {
+    "file": "venus_low.txt",
+    "seq": 125,
+    "old_deg": 188,
+    "old_am": 8,
+    "new_deg": 186,
+    "new_am": 56,
+    "delta_arcsec": -4305.29390018484,
+    "n_cases": 3
+  },
+  "venus_low.txt:126": {
+    "file": "venus_low.txt",
+    "seq": 126,
+    "old_deg": 211,
+    "old_am": 52,
+    "new_deg": 210,
+    "new_am": 40,
+    "delta_arcsec": -4347.831932773165,
+    "n_cases": 1
+  },
+  "venus_low.txt:130": {
+    "file": "venus_low.txt",
+    "seq": 130,
+    "old_deg": 279,
+    "old_am": 10,
+    "new_deg": 278,
+    "new_am": 29,
+    "delta_arcsec": -2486.671096345394,
+    "n_cases": 2
+  },
+  "venus_low.txt:131": {
+    "file": "venus_low.txt",
+    "seq": 131,
+    "old_deg": 289,
+    "old_am": 12,
+    "new_deg": 286,
+    "new_am": 24,
+    "delta_arcsec": -10058.166666666893,
+    "n_cases": 1
+  },
+  "venus_low.txt:134": {
+    "file": "venus_low.txt",
+    "seq": 134,
+    "old_deg": 307,
+    "old_am": 54,
+    "new_deg": 307,
+    "new_am": 19,
+    "delta_arcsec": -2103.712500000164,
+    "n_cases": 1
+  },
+  "venus_low.txt:140": {
+    "file": "venus_low.txt",
+    "seq": 140,
+    "old_deg": 311,
+    "old_am": 17,
+    "new_deg": 301,
+    "new_am": 11,
+    "delta_arcsec": -36389.400000002184,
+    "n_cases": 1
+  },
+  "venus_low.txt:142": {
+    "file": "venus_low.txt",
+    "seq": 142,
+    "old_deg": 302,
+    "old_am": 2,
+    "new_deg": 301,
+    "new_am": 3,
+    "delta_arcsec": -3541.7532934132964,
+    "n_cases": 1
+  },
+  "venus_low.txt:143": {
+    "file": "venus_low.txt",
+    "seq": 143,
+    "old_deg": 298,
+    "old_am": 39,
+    "new_deg": 296,
+    "new_am": 45,
+    "delta_arcsec": -6849.186206896352,
+    "n_cases": 1
+  },
+  "venus_low.txt:152": {
+    "file": "venus_low.txt",
+    "seq": 152,
+    "old_deg": 341,
+    "old_am": 8,
+    "new_deg": 339,
+    "new_am": 40,
+    "delta_arcsec": -5290.628571428946,
+    "n_cases": 3
+  },
+  "venus_low.txt:157": {
+    "file": "venus_low.txt",
+    "seq": 157,
+    "old_deg": 96,
+    "old_am": 0,
+    "new_deg": 99,
+    "new_am": 52,
+    "delta_arcsec": 13940.24669603528,
+    "n_cases": 1
+  },
+  "venus_low.txt:158": {
+    "file": "venus_low.txt",
+    "seq": 158,
+    "old_deg": 134,
+    "old_am": 25,
+    "new_deg": 132,
+    "new_am": 52,
+    "delta_arcsec": -5580.335664335523,
+    "n_cases": 7
+  },
+  "venus_low.txt:160": {
+    "file": "venus_low.txt",
+    "seq": 160,
+    "old_deg": 231,
+    "old_am": 46,
+    "new_deg": 232,
+    "new_am": 30,
+    "delta_arcsec": 2642.6099290781285,
+    "n_cases": 8
+  },
+  "venus_low.txt:162": {
+    "file": "venus_low.txt",
+    "seq": 162,
+    "old_deg": 282,
+    "old_am": 25,
+    "new_deg": 281,
+    "new_am": 22,
+    "delta_arcsec": -3782.7348837210575,
+    "n_cases": 9
+  },
+  "venus_low.txt:165": {
+    "file": "venus_low.txt",
+    "seq": 165,
+    "old_deg": 45,
+    "old_am": 31,
+    "new_deg": 44,
+    "new_am": 48,
+    "delta_arcsec": -2585.7218543046206,
+    "n_cases": 1
+  },
+  "venus_low.txt:166": {
+    "file": "venus_low.txt",
+    "seq": 166,
+    "old_deg": 69,
+    "old_am": 18,
+    "new_deg": 67,
+    "new_am": 49,
+    "delta_arcsec": -5356.468965517165,
+    "n_cases": 6
+  },
+  "venus_low.txt:173": {
+    "file": "venus_low.txt",
+    "seq": 173,
+    "old_deg": 156,
+    "old_am": 24,
+    "new_deg": 155,
+    "new_am": 43,
+    "delta_arcsec": -2455.091891891833,
+    "n_cases": 1
+  },
+  "venus_low.txt:181": {
+    "file": "venus_low.txt",
+    "seq": 181,
+    "old_deg": 151,
+    "old_am": 27,
+    "new_deg": 150,
+    "new_am": 9,
+    "delta_arcsec": -4654.976649746195,
+    "n_cases": 2
+  },
+  "venus_low.txt:182": {
+    "file": "venus_low.txt",
+    "seq": 182,
+    "old_deg": 148,
+    "old_am": 32,
+    "new_deg": 146,
+    "new_am": 47,
+    "delta_arcsec": -6276.290909090965,
+    "n_cases": 2
+  },
+  "venus_low.txt:188": {
+    "file": "venus_low.txt",
+    "seq": 188,
+    "old_deg": 159,
+    "old_am": 59,
+    "new_deg": 158,
+    "new_am": 44,
+    "delta_arcsec": -4492.008791208684,
+    "n_cases": 3
+  },
+  "venus_low.txt:196": {
+    "file": "venus_low.txt",
+    "seq": 196,
+    "old_deg": 276,
+    "old_am": 26,
+    "new_deg": 273,
+    "new_am": 40,
+    "delta_arcsec": -9933.185185185494,
+    "n_cases": 2
+  },
+  "venus_low.txt:197": {
+    "file": "venus_low.txt",
+    "seq": 197,
+    "old_deg": 313,
+    "old_am": 0,
+    "new_deg": 311,
+    "new_am": 5,
+    "delta_arcsec": -6914.4685714286825,
+    "n_cases": 5
+  },
+  "venus_low.txt:198": {
+    "file": "venus_low.txt",
+    "seq": 198,
+    "old_deg": 349,
+    "old_am": 44,
+    "new_deg": 18,
+    "new_am": 48,
+    "delta_arcsec": 104657.6103896081,
+    "n_cases": 1
+  },
+  "venus_low.txt:199": {
+    "file": "venus_low.txt",
+    "seq": 199,
+    "old_deg": 39,
+    "old_am": 6,
+    "new_deg": 37,
+    "new_am": 1,
+    "delta_arcsec": -7470.669833729709,
+    "n_cases": 8
+  },
+  "venus_low.txt:200": {
+    "file": "venus_low.txt",
+    "seq": 200,
+    "old_deg": 88,
+    "old_am": 8,
+    "new_deg": 88,
+    "new_am": 51,
+    "delta_arcsec": 2599.3720136518427,
+    "n_cases": 7
+  }
+}

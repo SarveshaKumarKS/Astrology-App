@@ -155,9 +155,9 @@ LAGNA_REF_LAT = 12.0
 # integrity filtering).  Applied as a simple additive offset in compute().
 PLANET_OUTPUT_BIJA = {
     'Mars':     +0.2778,
-    'Mercury':  +0.4425,
+    'Mercury':  +0.5196,
     'Jupiter':  +0.0700,
-    'Venus':    +0.4811,
+    'Venus':    +0.5542,
 }
 RAHU_OUTPUT_BIJA = -0.0848   # Ketu mirrors Rahu (always Rahu + 180°)
 
