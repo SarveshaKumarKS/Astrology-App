@@ -134,10 +134,10 @@ MOON_LAGNA_COEFF = 0.9
 # pada errors on the 729-case reference set.
 MOON_BIJA_DEG = 0.0395
 
-# Constant offset for the tabular Sun.  The SUN_DAILY_ARCSEC table accumulates
-# Calibrated against ASTRO NKV reference charts.  The raw table Sun at ghatika g
-# needs +0.675° to match birth-time Sun values shown by ASTRO NKV.
-SUN_BIJA_DEG = 0.675
+# Constant offset for the tabular Sun.  Calibrated against ICS Vakkiam Pro
+# reference data (587 clean cases).  Reduces mean bias from +0.675° (ASTRO NKV
+# calibration) to the ICS-matched value.
+SUN_BIJA_DEG = 0.327
 
 # Sun bija used specifically for Vakyam Lagna seed (no intra-day interpolation).
 # The Lagna starts from the Sun's daily table value at ghatika 0 (sunrise).
@@ -149,6 +149,17 @@ SUN_BIJA_LAGNA = 1.389
 # The Vakyam system uses pre-computed oblique-ascension tables for a standard
 # latitude, not the exact birth latitude.
 LAGNA_REF_LAT = 12.0
+
+# Per-planet output bija corrections (degrees), calibrated against ICS Vakkiam Pro
+# reference data (mean bias on 587 clean cases after Rahu/Ketu/Moon/Lagnam
+# integrity filtering).  Applied as a simple additive offset in compute().
+PLANET_OUTPUT_BIJA = {
+    'Mars':     +0.2778,
+    'Mercury':  +0.4425,
+    'Jupiter':  +0.0700,
+    'Venus':    +0.4811,
+}
+RAHU_OUTPUT_BIJA = -0.0848   # Ketu mirrors Rahu (always Rahu + 180°)
 
 
 class VakyaTableEngine:
@@ -735,9 +746,10 @@ class VakyaTableEngine:
 
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
             lon_deg, retro = self._calc_planet(pname, C, D, E, F, tamil_month, day_in_month, ghatika)
+            lon_deg = (lon_deg + PLANET_OUTPUT_BIJA.get(pname, 0.0)) % 360.0
             result[pname] = {'longitude': lon_deg, 'retrograde': retro}
 
-        rahu_lon = self._calc_rahu(C, D, E, tamil_month, day_in_month)
+        rahu_lon = (self._calc_rahu(C, D, E, tamil_month, day_in_month) + RAHU_OUTPUT_BIJA) % 360.0
         result['Rahu'] = {'longitude': rahu_lon, 'retrograde': True}
 
         ketu_lon = (rahu_lon + 180.0) % 360.0

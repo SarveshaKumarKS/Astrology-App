@@ -9,7 +9,6 @@
     66,
     67,
     70,
-    71,
     73,
     83,
     87,
@@ -26,7 +25,6 @@
     135,
     140,
     142,
-    156,
     166,
     175,
     185,
@@ -55,7 +53,6 @@
     322,
     326,
     333,
-    334,
     335,
     336,
     345,
@@ -70,14 +67,12 @@
     392,
     393,
     394,
-    396,
     401,
     403,
     416,
     417,
     422,
     428,
-    430,
     437,
     438,
     441,
@@ -93,7 +88,6 @@
     477,
     478,
     479,
-    481,
     489,
     492,
     496,
@@ -103,7 +97,6 @@
     522,
     523,
     525,
-    526,
     529,
     531,
     537,
@@ -111,19 +104,15 @@
     563,
     564,
     569,
-    571,
     577,
-    587,
     592,
     593,
     605,
     613,
-    617,
     621,
     624,
     629,
     632,
-    633,
     641,
     646,
     647,
@@ -208,6 +197,7 @@
     65,
     68,
     69,
+    71,
     72,
     74,
     75,
@@ -276,6 +266,7 @@
     153,
     154,
     155,
+    156,
     157,
     158,
     159,
@@ -425,6 +416,7 @@
     330,
     331,
     332,
+    334,
     337,
     338,
     339,
@@ -472,6 +464,7 @@
     388,
     391,
     395,
+    396,
     397,
     398,
     399,
@@ -499,6 +492,7 @@
     426,
     427,
     429,
+    430,
     431,
     432,
     433,
@@ -534,6 +528,7 @@
     474,
     475,
     480,
+    481,
     482,
     483,
     484,
@@ -569,6 +564,7 @@
     520,
     521,
     524,
+    526,
     527,
     528,
     530,
@@ -606,6 +602,7 @@
     567,
     568,
     570,
+    571,
     572,
     573,
     574,
@@ -620,6 +617,7 @@
     584,
     585,
     586,
+    587,
     588,
     589,
     590,
@@ -645,6 +643,7 @@
     614,
     615,
     616,
+    617,
     618,
     619,
     620,
@@ -656,6 +655,7 @@
     628,
     630,
     631,
+    633,
     634,
     635,
     636,
@@ -790,12 +790,6 @@
         "reason": "RAHU_KETU_OPP 20.0000°"
       }
     ],
-    "71": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.4197° (threshold=3.0°)"
-      }
-    ],
     "73": [
       {
         "planet": "Rahu",
@@ -839,13 +833,13 @@
     "96": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=21.2139° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.7714° (threshold=3.0°)"
       }
     ],
     "97": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=9.4600° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=9.0175° (threshold=3.0°)"
       },
       {
         "planet": "Saturn",
@@ -907,41 +901,35 @@
     "121": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=99.9392° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=100.0092° (threshold=3.0°)"
       }
     ],
     "135": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=100.3656° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=100.8081° (threshold=3.0°)"
       }
     ],
     "140": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.8673° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.2153° (threshold=3.0°)"
       },
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=140.9800° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.4989° (threshold=3.0°)"
       }
     ],
     "142": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=20.6081° (threshold=3.0°)"
-      }
-    ],
-    "156": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.3494° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.3303° (threshold=3.0°)"
       }
     ],
     "166": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=139.7603° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=139.2792° (threshold=3.0°)"
       }
     ],
     "175": [
@@ -967,19 +955,19 @@
     "186": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=19.8986° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.8286° (threshold=3.0°)"
       }
     ],
     "187": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=20.0072° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.9372° (threshold=3.0°)"
       }
     ],
     "189": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.9012° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.2492° (threshold=3.0°)"
       }
     ],
     "196": [
@@ -991,13 +979,13 @@
     "198": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=128.0192° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=128.5003° (threshold=3.0°)"
       }
     ],
     "200": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=139.7694° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=139.3269° (threshold=3.0°)"
       }
     ],
     "213": [
@@ -1049,19 +1037,19 @@
     "236": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.9351° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.2831° (threshold=3.0°)"
       }
     ],
     "237": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=140.5653° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.2875° (threshold=3.0°)"
       }
     ],
     "238": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=20.5733° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.1308° (threshold=3.0°)"
       }
     ],
     "243": [
@@ -1097,7 +1085,7 @@
       },
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=4.2397° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=3.7972° (threshold=3.0°)"
       }
     ],
     "306": [
@@ -1119,19 +1107,19 @@
     "320": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.7095° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.0575° (threshold=3.0°)"
       }
     ],
     "321": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=99.4150° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=98.9725° (threshold=3.0°)"
       }
     ],
     "322": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=21.0683° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.6258° (threshold=3.0°)"
       },
       {
         "planet": "Saturn",
@@ -1158,12 +1146,6 @@
         "reason": "RAHU_KETU_OPP 20.0000°"
       }
     ],
-    "334": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.0947° (threshold=3.0°)"
-      }
-    ],
     "335": [
       {
         "planet": "Moon",
@@ -1183,7 +1165,7 @@
     "345": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=19.7444° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.2633° (threshold=3.0°)"
       }
     ],
     "351": [
@@ -1199,13 +1181,13 @@
     "359": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=59.7631° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=59.2820° (threshold=3.0°)"
       }
     ],
     "368": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.7434° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.0914° (threshold=3.0°)"
       }
     ],
     "373": [
@@ -1217,7 +1199,7 @@
     "381": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=96.0281° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=96.3761° (threshold=3.0°)"
       }
     ],
     "383": [
@@ -1245,7 +1227,7 @@
     "392": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=140.5869° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.3091° (threshold=3.0°)"
       }
     ],
     "393": [
@@ -1264,12 +1246,6 @@
         "reason": "PLAUSIBILITY gap=10.0225° (threshold=3.0°)"
       }
     ],
-    "396": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2844° (threshold=3.0°)"
-      }
-    ],
     "401": [
       {
         "planet": "Moon",
@@ -1285,7 +1261,7 @@
     "416": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.7773° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.1253° (threshold=3.0°)"
       }
     ],
     "417": [
@@ -1307,13 +1283,7 @@
     "428": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=125.0709° (threshold=3.0°)"
-      }
-    ],
-    "430": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.1503° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.4189° (threshold=3.0°)"
       }
     ],
     "437": [
@@ -1331,7 +1301,7 @@
     "441": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=19.7389° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.2578° (threshold=3.0°)"
       }
     ],
     "444": [
@@ -1343,13 +1313,13 @@
     "451": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=141.3039° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.8614° (threshold=3.0°)"
       }
     ],
     "453": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=20.1675° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.0975° (threshold=3.0°)"
       }
     ],
     "459": [
@@ -1367,13 +1337,13 @@
     "464": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.8517° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.1997° (threshold=3.0°)"
       }
     ],
     "466": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=20.4547° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.1769° (threshold=3.0°)"
       }
     ],
     "472": [
@@ -1395,49 +1365,43 @@
     "477": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=141.1206° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.6781° (threshold=3.0°)"
       }
     ],
     "478": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=96.0962° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=96.4442° (threshold=3.0°)"
       }
     ],
     "479": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=21.9256° (threshold=3.0°)"
-      }
-    ],
-    "481": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.0994° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=21.4831° (threshold=3.0°)"
       }
     ],
     "489": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=140.1694° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.0994° (threshold=3.0°)"
       }
     ],
     "492": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=19.7531° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.2720° (threshold=3.0°)"
       }
     ],
     "496": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=20.4892° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.2114° (threshold=3.0°)"
       }
     ],
     "498": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=150.9647° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=150.4836° (threshold=3.0°)"
       }
     ],
     "510": [
@@ -1451,47 +1415,41 @@
       },
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=149.9597° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=149.8897° (threshold=3.0°)"
       }
     ],
     "519": [
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=20.5947° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.3169° (threshold=3.0°)"
       }
     ],
     "522": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=125.1389° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.4869° (threshold=3.0°)"
       },
       {
         "planet": "Mars",
-        "reason": "PLAUSIBILITY gap=10.6069° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=10.3291° (threshold=3.0°)"
       }
     ],
     "523": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=96.1301° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=96.4781° (threshold=3.0°)"
       }
     ],
     "525": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=61.4764° (threshold=3.0°)"
-      }
-    ],
-    "526": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.0011° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=61.0339° (threshold=3.0°)"
       }
     ],
     "529": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.4531° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=3.0106° (threshold=3.0°)"
       }
     ],
     "531": [
@@ -1539,13 +1497,7 @@
     "569": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=125.1728° (threshold=3.0°)"
-      }
-    ],
-    "571": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2383° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.5208° (threshold=3.0°)"
       }
     ],
     "577": [
@@ -1554,32 +1506,26 @@
         "reason": "PLAUSIBILITY gap=99.9081° (threshold=3.0°)"
       }
     ],
-    "587": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.3789° (threshold=3.0°)"
-      }
-    ],
     "592": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=140.8333° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=140.3908° (threshold=3.0°)"
       }
     ],
     "593": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.6603° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.0083° (threshold=3.0°)"
       }
     ],
     "605": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.9537° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.3017° (threshold=3.0°)"
       },
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=97.9786° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=97.4975° (threshold=3.0°)"
       }
     ],
     "613": [
@@ -1592,16 +1538,10 @@
         "reason": "RAHU_KETU_OPP 20.0000°"
       }
     ],
-    "617": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2322° (threshold=3.0°)"
-      }
-    ],
     "621": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.4714° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=3.0289° (threshold=3.0°)"
       }
     ],
     "624": [
@@ -1617,29 +1557,23 @@
     "629": [
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=98.9664° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=98.4853° (threshold=3.0°)"
       }
     ],
     "632": [
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=20.0278° (threshold=3.0°)"
-      }
-    ],
-    "633": [
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.0994° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.5853° (threshold=3.0°)"
       }
     ],
     "641": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.6942° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.0422° (threshold=3.0°)"
       },
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=150.5144° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=150.0719° (threshold=3.0°)"
       }
     ],
     "646": [
@@ -1665,7 +1599,7 @@
     "652": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=19.9511° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=19.8811° (threshold=3.0°)"
       }
     ],
     "653": [
@@ -1675,7 +1609,7 @@
       },
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.9878° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.3358° (threshold=3.0°)"
       }
     ],
     "655": [
@@ -1686,10 +1620,6 @@
       {
         "planet": "Ketu",
         "reason": "RAHU_KETU_OPP 60.0000°"
-      },
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2717° (threshold=3.0°)"
       }
     ],
     "656": [
@@ -1700,10 +1630,6 @@
       {
         "planet": "Ketu",
         "reason": "RAHU_KETU_OPP 60.0000°"
-      },
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2717° (threshold=3.0°)"
       }
     ],
     "657": [
@@ -1714,10 +1640,6 @@
       {
         "planet": "Ketu",
         "reason": "RAHU_KETU_OPP 60.0000°"
-      },
-      {
-        "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.2717° (threshold=3.0°)"
       }
     ],
     "660": [
@@ -1727,7 +1649,7 @@
       },
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=99.0489° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=99.5300° (threshold=3.0°)"
       }
     ],
     "670": [
@@ -1737,7 +1659,7 @@
       },
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=60.1461° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=59.6650° (threshold=3.0°)"
       }
     ],
     "672": [
@@ -1751,7 +1673,7 @@
       },
       {
         "planet": "Mercury",
-        "reason": "PLAUSIBILITY gap=3.8003° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=3.3578° (threshold=3.0°)"
       }
     ],
     "676": [
@@ -1779,13 +1701,13 @@
     "690": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=20.2377° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=20.5857° (threshold=3.0°)"
       }
     ],
     "691": [
       {
         "planet": "Sun",
-        "reason": "PLAUSIBILITY gap=124.7281° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=125.0761° (threshold=3.0°)"
       }
     ],
     "704": [
@@ -1795,7 +1717,7 @@
       },
       {
         "planet": "Venus",
-        "reason": "PLAUSIBILITY gap=9.5633° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=9.0822° (threshold=3.0°)"
       },
       {
         "planet": "Saturn",
@@ -1811,7 +1733,7 @@
     "728": [
       {
         "planet": "Jupiter",
-        "reason": "PLAUSIBILITY gap=124.9211° (threshold=3.0°)"
+        "reason": "PLAUSIBILITY gap=124.8511° (threshold=3.0°)"
       },
       {
         "planet": "Saturn",
@@ -1820,14 +1742,14 @@
     ]
   },
   "planet_bias_deg": {
-    "Sun": 0.347994,
-    "Moon": 0.01079,
-    "Mars": -0.277782,
-    "Mercury": -0.442527,
-    "Jupiter": -0.069975,
-    "Venus": -0.48112,
-    "Saturn": -0.03798,
-    "Rahu": 0.084757,
-    "Ketu": 0.084703
+    "Sun": -0.005315,
+    "Moon": 0.007337,
+    "Mars": -0.012311,
+    "Mercury": -0.053974,
+    "Jupiter": -0.002436,
+    "Venus": -0.018958,
+    "Saturn": -0.03808,
+    "Rahu": 6.4e-05,
+    "Ketu": 9e-06
   }
 }

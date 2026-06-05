@@ -8,7 +8,7 @@
     "vakra_accuracy": 0.9931412894375857,
     "pavaka_maatram_accuracy": 0.9423868312757202,
     "dasa_lord_accuracy": 0.9958847736625515,
-    "execution_time_seconds": 5.896887302398682
+    "execution_time_seconds": 4.969048023223877
   },
   "results": {
     "0": {
@@ -32,12 +32,12 @@
         "calc_nak": "26 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -75,12 +75,12 @@
         "calc_nak": "3 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Moon": 7
@@ -292,12 +292,12 @@
         "calc_nak": "16 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 12
@@ -828,12 +828,12 @@
         "calc_nak": "10 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -996,12 +996,12 @@
         "calc_nak": "22 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -1315,12 +1315,12 @@
         "calc_nak": "26 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -1358,12 +1358,12 @@
         "calc_nak": "3 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 9
@@ -1542,12 +1542,12 @@
         "calc_nak": "23 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "exp_pm": {
           "Venus": 4
@@ -1841,14 +1841,14 @@
         "calc_nak": "20 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -1931,12 +1931,12 @@
         "calc_nak": "26 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -2211,12 +2211,12 @@
         "calc_nak": "27 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 2
@@ -2718,13 +2718,13 @@
         "calc_nak": "18 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Venus",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
-          "Saturn",
           "Venus",
+          "Saturn",
           "Jupiter"
         ],
         "exp_pm": {
@@ -3733,12 +3733,12 @@
         "calc_nak": "26 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 11,
@@ -3779,12 +3779,12 @@
         "calc_nak": "3 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 7
@@ -3898,12 +3898,12 @@
         "calc_nak": "14 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Mars"
         ],
         "exp_pm": {},
@@ -4107,8 +4107,8 @@
           "Jupiter"
         ],
         "calc_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Jupiter"
         ],
         "exp_pm": {
@@ -4279,8 +4279,8 @@
         "calc_nak": "21 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
           "Mercury"
@@ -4619,16 +4619,16 @@
         "calc_nak": "1 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Saturn",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
+          "Mars",
           "Jupiter",
-          "Mars"
+          "Mercury"
         ],
         "exp_pm": {
           "Rahu": 8,
@@ -4669,12 +4669,12 @@
         "calc_nak": "5 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -5302,12 +5302,12 @@
         "calc_nak": "4 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -5501,13 +5501,13 @@
         "calc_nak": "1 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Jupiter"
         ],
         "calc_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Jupiter"
         ],
         "exp_pm": {
@@ -5549,13 +5549,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Mars": 11,
@@ -5597,12 +5597,12 @@
         "calc_nak": "8 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -5640,12 +5640,12 @@
         "calc_nak": "11 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 5
@@ -6015,12 +6015,12 @@
         "calc_nak": "19 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Rahu": 12,
@@ -6460,12 +6460,12 @@
         "calc_nak": "7 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 9
@@ -6505,12 +6505,12 @@
         "calc_nak": "9 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -6548,12 +6548,12 @@
         "calc_nak": "12 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Mercury": 3,
@@ -6638,12 +6638,12 @@
         "calc_nak": "19 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -7083,12 +7083,12 @@
         "calc_nak": "2 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -7506,12 +7506,12 @@
         "calc_nak": "15 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Venus": 4
@@ -7551,12 +7551,12 @@
         "calc_nak": "16 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 12,
@@ -8101,12 +8101,12 @@
         "calc_nak": "10 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 3
@@ -8146,12 +8146,12 @@
         "calc_nak": "13 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -8479,12 +8479,12 @@
         "calc_nak": "18 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -8522,12 +8522,12 @@
         "calc_nak": "21 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -9449,12 +9449,12 @@
         "calc_nak": "26 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -9492,12 +9492,12 @@
         "calc_nak": "3 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 7,
@@ -9538,14 +9538,14 @@
         "calc_nak": "3 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {
           "Jupiter": 12
@@ -10476,12 +10476,12 @@
         "calc_nak": "22 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Mercury": 3
@@ -10981,12 +10981,12 @@
         "calc_nak": "12 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 11
@@ -11026,14 +11026,14 @@
         "calc_nak": "23 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {
           "Moon": 5,
@@ -11449,8 +11449,8 @@
           "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -11897,12 +11897,12 @@
         "calc_nak": "16 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 11
@@ -12363,12 +12363,12 @@
         "calc_nak": "2 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 7
@@ -12845,12 +12845,12 @@
         "calc_nak": "20 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -13273,13 +13273,13 @@
         "calc_nak": "7 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Venus",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
-          "Saturn",
           "Venus",
+          "Saturn",
           "Jupiter"
         ],
         "exp_pm": {
@@ -13404,14 +13404,14 @@
         "calc_nak": "13 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -13776,14 +13776,14 @@
         "calc_nak": "20 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -14294,14 +14294,14 @@
         "calc_nak": "11 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {
           "Rahu": 5,
@@ -14469,12 +14469,12 @@
         "calc_nak": "23 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 5
@@ -14854,12 +14854,12 @@
         "calc_nak": "5 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -15832,12 +15832,12 @@
         "calc_nak": "14 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -16297,12 +16297,12 @@
         "calc_nak": "22 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 11
@@ -17357,12 +17357,12 @@
         "calc_nak": "4 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 4
@@ -17402,12 +17402,12 @@
         "calc_nak": "8 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -17563,13 +17563,13 @@
         "calc_nak": "1 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Jupiter"
         ],
         "calc_vakra": [
-          "Mercury",
           "Venus",
+          "Mercury",
           "Jupiter"
         ],
         "exp_pm": {},
@@ -17732,12 +17732,12 @@
         "calc_nak": "12 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 12
@@ -18227,12 +18227,12 @@
         "calc_nak": "2 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Venus": 4
@@ -18777,14 +18777,14 @@
         "calc_nak": "23 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
+          "Venus",
           "Mercury",
-          "Venus"
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
+          "Venus",
           "Mercury",
-          "Venus"
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 3,
@@ -18825,12 +18825,12 @@
         "calc_nak": "26 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -18954,13 +18954,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Mercury",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Mercury",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -19879,14 +19879,14 @@
         "calc_nak": "5 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Mercury": 4,
@@ -19927,12 +19927,12 @@
         "calc_nak": "9 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Jupiter": 6,
@@ -20061,12 +20061,12 @@
         "calc_nak": "19 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "exp_pm": {
           "Mars": 7
@@ -20264,14 +20264,14 @@
         "calc_nak": "14 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
+          "Venus",
           "Mercury",
-          "Venus"
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
+          "Venus",
           "Mercury",
-          "Venus"
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 10,
@@ -20761,12 +20761,12 @@
         "calc_nak": "4 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -20805,13 +20805,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Mercury": 3
@@ -21259,14 +21259,14 @@
         "calc_nak": "23 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
+          "Saturn",
           "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
-          "Jupiter"
+          "Jupiter",
+          "Mercury"
         ],
         "exp_pm": {
           "Moon": 1,
@@ -21432,12 +21432,12 @@
         "calc_nak": "10 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -21636,12 +21636,12 @@
         "calc_nak": "7 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Saturn": 12,
@@ -21684,13 +21684,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Moon": 8,
@@ -21733,13 +21733,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -22050,12 +22050,12 @@
         "calc_nak": "23 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Mercury": 4
@@ -22544,13 +22544,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Venus": 5
@@ -22590,16 +22590,16 @@
         "calc_nak": "14 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Saturn",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Mercury",
+          "Mars",
           "Jupiter",
-          "Mars"
+          "Mercury"
         ],
         "exp_pm": {
           "Saturn": 10
@@ -22640,13 +22640,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Saturn": 4
@@ -22774,12 +22774,12 @@
         "calc_nak": "27 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "calc_vakra": [
-          "Mercury",
-          "Venus"
+          "Venus",
+          "Mercury"
         ],
         "exp_pm": {
           "Venus": 3,
@@ -23475,13 +23475,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -23520,13 +23520,13 @@
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
           "Saturn",
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {
           "Moon": 3
@@ -23610,12 +23610,12 @@
         "calc_nak": "25 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 3,
@@ -23986,12 +23986,12 @@
         "calc_nak": "7 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 10
@@ -24117,12 +24117,12 @@
         "calc_nak": "15 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -24478,14 +24478,14 @@
         "calc_nak": "24 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 9
@@ -25019,12 +25019,12 @@
         "calc_nak": "18 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 5
@@ -25432,12 +25432,12 @@
         "calc_nak": "20 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {
           "Rahu": 3,
@@ -25478,12 +25478,12 @@
         "calc_nak": "4 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Mercury": 4
@@ -25523,12 +25523,12 @@
         "calc_nak": "8 2",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 7
@@ -26396,14 +26396,14 @@
         "calc_nak": "25 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
           "Mercury",
-          "Mars"
+          "Mars",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -26884,12 +26884,12 @@
         "calc_nak": "15 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 3
@@ -27447,12 +27447,12 @@
         "calc_nak": "7 4",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Mars": 7
@@ -27866,12 +27866,12 @@
         "calc_nak": "15 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -27950,12 +27950,12 @@
         "calc_nak": "22 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -28201,12 +28201,12 @@
         "calc_nak": "19 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "calc_vakra": [
-          "Jupiter",
-          "Mars"
+          "Mars",
+          "Jupiter"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -28829,12 +28829,12 @@
         "calc_nak": "26 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -28999,12 +28999,12 @@
         "calc_nak": "26 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {},
         "calc_pm": {
@@ -29420,12 +29420,12 @@
         "calc_nak": "12 3",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Venus"
+          "Venus",
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 3
@@ -29830,12 +29830,12 @@
         "calc_nak": "23 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Moon": 11,
@@ -30378,12 +30378,12 @@
         "calc_nak": "17 1",
         "exp_pada_src": "ics_positions",
         "exp_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "calc_vakra": [
-          "Saturn",
-          "Mercury"
+          "Mercury",
+          "Saturn"
         ],
         "exp_pm": {
           "Jupiter": 1
