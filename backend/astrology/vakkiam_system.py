@@ -490,10 +490,11 @@ class AyanamsaProvider:
 # Graha Vakra in Vakya/ICS charts: Mars, Jupiter, Venus, Saturn only (not Mercury).
 VAKRA_PLANETS = frozenset({"Mars", "Jupiter", "Venus", "Saturn"})
 
-# ICS pada labels lag slightly behind strict 3°20' quarters near boundaries.
-NAKSHATRA_PADA_BOUNDARY_EPS = 0.19
-# Quarters (pada 2–4 entry) where ICS keeps the previous pada label briefly.
-NAKSHATRA_PADA_LAG_INTS = (1, 2, 3)
+# ICS Vakkiam Pro uses strict 3°20' pada boundaries with no lag.
+# Reference: Venus at 236°53'56" (13.93' into Kettai 4) and Sun at 247°16'34"
+# (13.93' into Mulam 3) both display the current pada, proving no meaningful lag.
+NAKSHATRA_PADA_BOUNDARY_EPS = 0.0
+NAKSHATRA_PADA_LAG_INTS = (1, 2, 3)  # retained but EPS=0 disables the lag
 
 
 class VakkiamCalculator(AstronomicalCalculations):
