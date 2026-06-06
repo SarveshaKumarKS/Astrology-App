@@ -151,15 +151,16 @@ SUN_BIJA_LAGNA = 1.389
 LAGNA_REF_LAT = 12.0
 
 # Per-planet output bija corrections (degrees), calibrated against ICS Vakkiam Pro
-# reference data (mean bias on 587 clean cases after Rahu/Ketu/Moon/Lagnam
-# integrity filtering).  Applied as a simple additive offset in compute().
+# reference data.  Computed as -(mean_raw_error) across 700+ clean cases (DD/MM/YYYY
+# dates, 1965-2025, Salem India, corrupted abs_lon entries corrected via rasi+rasi_lon).
+# Applied as a simple additive offset in compute().
 PLANET_OUTPUT_BIJA = {
-    'Mars':     +0.2778,
-    'Mercury':  +0.5440,
-    'Jupiter':  +0.0700,
-    'Venus':    +0.5540,
+    'Mars':     +0.2951,
+    'Mercury':  +0.5304,
+    'Jupiter':  +0.0811,
+    'Venus':    +0.5778,
 }
-RAHU_OUTPUT_BIJA = -0.0848   # Ketu mirrors Rahu (always Rahu + 180°)
+RAHU_OUTPUT_BIJA = -0.0636   # Ketu mirrors Rahu (always Rahu + 180°)
 
 
 class VakyaTableEngine:
