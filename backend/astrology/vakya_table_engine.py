@@ -332,11 +332,16 @@ class VakyaTableEngine:
         sun_arcsec += SUN_DAILY_ARCSEC[seg] * ghatika / 60.0
 
         # Per-Tamil-year Fourier correction (see SUN_YEAR_CORR constant).
-        A, B, C_cos, D_sin = SUN_YEAR_CORR
-        ty = float(year) - 2000.0
-        year_corr_deg = (A + B * ty
-                         + C_cos * _math.cos(2 * _math.pi * ty / 4)
-                         + D_sin * _math.sin(2 * _math.pi * ty / 4)) / 60.0
+        # Only applied for the calibrated range 1964–2025; outside that range the
+        # constant SUN_BIJA_DEG alone is used to avoid extrapolation artefacts.
+        if 1964 <= year <= 2025:
+            A, B, C_cos, D_sin = SUN_YEAR_CORR
+            ty = float(year) - 2000.0
+            year_corr_deg = (A + B * ty
+                             + C_cos * _math.cos(2 * _math.pi * ty / 4)
+                             + D_sin * _math.sin(2 * _math.pi * ty / 4)) / 60.0
+        else:
+            year_corr_deg = 0.0
 
         return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_DEG + year_corr_deg) % 360.0
 
