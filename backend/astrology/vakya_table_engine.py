@@ -155,9 +155,9 @@ LAGNA_REF_LAT = 12.0
 # integrity filtering).  Applied as a simple additive offset in compute().
 PLANET_OUTPUT_BIJA = {
     'Mars':     +0.2778,
-    'Mercury':  +0.5196,
+    'Mercury':  +0.5440,
     'Jupiter':  +0.0700,
-    'Venus':    +0.5542,
+    'Venus':    +0.5540,
 }
 RAHU_OUTPUT_BIJA = -0.0848   # Ketu mirrors Rahu (always Rahu + 180°)
 
@@ -198,10 +198,16 @@ class VakyaTableEngine:
                     # strip stray non-numeric chars (decompilation artefacts)
                     import re as _re
                     c = _re.sub(r'[^\d.\-]', '', c) or '0'
+                    # remove trailing minus (not a sign) e.g. "12-" → "12"
+                    if c.endswith('-'):
+                        c = c[:-1] or '0'
                     try:
                         parsed.append(int(c))
                     except ValueError:
-                        parsed.append(float(c))
+                        try:
+                            parsed.append(float(c))
+                        except ValueError:
+                            parsed.append(0)
                 result[n] = parsed
         return result
 
