@@ -134,10 +134,19 @@ MOON_LAGNA_COEFF = 0.9
 # pada errors on the 729-case reference set.
 MOON_BIJA_DEG = 0.0395
 
-# Constant offset for the tabular Sun.  Calibrated against ICS Vakkiam Pro
-# reference data (587 clean cases).  Reduces mean bias from +0.675° (ASTRO NKV
-# calibration) to the ICS-matched value.
-SUN_BIJA_DEG = 0.327
+# Constant offset for the tabular Sun.  Adjusted to compensate for the mean
+# of the Fourier year-correction below (A = −2.42ʹ), so that the overall
+# mean error remains zero after both corrections are applied.
+SUN_BIJA_DEG = 0.549
+
+# Per-Tamil-year Fourier correction for the Sun (arcminutes).
+# The tabular Sun resets to 0° at each Tamil New Year, but ICS keeps a
+# continuous Kali-Yuga accumulation; the resulting per-year bias follows a
+# 4-year (leap-year) cycle with a slow secular drift.  Fit from 62 Tamil
+# years of ICS reference data (1964–2025, 698 cases, R² = 0.85):
+#   correction(TY) = A + B·(TY−2000) + C·cos(2π·(TY−2000)/4) + D·sin(2π·(TY−2000)/4)
+# Units: arcminutes.  Applied as +correction in _calc_sun.
+SUN_YEAR_CORR = (-2.420, -0.5243, 14.768, 14.450)  # A, B, C_cos, D_sin
 
 # Sun bija used specifically for Vakyam Lagna seed (no intra-day interpolation).
 # The Lagna starts from the Sun's daily table value at ghatika 0 (sunrise).
@@ -309,6 +318,7 @@ class VakyaTableEngine:
     # ── Sun ───────────────────────────────────────────────────────────────────
 
     def _calc_sun(self, year: int, month: int, day_in_month: int, ghatika: int) -> float:
+        import math as _math
         tny = self._find_tamil_new_year(year)
         birth_date = tny + timedelta(days=SAKA_MONTHS[month - 1][0] + day_in_month - 1)
         days_since_tny = (birth_date - tny).days
@@ -321,7 +331,14 @@ class VakyaTableEngine:
         seg = min((days_since_tny + 2) // 10, 36)
         sun_arcsec += SUN_DAILY_ARCSEC[seg] * ghatika / 60.0
 
-        return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_DEG) % 360.0
+        # Per-Tamil-year Fourier correction (see SUN_YEAR_CORR constant).
+        A, B, C_cos, D_sin = SUN_YEAR_CORR
+        ty = float(year) - 2000.0
+        year_corr_deg = (A + B * ty
+                         + C_cos * _math.cos(2 * _math.pi * ty / 4)
+                         + D_sin * _math.sin(2 * _math.pi * ty / 4)) / 60.0
+
+        return ((sun_arcsec % FULL_CIRCLE_ARCSEC) / 3600.0 + SUN_BIJA_DEG + year_corr_deg) % 360.0
 
     def _sun_lagna_seed(self, year: int, month: int, day_in_month: int) -> float:
         """Sun's sidereal longitude at Tamil-day start (ghatika 0 = sunrise),
