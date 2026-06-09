@@ -752,8 +752,10 @@ class VakkiamCalculator(AstronomicalCalculations):
         )
         planetary_positions_raw = {}
         _retro_flags: Dict[str, bool] = {}
+        vakya_lagna_lon: Optional[float] = None
         for pname, pdata in table_result.items():
             if pname == 'Lagnam':
+                vakya_lagna_lon = pdata['longitude']
                 continue
             lon = pdata['longitude']
             planetary_positions_raw[pname] = {
@@ -763,9 +765,12 @@ class VakkiamCalculator(AstronomicalCalculations):
                 'nakshatra': self.get_nakshatra_from_longitude(lon),
             }
             _retro_flags[pname] = pdata['retrograde']
-        ascendant_longitude = self.calculate_ascendant_traditional(
-            jd, birth_details.latitude, birth_details.longitude
-        )
+        if vakya_lagna_lon is not None:
+            ascendant_longitude = vakya_lagna_lon
+        else:
+            ascendant_longitude = self.calculate_ascendant_traditional(
+                jd, birth_details.latitude, birth_details.longitude
+            )
         house_cusps = self.calculate_houses(ascendant_longitude)
 
         planetary_positions: List[PlanetaryPosition] = []

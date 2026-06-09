@@ -420,7 +420,7 @@ class VakyaTableEngine:
         lagna_seed = self._sun_lagna_seed(year, month, day_in_month)
 
         # ── Advance through signs ─────────────────────────────────────────────
-        rising = self._sign_rising_times()
+        rising = self._sign_rising_times(lat_deg=lat)
         rem = ik_gh
         si = int(lagna_seed / 30) % 12
         pos_in_sign = lagna_seed % 30.0
