@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 import math
 import json
 import os
+import swisseph as swe
 from astrology.calculations import AstronomicalCalculations
 from astrology.vakya_table_engine import VakyaTableEngine
 from astrology.models import (
@@ -554,15 +555,22 @@ class VakkiamCalculator(AstronomicalCalculations):
         return self.vakya_ephemeris.engine.check_retrograde(planet, jd)
 
     def calculate_ascendant_traditional(self, jd: float, latitude: float, longitude: float) -> float:
-        eps = math.radians(23.44)
-        lst_deg = self.calculate_sidereal_time_meeus(jd, longitude)
-        theta = math.radians(lst_deg)
-        phi = math.radians(latitude)
-        x = math.sin(theta) * math.cos(eps) + math.tan(phi) * math.sin(eps)
-        y = -math.cos(theta) 
-        lam_tropical = (math.degrees(math.atan2(y, x)) + 180.0) % 360.0
-        ayanamsa = self.ayanamsa_provider.calculate_ayanamsa(jd)
-        return (lam_tropical - ayanamsa) % 360.0
+        """Lagna exactly as ICS Vakkiam Pro computes it.
+
+        Decompiling the ICS APK (classes.dex) shows the chart Lagna is NOT a Vakya
+        table lookup — it is the standard astronomical sidereal ascendant:
+          * class `be` = Moshier/ELP-2000 ephemeris (Swiss Ephemeris derived)
+          * `beVar.a(1)` sets ayanamsa mode 1 = LAHIRI
+          * class `as` builds Placidus house cusps from the birth latitude; the
+            first cusp minus the Lahiri ayanamsa is the sidereal Lagna.
+        Swiss Ephemeris (pyswisseph) reproduces this to sub-arcsecond — its Lahiri
+        ayanamsa matches ICS's `be.a(1)` constants (t0=2415020.0, ayan=22.46047,
+        rate=50.290966"/yr) to within 1 arcsecond.  jd here is already UT-based.
+        Planets remain Vakya-table values (that is what ICS itself uses).
+        """
+        swe.set_sid_mode(swe.SIDM_LAHIRI, 0, 0)
+        _, ascmc = swe.houses_ex(jd, latitude, longitude, b'P', swe.FLG_SIDEREAL)
+        return ascmc[0] % 360.0
 
     def calculate_sidereal_time_meeus(self, jd: float, longitude: float) -> float:
         """Calculate Local Sidereal Time using Meeus formula"""
@@ -752,10 +760,11 @@ class VakkiamCalculator(AstronomicalCalculations):
         )
         planetary_positions_raw = {}
         _retro_flags: Dict[str, bool] = {}
-        vakya_lagna_lon: Optional[float] = None
         for pname, pdata in table_result.items():
+            # Planets come from the Vakya tables (this is what ICS itself uses).
+            # The Lagna does NOT — ICS computes it astronomically, so the Vakya
+            # engine's 'Lagnam' entry is intentionally discarded here.
             if pname == 'Lagnam':
-                vakya_lagna_lon = pdata['longitude']
                 continue
             lon = pdata['longitude']
             planetary_positions_raw[pname] = {
@@ -765,12 +774,10 @@ class VakkiamCalculator(AstronomicalCalculations):
                 'nakshatra': self.get_nakshatra_from_longitude(lon),
             }
             _retro_flags[pname] = pdata['retrograde']
-        if vakya_lagna_lon is not None:
-            ascendant_longitude = vakya_lagna_lon
-        else:
-            ascendant_longitude = self.calculate_ascendant_traditional(
-                jd, birth_details.latitude, birth_details.longitude
-            )
+        # Lagna via ICS's real algorithm: astronomical sidereal (Lahiri) ascendant.
+        ascendant_longitude = self.calculate_ascendant_traditional(
+            jd, birth_details.latitude, birth_details.longitude
+        )
         house_cusps = self.calculate_houses(ascendant_longitude)
 
         planetary_positions: List[PlanetaryPosition] = []
