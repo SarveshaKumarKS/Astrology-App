@@ -29,6 +29,31 @@ SAKA_MONTHS = [
     (365, 15, 31, 15),   # Month 13 (year-end sentinel)
 ]
 
+# Solar transit parameters for dynamic Tamil month boundary computation
+# Source: k.java a(long j) sVarArr[0..12] — (f704a=day%7, b=gh, c=vi, d=pr)
+# These are CUMULATIVE offsets from Tamil New Year (same gh/vi/pr as SAKA_MONTHS).
+SOLAR_MONTH_PARAMS = [
+    (1, 15, 31, 15),   # [0] TNY / sentinel
+    (2, 55, 32,  0),   # [1] Vaikasi
+    (6, 19, 44,  0),   # [2] Aani
+    (2, 56, 22,  0),   # [3] Aadi
+    (6, 24, 34,  0),   # [4] Aavani
+    (2, 26, 44,  0),   # [5] Purattasi
+    (4, 54,  6,  0),   # [6] Aippasi
+    (6, 48, 13,  0),   # [7] Karthigai
+    (1, 18, 37,  0),   # [8] Margazhi
+    (2, 39, 30,  0),   # [9] Thai
+    (4,  6, 46,  0),   # [10] Maasi
+    (5, 55, 10,  0),   # [11] Panguni
+    (1, 15, 31, 15),   # [12] year-end sentinel
+]
+
+# Threshold (gh, vi) for weekday-bump test — k.java a(long j) sVarArr2[0..12]
+SOLAR_THRESH = [
+    (30, 36), (31, 16), (31, 34), (31, 24), (30, 50), (30,  7),
+    (29, 24), (28, 45), (28, 26), (28, 36), (29,  8), (29, 52), (30, 36),
+]
+
 # Weekday arrays (k.java's FRIDAY=0 convention)
 WEEKDAYS      = ['FRIDAY', 'SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY']
 PY_TO_VAKYA   = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
@@ -205,31 +230,101 @@ class VakyaTableEngine:
 
     def _find_tamil_new_year(self, year: int) -> date:
         C, D, E, _ = self._ky_year_arithmetic(year)
-        day_count = C + 1 + (1 if D * 60 + E >= 1815 else 0)
+        day_count = C + (1 if D * 60 + E >= 1815 else 0)   # k.java: j13=C; if(D*60+E>=1815) j13++
         ky_weekday = WEEKDAYS[day_count % 7]
         apr13 = date(year, 4, 13)
         if PY_TO_VAKYA[apr13.weekday()] == ky_weekday:
             return apr13
         return date(year, 4, 14)
 
+    def _find_all_month_starts(self, year: int):
+        """Compute the 13 Tamil month start dates using Java's solar transit algorithm.
+
+        Faithful port of k.java a(long j) loop (lines 280-357): for each month
+        i=1..12, add SOLAR_MONTH_PARAMS[i] to the TNY state with carry, apply
+        the threshold test (SOLAR_THRESH[i]), then search 29-32 days after the
+        previous month start for the calendar date whose weekday matches.
+
+        Returns list of 13 date objects: [0]=TNY, [1..12]=start of months 2-13.
+        Results are cached per year.
+        """
+        if not hasattr(self, '_month_starts_cache'):
+            self._month_starts_cache: dict = {}
+        if year in self._month_starts_cache:
+            return self._month_starts_cache[year]
+
+        C, D, E, F = self._ky_year_arithmetic(year)
+        tny = self._find_tamil_new_year(year)
+
+        sv_a = int(C % 7)
+        sv_b = int(D)
+        sv_c = int(E)
+        sv_d = int(F)
+
+        month_starts = [tny]
+        prev = tny
+
+        for i in range(1, 13):
+            p = SOLAR_MONTH_PARAMS[i]
+            d_val = p[3] + sv_d
+            c_val = p[2] + sv_c
+            b_val = p[1] + sv_b
+            a_val = p[0] + sv_a
+            if d_val >= 60: d_val -= 60; c_val += 1
+            if c_val >= 60: c_val -= 60; b_val += 1
+            if b_val >= 60: b_val -= 60; a_val += 1
+
+            thresh = SOLAR_THRESH[i]
+            j14 = a_val + (1 if b_val * 60 + c_val > thresh[0] * 60 + thresh[1] else 0)
+            target_wd = WEEKDAYS[j14 % 7]
+
+            found = None
+            for offset in range(29, 33):
+                cand = prev + timedelta(days=offset)
+                if PY_TO_VAKYA[cand.weekday()] == target_wd:
+                    found = cand
+                    break
+            if found is None:
+                found = prev + timedelta(days=30)
+
+            month_starts.append(found)
+            prev = found
+
+        self._month_starts_cache[year] = month_starts
+        return month_starts
+
     def _date_to_tamil_month_day(self, d: date) -> Tuple[int, int, int]:
-        """Return (gregorian_year_of_tny, tamil_month 1-12, day_in_month 1-based)."""
+        """Return (gregorian_year_of_tny, tamil_month 1-12, day_in_month 1-based).
+
+        Uses dynamic Tamil month boundaries matching k.java's solar transit
+        weekday-matching algorithm (via _find_all_month_starts).
+        """
         tny = self._find_tamil_new_year(d.year)
         gy = d.year
         if d < tny:
             gy -= 1
-            tny = self._find_tamil_new_year(gy)
 
-        days_since_tny = (d - tny).days
+        month_starts = self._find_all_month_starts(gy)
+
         for m in range(12):
-            if SAKA_MONTHS[m][0] <= days_since_tny < SAKA_MONTHS[m + 1][0]:
-                day_in_month = days_since_tny - SAKA_MONTHS[m][0] + 1
-                return gy, m + 1, day_in_month
+            if month_starts[m] <= d < month_starts[m + 1]:
+                return gy, m + 1, (d - month_starts[m]).days + 1
 
-        return gy, 12, days_since_tny - SAKA_MONTHS[11][0] + 1
+        return gy, 12, (d - month_starts[11]).days + 1
 
-    def _next_tamil_day(self, month: int, day_in_month: int) -> Tuple[int, int]:
-        """Returns (month, day_in_month) for the next Tamil calendar day."""
+    def _next_tamil_day(self, month: int, day_in_month: int,
+                        month_starts=None) -> Tuple[int, int]:
+        """Returns (month, day_in_month) for the next Tamil calendar day.
+
+        When month_starts (from _find_all_month_starts) is provided, uses the
+        dynamic boundaries so month rollovers are consistent with Java.
+        """
+        if month_starts is not None:
+            d = month_starts[month - 1] + timedelta(days=day_in_month)
+            for m in range(12):
+                if month_starts[m] <= d < month_starts[m + 1]:
+                    return m + 1, (d - month_starts[m]).days + 1
+            return 12, (d - month_starts[11]).days + 1
         tomorrow = SAKA_MONTHS[month - 1][0] + day_in_month
         for m in range(12):
             if SAKA_MONTHS[m][0] <= tomorrow < SAKA_MONTHS[m + 1][0]:
@@ -557,16 +652,26 @@ class VakyaTableEngine:
         # Vinadi elapsed since sunrise and the Tamil 'day start' date
         vinadi, vakya_date = self._vinadi_and_vakya_date(dt_utc, lat, lon, tz_hours)
 
+        # Today's Tamil date — dynamic boundaries matching Java's i(date)
         gy, tamil_month, day_in_month = self._date_to_tamil_month_day(vakya_date)
         C, D, E, F = self._ky_year_arithmetic(gy)
+        month_starts = self._find_all_month_starts(gy)
 
-        t_month, t_day = self._next_tamil_day(tamil_month, day_in_month)
+        # Tomorrow's Tamil date — Java calls k.h(date+1day) separately, which
+        # internally calls i(date+1day) for dynamic boundaries and recomputes
+        # C/D/E/F if the Tamil year has changed.
+        tomorrow_date = vakya_date + timedelta(days=1)
+        gy_tom, t_month, t_day = self._date_to_tamil_month_day(tomorrow_date)
+        if gy_tom != gy:
+            C_tom, D_tom, E_tom, F_tom = self._ky_year_arithmetic(gy_tom)
+        else:
+            C_tom, D_tom, E_tom, F_tom = C, D, E, F
 
         result: dict = {}
 
         # ── Sun ───────────────────────────────────────────────────────────────
         sun_today    = self._sun_arcsec_at_date(gy, tamil_month, day_in_month)
-        sun_tomorrow = self._sun_arcsec_at_date(gy, t_month, t_day)
+        sun_tomorrow = self._sun_arcsec_at_date(gy_tom, t_month, t_day)
         sun_lon, _   = self._lj_interpolate(sun_today, sun_tomorrow, vinadi)
         result['Sun'] = {'longitude': sun_lon % 360.0, 'retrograde': False}
 
@@ -598,8 +703,8 @@ class VakyaTableEngine:
 
         # ── Table planets (Mars, Jupiter, Venus, Saturn, Mercury) ─────────────
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
-            today    = self._planet_raw_arcsec(pname, C, D, E, F, tamil_month, day_in_month)
-            tomorrow = self._planet_raw_arcsec(pname, C, D, E, F, t_month, t_day)
+            today    = self._planet_raw_arcsec(pname, C,     D,     E,     F,     tamil_month, day_in_month)
+            tomorrow = self._planet_raw_arcsec(pname, C_tom, D_tom, E_tom, F_tom, t_month,     t_day)
             if today is None:
                 result[pname] = {'longitude': 0.0, 'retrograde': False}
                 continue
@@ -609,8 +714,8 @@ class VakyaTableEngine:
             result[pname] = {'longitude': lon_deg % 360.0, 'retrograde': retro}
 
         # ── Rahu / Ketu ───────────────────────────────────────────────────────
-        rahu_today    = self._rahu_arcsec_at_date(C, D, E, tamil_month, day_in_month)
-        rahu_tomorrow = self._rahu_arcsec_at_date(C, D, E, t_month, t_day)
+        rahu_today    = self._rahu_arcsec_at_date(C,     D,     E,     tamil_month, day_in_month)
+        rahu_tomorrow = self._rahu_arcsec_at_date(C_tom, D_tom, E_tom, t_month,     t_day)
         rahu_lon, _   = self._lj_interpolate(rahu_today, rahu_tomorrow, vinadi)
         rahu_lon      = rahu_lon % 360.0
         ketu_lon      = (rahu_lon + 180.0) % 360.0
