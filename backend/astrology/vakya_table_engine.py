@@ -118,6 +118,20 @@ PLANET_DESC: Dict[str, dict] = {
     },
 }
 
+# Sun manda (equation of center) tables — jArr2/jArr in k.java g(Date)
+# SUN_MANDA: correction in arcmin at each 10° of mean anomaly (38 entries)
+# SUN_MANDA_GRAD: change per 10° segment (37 entries) for sub-segment interpolation
+SUN_MANDA = [
+    0, 14, 32, 54, 78, 105, 133, 163, 194, 224, 254, 284, 311, 335, 358,
+    376, 391, 403, 411, 415, 416, 412, 406, 398, 386, 374, 361, 347, 334,
+    322, 311, 303, 297, 295, 296, 301, 309, 322,
+]
+SUN_MANDA_GRAD = [
+    84, 108, 132, 144, 162, 168, 180, 186, 180, 180, 180, 162, 144, 138,
+    108, 90, 72, 48, 24, 6, -24, -36, -48, -72, -72, -78, -84, -78, -72,
+    -66, -48, -36, -12, 6, 30, 48, 78,
+]
+
 # Sun daily arc table — jArr3 in k.java g(Date) — arcseconds per day
 SUN_DAILY_ARCSEC = [
     3516, 3492, 3468, 3456, 3438, 3432, 3420, 3414, 3420, 3420, 3420, 3438,
@@ -403,19 +417,73 @@ class VakyaTableEngine:
     def _sun_arcsec_at_date(self, year: int, month: int, day_in_month: int) -> int:
         """Sun's Vakya arcsec longitude at the given Tamil date (start of day).
 
-        Faithful to k.java g(Date): accumulate SUN_DAILY_ARCSEC from Tamil
-        New Year to the given date, then wrap to [0, 1296000).
-        Tamil New Year = Sun at 0° Mesha (sidereal 0°).
+        Faithful to k.java g(Date):
+        1. True Sun at Tamil New Year = kshepa (mean residual in deg/min/sec/
+           thirds from the year's D/E/F) minus the manda correction
+           interpolated from SUN_MANDA/SUN_MANDA_GRAD.
+        2. Accumulate SUN_DAILY_ARCSEC per day, with day-of-year derived from
+           the DYNAMIC month lengths (this.z in Java), not fixed SAKA_MONTHS.
         """
-        tny = self._find_tamil_new_year(year)
-        days_since_tny = SAKA_MONTHS[month - 1][0] + day_in_month - 1
+        _, D, E, F = self._ky_year_arithmetic(year)
 
-        arcsec = 0
-        for d in range(days_since_tny):
-            seg = min((d + 2) // 10, 36)
-            arcsec += SUN_DAILY_ARCSEC[seg]
+        # Kshepa: mean-sun residual at TNY day reference (k.java j/j2/j3/j4)
+        if D * 60 + E < 1856:
+            j  = 15 - F
+            j2 = 31 - E
+            j3 = 15 - D
+            j4 = 365
+        else:
+            j  = 0 - F
+            j2 = 0 - E
+            j3 = 60 - D
+            j4 = 0
+        if j  < 0: j  += 60; j2 -= 1
+        if j2 < 0: j2 += 60; j3 -= 1
+        if j3 < 0: j3 += 60; j4 -= 1
+        if j4 < 0: j4 += 360
 
-        return int(arcsec % FULL_CIRCLE_ARCSEC)
+        # Manda correction interpolated within the 10° segment
+        i3 = int(j4 // 10)
+        if i3 > 37: i3 = 0
+        j9 = SUN_MANDA[i3]
+        if i3 > 36: i3 = 0
+        grad = SUN_MANDA_GRAD[i3]
+        frac = ((((j4 % 10) * 60 + j3) * 60 + j2) * 60) + j
+        abs_corr = (abs(grad) * 60 * frac) / 216 / 1000.0
+        j10 = j9 * 60 * 60                      # arcmin → thirds
+        j11 = int(j10 + abs_corr) if grad > 0 else int(j10 - abs_corr)
+
+        # Subtract correction (deg/min/sec/thirds with borrows)
+        j12 = j11 % 60
+        j13 = int(j11 // 60)
+        j14 = j13 % 60
+        j15 = j  - j12
+        j16 = j2 - j14
+        j17 = j3 - ((j13 // 60) % 60)
+        j18 = j4 - ((j13 // 60) // 60)
+        if j15 < 0: j15 += 60; j16 -= 1
+        if j16 < 0: j16 += 60; j17 -= 1
+        if j17 < 0: j17 += 60; j18 -= 1
+        if j18 < 0: j18 += 360
+
+        # Day-of-year from dynamic month boundaries (Java: sum of this.z)
+        if month == 1:
+            j5 = day_in_month
+        else:
+            month_starts = self._find_all_month_starts(year)
+            j5 = (month_starts[month - 1] - month_starts[0]).days + day_in_month
+
+        # Daily accumulation (deg/min/sec with carries; thirds j15 unused)
+        for i5 in range(j5 - 1):
+            seg = min((i5 + 2) // 10, 36)
+            daily = SUN_DAILY_ARCSEC[seg]
+            j17 += daily // 60
+            j16 += daily % 60
+            if j16 >= 60: j17 += 1; j16 -= 60
+            if j17 >= 60: j18 += 1; j17 -= 60
+            if j18 >= 360: j18 -= 360
+
+        return int(((j18 * 60 + j17) * 60 + j16) % FULL_CIRCLE_ARCSEC)
 
     # ── Moon (k.java f(Date) structure) ──────────────────────────────────────
 
