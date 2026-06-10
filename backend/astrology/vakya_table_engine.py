@@ -540,11 +540,19 @@ class VakyaTableEngine:
 
     # ── Rahu (k.java e(Date)) ─────────────────────────────────────────────────
 
-    def _rahu_arcsec_at_date(self, ky_C: int, ky_D: int, ky_E: int,
+    def _rahu_arcsec_at_date(self, ky_C: int, ky_D: int, ky_E: int, ky_F: float,
                               month: int, day_in_month: int) -> int:
         """Rahu's Vakya arcsec at the given Tamil date (faithful k.java port)."""
         sm = SAKA_MONTHS[month - 1]
-        j = ky_C + sm[0] + day_in_month - 1          # total KY days at this date
+        j  = ky_C + sm[0] + day_in_month - 1         # total KY days at this date
+        j2 = ky_D + sm[1]                            # ghatika
+        j3 = ky_E + sm[2]                            # vinadi
+        if (ky_F + sm[3]) > 29.0:                    # k.java: if (F + g > 29.0d) j3++
+            j3 += 1
+        if j3 >= 60:
+            j3 -= 60; j2 += 1
+        if j2 >= 60:
+            j2 -= 60; j += 1                         # gha overflow carries into day count
 
         j4 = j - RAHU_KY_OFFSET
         j5 = j4 % RAHU_PERIOD                         # pos within 6792-day cycle
@@ -570,8 +578,8 @@ class VakyaTableEngine:
         if j15 < 0: j15 += 60; j7  -= 1
         j16 = (j7 - j26) % 360
 
-        # Speed correction from D/E (ghatika/vinadi)
-        vn_combined = (ky_D + sm[1]) * 60 + ky_E
+        # Speed correction from carried gha/vin (k.java: d = j2*60 + j3)
+        vn_combined = j2 * 60 + j3
         speed_corr  = 0.0
         running     = float(vn_combined)
         for inc, lim in zip(RAHU_SPEED_INC, RAHU_SPEED_LIMIT):
@@ -782,8 +790,8 @@ class VakyaTableEngine:
             result[pname] = {'longitude': lon_deg % 360.0, 'retrograde': retro}
 
         # ── Rahu / Ketu ───────────────────────────────────────────────────────
-        rahu_today    = self._rahu_arcsec_at_date(C,     D,     E,     tamil_month, day_in_month)
-        rahu_tomorrow = self._rahu_arcsec_at_date(C_tom, D_tom, E_tom, t_month,     t_day)
+        rahu_today    = self._rahu_arcsec_at_date(C,     D,     E,     F,     tamil_month, day_in_month)
+        rahu_tomorrow = self._rahu_arcsec_at_date(C_tom, D_tom, E_tom, F_tom, t_month,     t_day)
         rahu_lon, _   = self._lj_interpolate(rahu_today, rahu_tomorrow, vinadi)
         rahu_lon      = rahu_lon % 360.0
         ketu_lon      = (rahu_lon + 180.0) % 360.0

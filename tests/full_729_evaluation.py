@@ -8,7 +8,7 @@ from astrology.vakya_table_engine import VakyaTableEngine
 DATA_FILE = Path(__file__).parent / "astrology_data .json"
 VAKYA_DIR = Path(__file__).resolve().parents[1] / "backend/astrology/data/vakya"
 
-LAT, LON = 11.6643, 78.146
+LAT, LON = 11.6643, 78.185
 
 RASIS = ["Mesham", "Rishabam", "Mithunam", "Kadakam", "Simmam", "Kanni",
          "Tulam", "Viruchigam", "Dhanusu", "Magaram", "Kumbam", "Meenam"]
