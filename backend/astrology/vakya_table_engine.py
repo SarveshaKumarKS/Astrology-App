@@ -324,31 +324,22 @@ class VakyaTableEngine:
 
     # ── Moon (k.java f(Date) structure) ──────────────────────────────────────
 
-    def _moon_table_arcsec(self, ky_C: int, ky_D: int, ky_E: int,
-                            month: int, day_in_month: int) -> int:
-        """Moon's Vakya arcsec longitude for the given Tamil date.
+    def _moon_arcsec_from_j7(self, j7: int, month: int, day_in_month: int) -> int:
+        """Moon's Vakya arcsec given a pre-computed j7 (D/E condition already applied).
 
-        Faithful port of k.java f(Date) — uses sre.txt (MoonVak) and
-        hsg.txt (month correction).  No ghatika intra-day adjustment here;
-        that is done by the caller via _lj_interpolate.
+        Faithful port of k.java f(Date) inner body.  The caller is responsible
+        for computing j7 = C + (1 if D*60+E >= 1845 else 0) + delta.
         """
-        # Adjusted KY day count (k.java lines 1563–1569)
-        j7 = ky_C + (1 if ky_D * 60 + ky_E >= 1845 else 0)
-
-        # Day index within Tamil year (a3 in k.java)
         a3 = SAKA_MONTHS[month - 1][0] + day_in_month - 1
 
-        # 38-element greedy khanda reduction (k.java lines 1577–1597)
-        j13 = 0       # accumulated arcsec (= j13 / j20 in Java)
-        j15 = j7      # remaining days (= j15 in Java)
+        j13 = 0
+        j15 = j7
         for i in range(38):
             if j15 >= MOON_KHANDAS[i]:
                 j15 -= MOON_KHANDAS[i]
                 j13 += MOON_ANCHORS[i]
 
-        j16 = j15 + a3    # sre.txt row index (= j16 / j7+a3 in Java)
-
-        # Wrap j16 into sre.txt range [1, 248] (k.java lines 1590–1597)
+        j16 = j15 + a3
         if j16 > 248:
             j16 -= 248;  j13 += 99846
         if j16 > 248:
@@ -356,19 +347,21 @@ class VakyaTableEngine:
         if j16 == 0:
             j16 = 1
 
-        # Read sre.txt (Moon vakya): field[1] = cumulative arcminutes
         vak_row = self._tables.get('sre.txt', {}).get(j16)
         if vak_row is None:
             return 0
-        m_b_arcmin = int(vak_row[1])          # m.b in Java (arcminutes)
+        m_b_arcmin = int(vak_row[1])
 
-        # Read hsg.txt: row = Tamil day-in-month, col = month index
         hsg_row = self._tables.get('hsg.txt', {}).get(day_in_month)
         month_corr = int(hsg_row[month - 1]) if hsg_row is not None else 0
 
-        # Total Moon arcsec (k.java line 1675: j18 = j11 + j17)
-        total = j13 + (m_b_arcmin * 60) + month_corr
-        return int(total % FULL_CIRCLE_ARCSEC)
+        return int((j13 + m_b_arcmin * 60 + month_corr) % FULL_CIRCLE_ARCSEC)
+
+    def _moon_table_arcsec(self, ky_C: int, ky_D: int, ky_E: int,
+                            month: int, day_in_month: int) -> int:
+        """Legacy wrapper — applies D/E condition and delegates to _moon_arcsec_from_j7."""
+        j7 = ky_C + (1 if ky_D * 60 + ky_E >= 1845 else 0)
+        return self._moon_arcsec_from_j7(j7, month, day_in_month)
 
     def _astronomical_moon_sidereal(self, dt_utc: datetime) -> Optional[float]:
         """Approximate Lahiri Moon longitude (deg) for ±1-day disambiguation."""
@@ -579,26 +572,27 @@ class VakyaTableEngine:
 
         # ── Moon ──────────────────────────────────────────────────────────────
         ref_moon = self._astronomical_moon_sidereal(dt_utc)
+        # j7_std: D/E condition applied exactly once (k.java f(Date) line 1563)
+        j7_std = C + (1 if D * 60 + E >= 1845 else 0)
 
-        def _moon_for_bump(bump: int) -> int:
-            # bump adjusts the KY day count for ±1 day disambiguation
-            return self._moon_table_arcsec(C + bump, D, E, tamil_month, day_in_month)
-
-        default_bump = 1 if D * 60 + E >= 1845 else 0
         if ref_moon is None:
-            chosen_bump = default_bump
+            chosen_delta = 0
         else:
             best = None
-            for bump in range(default_bump - 1, default_bump + 3):
-                clon = (_moon_for_bump(bump) / 3600.0) % 360.0
-                diff = abs((clon - ref_moon + 180.0) % 360.0 - 180.0)
+            for delta in range(-1, 4):
+                j7_cand = j7_std + delta
+                today_cand = self._moon_arcsec_from_j7(j7_cand, tamil_month, day_in_month)
+                tom_cand   = self._moon_arcsec_from_j7(j7_cand, t_month, t_day)
+                # Compare the interpolated (intra-day) Moon, not the raw table value
+                interp, _  = self._lj_interpolate(today_cand, tom_cand, vinadi)
+                diff = abs((interp - ref_moon + 180.0) % 360.0 - 180.0)
                 if best is None or diff < best[0]:
-                    best = (diff, bump)
-            chosen_bump = best[1]
+                    best = (diff, delta)
+            chosen_delta = best[1]
 
-        moon_today    = _moon_for_bump(chosen_bump)
-        # Tomorrow: same bump applied, next Tamil date
-        moon_tomorrow = self._moon_table_arcsec(C + chosen_bump, D, E, t_month, t_day)
+        j7_chosen     = j7_std + chosen_delta
+        moon_today    = self._moon_arcsec_from_j7(j7_chosen, tamil_month, day_in_month)
+        moon_tomorrow = self._moon_arcsec_from_j7(j7_chosen, t_month, t_day)
         moon_lon, _   = self._lj_interpolate(moon_today, moon_tomorrow, vinadi)
         result['Moon'] = {'longitude': moon_lon % 360.0, 'retrograde': False}
 
