@@ -11,18 +11,18 @@ Python results:727
 Planet           N Pada Match    Pada%  Failures
 --------------------------------------------------
 Sun            727        727   100.00         0
-Moon           727        713    98.07        14
-Mars           727        725    99.72         2
-Mercury        727        726    99.86         1
+Moon           727        727   100.00         0
+Mars           727        727   100.00         0
+Mercury        727        727   100.00         0
 Jupiter        727        727   100.00         0
-Venus          727        719    98.90         8
+Venus          727        721    99.17         6
 Saturn         727        727   100.00         0
 Rahu           727        727   100.00         0
 Ketu           727        727   100.00         0
 --------------------------------------------------
-TOTAL         6543       6518    99.62        25
+TOTAL         6543       6537    99.91         6
 
-── Discrepant Cases: 24 records with pada mismatch ──
+── Discrepant Cases: 6 records with pada mismatch ──
 
 [idx 75] 6/5/2019 1:38AM
   Venus      Java=353.1137° (Revathi p2)   Py=353.3895° (Revathi p3)  diff=16.5'
@@ -37,69 +37,6 @@ TOTAL         6543       6518    99.62        25
     Rahu       85.6433° (Punarpoosam p2)
     Ketu       265.6433° (Pooradam p4)
 
-[idx 127] 6/11/2015 1:38AM
-  Mars       Java=149.9909° (Uthiram p1)   Py=150.0007° (Uthiram p2)  diff=0.6'
-  ICS reference:
-    Sun        198.7033° (Swathi p4)
-    Moon       132.8081° (Magam p4)
-    Mars       150.0006° (Uthiram p2)
-    Mercury    197.3844° (Swathi p4)
-    Jupiter    144.7478° (Pooram p4)
-    Venus      153.3144° (Uthiram p2)
-    Saturn     215.3175° (Anusham p1)
-    Rahu       153.3208° (Uthiram p2)
-    Ketu       333.3208° (Poorattathi p4)
-
-[idx 147] 6/8/2013 1:38AM
-  Moon       Java=96.8105° (Poosam p2)   Py=96.6088° (Poosam p1)  diff=12.1'
-  ICS reference:
-    Sun        109.1014° (Ayilyam p1)
-    Moon       96.6086° (Poosam p1)
-    Mars       81.3158° (Punarpoosam p1)
-    Mercury    109.6333° (Ayilyam p1)
-    Jupiter    75.6772° (Thiruvadirai p3)
-    Venus      141.5325° (Pooram p3)
-    Saturn     187.4914° (Swathi p1)
-    Rahu       196.9689° (Swathi p4)
-    Ketu       16.9689° (Barani p2)
-
-[idx 179] 6/3/2010 1:38AM
-  Moon       Java=206.7592° (Visakam p3)   Py=206.5370° (Visakam p2)  diff=13.3'
-  ICS reference:
-    Sun        321.1889° (Poorattathi p1)
-    Moon       206.5369° (Visakam p2)
-    Mercury    325.1464° (Poorattathi p2)
-    Jupiter    317.1561° (Sathayam p4)
-    Venus      332.5631° (Poorattathi p4)
-    Saturn     156.0133° (Uthiram p3)
-    Rahu       263.1769° (Pooradam p3)
-    Ketu       83.1769° (Punarpoosam p1)
-
-[idx 187] 6/11/2010 1:38AM
-  Moon       Java=193.2579° (Swathi p2)   Py=193.4912° (Swathi p3)  diff=14.0'
-  ICS reference:
-    Sun        198.9956° (Swathi p4)
-    Moon       193.5747° (Swathi p3)
-    Mars       222.6881° (Anusham p3)
-    Jupiter    350.0597° (Poorattathi p4)
-    Venus      193.3414° (Swathi p3)
-    Saturn     165.4486° (Hastam p2)
-    Rahu       250.1931° (Moolam p4)
-    Ketu       70.1931° (Thiruvadirai p2)
-
-[idx 188] 6/12/2010 1:38AM
-  Moon       Java=229.9274° (Kettai p1)   Py=230.1519° (Kettai p2)  diff=13.5'
-  ICS reference:
-    Sun        229.3825° (Kettai p1)
-    Moon       229.9428° (Kettai p1)
-    Mars       245.4378° (Moolam p2)
-    Mercury    234.7250° (Kettai p3)
-    Jupiter    330.4683° (Poorattathi p4)
-    Venus      190.1744° (Swathi p2)
-    Saturn     168.0878° (Hastam p3)
-    Rahu       248.5986° (Moolam p3)
-    Ketu       68.5986° (Thiruvadirai p1)
-
 [idx 202] 6/2/2008 1:38AM
   Venus      Java=260.1490° (Pooradam p3)   Py=259.9990° (Pooradam p2)  diff=9.0'
   ICS reference:
@@ -112,43 +49,6 @@ TOTAL         6543       6518    99.62        25
     Saturn     130.0122° (Magam p4)
     Rahu       303.4069° (Avittam p4)
     Ketu       123.4069° (Magam p2)
-
-[idx 244] 6/8/2005 1:38AM
-  Moon       Java=116.8377° (Ayilyam p4)   Py=116.6368° (Ayilyam p3)  diff=12.1'
-  ICS reference:
-    Sun        109.1692° (Ayilyam p1)
-    Moon       116.6367° (Ayilyam p3)
-    Mercury    93.0753° (Punarpoosam p4)
-    Jupiter    172.2622° (Hastam p4)
-    Venus      141.1061° (Pooram p3)
-    Saturn     95.3011° (Poosam p1)
-    Rahu       351.8292° (Revathi p2)
-    Ketu       171.8292° (Hastam p4)
-
-[idx 374] 6/8/1994 1:38AM
-  Venus      Java=153.3471° (Uthiram p3)   Py=153.3291° (Uthiram p2)  diff=1.1'
-  ICS reference:
-    Sun        109.0183° (Ayilyam p1)
-    Moon       90.0331° (Punarpoosam p4)
-    Mars       59.4461° (Mrigashirsha p2)
-    Mercury    110.4069° (Ayilyam p2)
-    Jupiter    194.9322° (Swathi p3)
-    Venus      153.3289° (Uthiram p2)
-    Saturn     307.3958° (Sathayam p1)
-    Rahu       204.7997° (Visakam p2)
-    Ketu       24.7997° (Barani p4)
-
-[idx 410] 6/7/1991 1:38AM
-  Moon       Java=347.1950° (Revathi p1)   Py=0.6036° (Aswini p1)  diff=804.5'
-  ICS reference:
-    Sun        79.3311° (Thiruvadirai p4)
-    Moon       0.6036° (Aswini p1)
-    Mars       119.5578° (Ayilyam p4)
-    Mercury    102.0372° (Poosam p3)
-    Jupiter    113.0694° (Ayilyam p2)
-    Venus      123.9886° (Magam p2)
-    Saturn     273.1731° (Uthiradam p2)
-    Ketu       84.4503° (Punarpoosam p2)
 
 [idx 469] 6/6/1986 1:38AM
   Venus      Java=83.1447° (Punarpoosam p1)   Py=83.3660° (Punarpoosam p2)  diff=13.3'
@@ -176,46 +76,6 @@ TOTAL         6543       6518    99.62        25
     Rahu       2.8914° (Aswini p1)
     Ketu       182.8914° (Chithirai p3)
 
-[idx 510] 6/11/1983 1:38AM
-  Mercury    Java=209.9813° (Visakam p3)   Py=210.0089° (Visakam p4)  diff=1.7'
-  Venus      Java=153.3231° (Uthiram p2)   Py=153.3396° (Uthiram p3)  diff=1.0'
-  ICS reference:
-    Sun        198.9803° (Swathi p4)
-    Moon       209.6119° (Visakam p3)
-    Mars       147.3539° (Uthiram p1)
-    Mercury    210.0089° (Visakam p4)
-    Jupiter    21.1881° (Kettai p2)
-    Venus      153.3394° (Uthiram p3)
-    Saturn     190.7800° (Swathi p2)
-    Rahu       52.8836° (Rohini p4)
-    Ketu       252.8836° (Kettai p2)
-
-[idx 515] 6/3/1982 1:38PM
-  Moon       Java=96.8542° (Poosam p2)   Py=96.6198° (Poosam p1)  diff=14.1'
-  ICS reference:
-    Sun        321.9486° (Poorattathi p1)
-    Moon       96.6197° (Poosam p1)
-    Mars       169.4153° (Hastam p3)
-    Mercury    302.3494° (Avittam p3)
-    Jupiter    198.5264° (Swathi p4)
-    Venus      279.5733° (Uthiradam p4)
-    Saturn     174.7092° (Chithirai p1)
-    Rahu       85.1725° (Punarpoosam p2)
-    Ketu       265.1725° (Pooradam p4)
-
-[idx 529] 6/8/1981 1:38AM
-  Moon       Java=176.8705° (Chithirai p2)   Py=176.6649° (Chithirai p1)  diff=12.3'
-  ICS reference:
-    Sun        109.3450° (Ayilyam p1)
-    Moon       176.6647° (Chithirai p1)
-    Mars       78.5083° (Thiruvadirai p4)
-    Mercury    115.1367° (Ayilyam p2)
-    Jupiter    165.3311° (Hastam p2)
-    Venus      139.7894° (Pooram p2)
-    Saturn     160.4769° (Hastam p1)
-    Rahu       96.3725° (Poosam p1)
-    Ketu       276.3725° (Uthiradam p3)
-
 [idx 535] 6/2/1980 1:38AM
   Venus      Java=330.0323° (Poorattathi p4)   Py=329.8637° (Poorattathi p3)  diff=10.1'
   ICS reference:
@@ -229,47 +89,8 @@ TOTAL         6543       6518    99.62        25
     Rahu       125.4294° (Magam p2)
     Ketu       305.4294° (Avittam p4)
 
-[idx 567] 6/11/1978 1:38AM
-  Moon       Java=263.1029° (Pooradam p3)   Py=263.3404° (Pooradam p4)  diff=14.3'
-  ICS reference:
-    Sun        199.2669° (Swathi p4)
-    Moon       265.3403° (Pooradam p4)
-    Mars       219.4486° (Anusham p2)
-    Mercury    221.5586° (Anusham p3)
-    Jupiter    105.9228° (Poosam p4)
-    Venus      209.5000° (Visakam p3)
-    Saturn     136.2286° (Pooram p1)
-    Rahu       149.6497° (Uthiram p1)
-    Ketu       329.6497° (Poorattathi p3)
-
-[idx 576] 6/8/1977 1:38AM
-  Moon       Java=6.6891° (Aswini p3)   Py=6.4816° (Aswini p2)  diff=12.5'
-  ICS reference:
-    Sun        109.3789° (Ayilyam p1)
-    Moon       6.4814° (Aswini p2)
-    Mars       50.0558° (Rohini p4)
-    Mercury    132.3917° (Magam p4)
-    Jupiter    64.1644° (Mrigashirsha p4)
-    Venus      70.0467° (Thiruvadirai p2)
-    Saturn     112.8269° (Ayilyam p2)
-    Rahu       173.8072° (Chithirai p1)
-    Ketu       353.8072° (Revathi p3)
-
-[idx 595] 6/3/1975 1:38AM
-  Moon       Java=240.1748° (Moolam p1)   Py=239.9584° (Kettai p4)  diff=13.0'
-  ICS reference:
-    Sun        321.2414° (Poorattathi p1)
-    Moon       239.9583° (Kettai p4)
-    Mars       278.9183° (Uthiradam p4)
-    Mercury    296.9275° (Avittam p2)
-    Jupiter    333.2181° (Poorattathi p4)
-    Venus      347.8717° (Revathi p1)
-    Saturn     74.6717° (Thiruvadirai p3)
-    Rahu       220.7275° (Anusham p3)
-    Ketu       40.7275° (Rohini p1)
-
 [idx 600] 6/8/1975 1:38AM
-  Venus      Java=143.1854° (Pooram p3)   Py=143.3438° (Pooram p4)  diff=9.5'
+  Venus      Java=143.1815° (Pooram p3)   Py=143.3438° (Pooram p4)  diff=9.7'
   ICS reference:
     Sun        108.9353° (Ayilyam p1)
     Moon       86.7556° (Punarpoosam p3)
@@ -280,58 +101,6 @@ TOTAL         6543       6518    99.62        25
     Saturn     88.5300° (Punarpoosam p3)
     Rahu       212.6219° (Visakam p4)
     Ketu       32.6219° (Krittika p2)
-
-[idx 616] 6/12/1974 1:38AM
-  Moon       Java=129.8378° (Magam p3)   Py=130.0764° (Magam p4)  diff=14.3'
-  ICS reference:
-    Sun        229.6878° (Kettai p1)
-    Moon       129.8375° (Magam p3)
-    Mars       211.9994° (Visakam p4)
-    Mercury    228.2136° (Kettai p1)
-    Jupiter    316.7042° (Sathayam p4)
-    Venus      235.5667° (Kettai p3)
-    Saturn     79.9661° (Thiruvadirai p4)
-    Rahu       225.4278° (Anusham p4)
-    Ketu       45.4278° (Rohini p2)
-
-[idx 627] 6/11/1973 1:38AM
-  Moon       Java=319.8598° (Sathayam p4)   Py=320.0707° (Poorattathi p1)  diff=12.7'
-  ICS reference:
-    Sun        199.5775° (Swathi p4)
-    Moon       320.0706° (Poorattathi p1)
-    Mars       10.3200° (Aswini p4)
-    Mercury    187.7872° (Swathi p1)
-    Jupiter    281.8772° (Thiruvonam p1)
-    Venus      245.7561° (Moolam p2)
-    Saturn     66.1889° (Mrigashirsha p4)
-    Rahu       246.3544° (Moolam p2)
-    Ketu       66.3544° (Mrigashirsha p4)
-
-[idx 713] 6/11/1966 1:38AM
-  Moon       Java=109.9267° (Ayilyam p1)   Py=110.1737° (Ayilyam p2)  diff=14.8'
-  ICS reference:
-    Sun        199.3686° (Swathi p4)
-    Moon       110.1736° (Ayilyam p2)
-    Mars       139.1219° (Pooram p2)
-    Mercury    199.1914° (Swathi p4)
-    Jupiter    101.7550° (Poosam p3)
-    Venus      197.4031° (Swathi p4)
-    Saturn     321.2589° (Poorattathi p1)
-    Rahu       21.8911° (Barani p3)
-    Ketu       201.8911° (Visakam p1)
-
-[idx 728] 6/8/2008 1:38AM
-  Mars       Java=146.6706° (Uthiram p1)   Py=146.6602° (Pooram p4)  diff=0.6'
-  ICS reference:
-    Sun        109.3603° (Ayilyam p1)
-    Moon       163.4572° (Hastam p2)
-    Mars       146.6600° (Pooram p4)
-    Mercury    123.5511° (Magam p2)
-    Jupiter    26.1908° (Pooradam p3)
-    Venus      124.3122° (Magam p2)
-    Saturn     152.1842° (Magam p4)
-    Rahu       293.6822° (Avittam p1)
-    Ketu       113.6822° (Ayilyam p3)
 
 ── Java stderr (first 2000 chars) ──
 

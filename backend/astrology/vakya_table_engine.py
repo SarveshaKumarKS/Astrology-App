@@ -347,6 +347,126 @@ class VakyaTableEngine:
 
     # ── Time helpers (l.java) ─────────────────────────────────────────────────
 
+    @staticmethod
+    def _ics_c(d: float) -> float:
+        """Exact port of class i c(d): d - int(d/360)*360.
+
+        Java (int) truncates toward zero — replicate with int() on the quotient
+        before multiplying, matching Java's truncation semantics for negatives.
+        """
+        return d - (int(d / 360.0)) * 360.0
+
+    @staticmethod
+    def _ics_sin_deg(d: float) -> float:
+        import math
+        return math.sin(d * 0.0174532925199433)
+
+    @staticmethod
+    def _ics_cos_deg(d: float) -> float:
+        import math
+        return math.cos(d * 0.0174532925199433)
+
+    def _ics_sunrise_local_hours(self, year: int, month: int, day: int,
+                                  lat_arcsec: float, lon_arcsec: float,
+                                  tz_hours: float, mode: int = 1) -> float:
+        """Exact Python port of class i a(Date, lat_arcsec, lon_arcsec, tz_arcsec, mode).
+
+        lat_arcsec, lon_arcsec: lat/lon in arcseconds (multiply degrees by 3600).
+        tz_hours: timezone offset in hours (e.g. 5.5 for IST).
+        mode: 1 = sunrise, 2 = sunset.
+
+        Returns local solar time of sunrise/sunset in hours [0, 24).
+
+        Key details from i.java:
+          - Calendar month is 0-indexed in Java; i5 = month + 1 (1-indexed for formula)
+          - Jan/Feb adjustment: if i5 <= 2: i5 += 12, year--
+          - d7 = (year*365 - 730548.5) + (year/400 - year/100) + year/4
+                 + int((i5+1)*30.6001) + day
+            (all divisions are Java integer division = truncation toward zero)
+          - sin = Math.sin(0.0) = 0  → no atmospheric refraction
+          - Iterates until |prev_ut - cur_ut| <= 0.1
+          - d10/15 + tz_hours, then wrap to [0,24)
+        """
+        import math
+
+        # Java Calendar: get(MONTH) = 0-indexed, get(DAY_OF_MONTH) = day
+        # i5 = month_0indexed + 1  (i.e., 1-indexed month)
+        i5 = month  # already 1-indexed (January=1)
+        yr = year
+        if i5 <= 2:
+            i5 += 12
+            yr -= 1
+
+        # Integer arithmetic matching Java int division (truncation toward zero)
+        d7 = ((yr * 365) - 730548.5
+              + (int(yr / 400) - int(yr / 100))
+              + int(yr / 4)
+              + int((i5 + 1) * 30.6001)
+              + day
+              + 0.0)
+
+        d8 = lat_arcsec / 3600.0   # lat in degrees
+        d9 = lon_arcsec / 3600.0   # lon in degrees
+
+        sin_val = math.sin(0.0)    # = 0; no refraction
+        sin_lat = self._ics_sin_deg(d8)
+        cos_lat = self._ics_cos_deg(d8)
+
+        if mode == 1:
+            d4 = sin_lat    # a2
+            d5 = 1.0
+        else:
+            d4 = sin_lat    # a2
+            d5 = -1.0
+
+        d6 = 180.0   # prevUT initial value (triggers first iteration)
+        d10 = 0.0    # curUT (UTnew)
+
+        while abs(d6 - d10) > 0.1:
+            d11 = d7 + (d10 / 360.0)
+            d13 = d11 / 36525.0                              # T (Julian centuries)
+
+            L   = self._ics_c((36000.77 * d13) + 280.46)    # mean longitude
+            d14 = (35999.05 * d13) + 357.528                 # mean anomaly G
+            d15 = d14 * 2.0
+            a3  = L + (self._ics_sin_deg(d14) * 1.915) + (self._ics_sin_deg(d15) * 0.02)  # lambda
+
+            # Equation of time component E
+            a4 = (((self._ics_sin_deg(d14) * (-1.915))
+                   - (self._ics_sin_deg(d15) * 0.02))
+                  + (self._ics_sin_deg(a3 * 2.0) * 2.466)
+                  - (self._ics_sin_deg(4.0 * a3) * 0.053))
+
+            d16 = 23.4393 - (0.13 * d13)                    # obliquity
+            d17 = (d10 - 180.0) + a4                        # GHA
+
+            # Solar declination
+            a5   = self._ics_sin_deg(d16) * self._ics_sin_deg(a3)
+            atan_val = math.atan(a5 / math.sqrt((-a5) * a5 + 1.0)) * 57.2957795130823
+            # delta = declination in degrees
+
+            # Hour angle cosine
+            a6 = (sin_val - (self._ics_sin_deg(atan_val) * d4)) / (self._ics_cos_deg(atan_val) * cos_lat)
+
+            # Act = atan2-based hour angle in degrees
+            d20 = -a6
+            atan2_val = (math.atan(d20 / math.sqrt((d20 * a6) + 1.0)) + (math.atan(1.0) * 2.0)) * 57.2957795130823
+            if a6 > 1.0:
+                atan2_val = 0.0
+            if a6 < -1.0:
+                atan2_val = 180.0
+
+            d6  = d10                                        # prevUT = curUT
+            d10 = self._ics_c(d6 - ((d17 + d9) + (d5 * atan2_val)))  # UTnew
+
+        # Convert UT degrees to local hours
+        d21 = (d10 / 15.0) + tz_hours
+        if d21 < 0.0:
+            d21 += 24.0
+        if d21 >= 24.0:
+            d21 -= 24.0
+        return d21
+
     def _vinadi_and_vakya_date(self, dt_utc: datetime, lat: float, lon: float,
                                tz_hours: float) -> Tuple[int, date]:
         """Return (vinadi, vakya_date) where:
@@ -354,30 +474,55 @@ class VakyaTableEngine:
           (1 vinadi = 24 s; 3600 vinadi = 1 full Tamil day)
         - vakya_date = Gregorian date of that sunrise (the Tamil 'day start')
 
-        Faithful to InputActivity.java:
-          timeInMillis2 = (birth_ms - sunrise_ms) / 3600000 * 2.5
-          k = (long)(timeInMillis2) * 60
+        Exact port of ICS class i sunrise algorithm + InputActivity.b() vinadi formula.
+        Works entirely in LOCAL time (matching ICS behavior):
+          - Compute sunrise_local_hours for birth's local calendar date
+          - If birth is before sunrise → pre-sunrise: use previous day, vinadi formula uses
+            (sunrise - birth) difference
+          - If birth is at/after sunrise → post-sunrise: use birth date, vinadi formula uses
+            (birth - sunrise) difference
+
+        ICS vinadi formula (InputActivity.b()):
+          post: timeInMillis2 = (birth_ms - sunrise_ms) / 3600000 * 2.5
+          pre:  timeInMillis2 = 60 - (sunrise_ms - birth_ms) / 3600000 * 2.5
+          vinadi = (long)(timeInMillis2) * 60
         """
+        # Reconstruct local datetime from UTC
+        local_dt = dt_utc + timedelta(hours=tz_hours)
+        birth_year  = local_dt.year
+        birth_month = local_dt.month
+        birth_day   = local_dt.day
+        birth_local_hours = local_dt.hour + local_dt.minute / 60.0 + local_dt.second / 3600.0
+
+        # ICS passes lat/lon in arcseconds to class i
+        lat_arcsec = lat * 3600.0
+        lon_arcsec = lon * 3600.0
+
         try:
-            import ephem
-            obs = ephem.Observer()
-            obs.lat = str(lat)
-            obs.lon = str(lon)
-            obs.pressure = 0
-            obs.date = dt_utc.strftime('%Y/%m/%d %H:%M:%S')
-            sr = obs.previous_rising(ephem.Sun())
-            sr_utc = sr.datetime()
-            elapsed_hours = (dt_utc - sr_utc).total_seconds() / 3600.0
-            if elapsed_hours < 0:
-                elapsed_hours += 24.0
-            # nazhigai = elapsed_hours * 2.5 (60 nazhigai/day ÷ 24 h/day)
-            nazhigai = elapsed_hours * 2.5
-            vinadi = int(nazhigai) * 60          # truncated to int per Java cast
+            sunrise_local = self._ics_sunrise_local_hours(
+                birth_year, birth_month, birth_day,
+                lat_arcsec, lon_arcsec, tz_hours, mode=1)
+
+            if birth_local_hours < sunrise_local:
+                # Pre-sunrise: Tamil day = previous calendar day
+                # ICS: timeInMillis2 = 60 - (sunrise_ms - birth_ms)/3600000 * 2.5
+                diff_hours = sunrise_local - birth_local_hours
+                nazhigai = 60.0 - diff_hours * 2.5
+                vinadi = int(nazhigai) * 60
+                vakya_date = (local_dt - timedelta(days=1)).date()
+            else:
+                # Post-sunrise: Tamil day = birth's calendar date
+                # ICS: timeInMillis2 = (birth_ms - sunrise_ms)/3600000 * 2.5
+                diff_hours = birth_local_hours - sunrise_local
+                nazhigai = diff_hours * 2.5
+                vinadi = int(nazhigai) * 60
+                vakya_date = local_dt.date()
+
             vinadi = max(0, min(vinadi, 3599))
-            sr_local = sr_utc + timedelta(hours=tz_hours)
-            return vinadi, sr_local.date()
+            return vinadi, vakya_date
+
         except Exception:
-            return 900, dt_utc.date()             # fallback: ≈6 h after sunrise
+            return 900, local_dt.date()    # fallback: ~6 h after sunrise
 
     # ── l.java interpolation ──────────────────────────────────────────────────
 

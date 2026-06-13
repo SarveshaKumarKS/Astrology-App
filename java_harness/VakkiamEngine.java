@@ -378,74 +378,149 @@ public class VakkiamEngine {
         return calToJulianDay(a) - calToJulianDay(b);
     }
 
-    // ── Sunrise computation (simplified formula) ────────────────────────────
+    // ── Sunrise computation — exact port of ICS class i ────────────────────
     // Returns vinadi elapsed since sunrise, and the local date of sunrise.
     // vinadi = elapsed Tamil time units (1 vinadi = 24s, 3600 vinadi = 1 full day).
-    // Faithful to InputActivity.java:
-    //   timeInMillis2 = (birth_ms - sunrise_ms) / 3600000 * 2.5
-    //   k = (long)(timeInMillis2) * 60
+    // Faithful to InputActivity.b() vinadi formula and class i sunrise algorithm.
+
+    // c(d) = d - (int)(d/360) * 360  [Java int truncates toward zero]
+    private static double icsC(double d) {
+        return d - ((int)(d / 360.0)) * 360.0;
+    }
+
+    private static double icsSinDeg(double d) {
+        return Math.sin(d * 0.0174532925199433);
+    }
+
+    private static double icsCosDeg(double d) {
+        return Math.cos(d * 0.0174532925199433);
+    }
+
+    // Exact port of class i a(Date date, double latArcsec, double lonArcsec, double tzArcsec, int mode)
+    // lat/lon passed as arcseconds (degrees * 3600); tzHours in decimal hours.
+    // mode=1 sunrise, mode=2 sunset.
+    // Returns local solar time in hours [0, 24).
+    double icsSunriseLocalHours(int year, int month, int day,
+                                 double latArcsec, double lonArcsec,
+                                 double tzHours, int mode) {
+        // Java Calendar: month is 0-indexed; class i does i5 = month0 + 1
+        // Here month is already 1-indexed (January=1), so i5 = month.
+        int i5 = month;
+        int yr = year;
+        if (i5 <= 2) { i5 += 12; yr--; }
+
+        // d7: days from J2000.0, using local calendar date (treating local midnight as UTC)
+        // Java integer divisions truncate toward zero
+        double d7 = ((yr * 365) - 730548.5)
+                    + ((yr / 400) - (yr / 100))   // Java int/int = truncation
+                    + (yr / 4)
+                    + (int)((i5 + 1) * 30.6001)
+                    + day
+                    + 0.0;
+
+        double d8 = latArcsec / 3600.0;  // lat degrees
+        double d9 = lonArcsec / 3600.0;  // lon degrees
+
+        double sinVal = Math.sin(0.0);    // = 0; no atmospheric refraction
+        double sinLat = icsSinDeg(d8);
+        double cosLat = icsCosDeg(d8);
+
+        double d4, d5;
+        if (mode == 1) {
+            d4 = sinLat;
+            d5 = 1.0;
+        } else {
+            d4 = sinLat;
+            d5 = -1.0;
+        }
+
+        double d6  = 180.0;   // prevUT (initial, triggers first iteration)
+        double d10 = 0.0;     // curUT (UTnew)
+
+        while (Math.abs(d6 - d10) > 0.1) {
+            double d11 = d7 + (d10 / 360.0);
+            double d13 = d11 / 36525.0;                              // T
+
+            double L   = icsC((36000.77 * d13) + 280.46);           // mean lon
+            double d14 = (35999.05 * d13) + 357.528;                // mean anomaly G
+            double d15 = d14 * 2.0;
+            double a3  = L + (icsSinDeg(d14) * 1.915) + (icsSinDeg(d15) * 0.02); // lambda
+
+            // Equation of time component E
+            double a4 = (((icsSinDeg(d14) * (-1.915))
+                         - (icsSinDeg(d15) * 0.02))
+                         + (icsSinDeg(a3 * 2.0) * 2.466))
+                        - (icsSinDeg(4.0 * a3) * 0.053);
+
+            double d16 = 23.4393 - (0.13 * d13);                    // obliquity
+            double d17 = (d10 - 180.0) + a4;                        // GHA
+
+            // Solar declination
+            double a5    = icsSinDeg(d16) * icsSinDeg(a3);
+            double delta = Math.atan(a5 / Math.sqrt((-a5) * a5 + 1.0)) * 57.2957795130823;
+
+            // Hour angle cosine
+            double a6 = (sinVal - (icsSinDeg(delta) * d4)) / (icsCosDeg(delta) * cosLat);
+
+            // Act = hour angle in degrees
+            double d20 = -a6;
+            double act = (Math.atan(d20 / Math.sqrt((d20 * a6) + 1.0))
+                          + (Math.atan(1.0) * 2.0)) * 57.2957795130823;
+            if (a6 > 1.0)  act = 0.0;
+            if (a6 < -1.0) act = 180.0;
+
+            d6  = d10;                                               // prevUT
+            d10 = icsC(d6 - ((d17 + d9) + (d5 * act)));            // UTnew
+        }
+
+        // Convert UT degrees to local hours
+        double d21 = (d10 / 15.0) + tzHours;
+        if (d21 < 0.0)   d21 += 24.0;
+        if (d21 >= 24.0) d21 -= 24.0;
+        return d21;
+    }
 
     long[] computeVinadiAndVakyaDate(int year, int month, int day,
                                       int hour, int minute,
                                       double lat, double lon, double tzHours) {
-        // Convert local time to UTC
-        double localMinutes = hour * 60.0 + minute;
-        double utcMinutes = localMinutes - tzHours * 60.0;
+        // Work entirely in LOCAL time, matching ICS behavior.
+        double birthLocalHours = hour + minute / 60.0;
 
-        // UTC date/time
-        int utcYear = year, utcMonth = month, utcDay = day;
-        double utcHour = utcMinutes / 60.0;
-        if (utcHour < 0) { utcHour += 24; utcDay--; if (utcDay < 1) { utcMonth--; if (utcMonth < 1) {utcMonth=12; utcYear--;} utcDay = daysInMonth(utcYear, utcMonth); } }
-        if (utcHour >= 24) { utcHour -= 24; utcDay++; if (utcDay > daysInMonth(utcYear, utcMonth)) { utcMonth++; utcDay=1; if (utcMonth>12){utcMonth=1;utcYear++;} } }
+        // ICS passes lat/lon in arcseconds to class i
+        double latArcsec = lat * 3600.0;
+        double lonArcsec = lon * 3600.0;
 
-        // Approximate sunrise using standard formula
-        // Julian Day Number for UTC date
-        double jd = julianDayNumber(utcYear, utcMonth, utcDay) + utcHour / 24.0 - 0.5;
+        double sunriseLocal = icsSunriseLocalHours(year, month, day,
+                                                    latArcsec, lonArcsec, tzHours, 1);
 
-        double sunriseUTC = approximateSunrise(jd, lat, lon);  // hours UTC
+        long vinadi;
+        int srYear = year, srMonth = month, srDay = day;
 
-        // elapsed since previous sunrise
-        double birthUTC = utcHour;
-        double elapsedHours = birthUTC - sunriseUTC;
-        if (elapsedHours < 0) elapsedHours += 24.0;  // before today's sunrise → yesterday's
+        if (birthLocalHours < sunriseLocal) {
+            // Pre-sunrise: Tamil day = previous calendar day
+            // ICS: timeInMillis2 = 60 - (sunrise_ms - birth_ms)/3600000 * 2.5
+            double diffHours = sunriseLocal - birthLocalHours;
+            double nazhigai  = 60.0 - diffHours * 2.5;
+            vinadi = (long)(nazhigai) * 60;
+            // Decrement date
+            srDay--;
+            if (srDay < 1) {
+                srMonth--;
+                if (srMonth < 1) { srMonth = 12; srYear--; }
+                srDay = daysInMonth(srYear, srMonth);
+            }
+        } else {
+            // Post-sunrise: Tamil day = birth's calendar date
+            // ICS: timeInMillis2 = (birth_ms - sunrise_ms)/3600000 * 2.5
+            double diffHours = birthLocalHours - sunriseLocal;
+            double nazhigai  = diffHours * 2.5;
+            vinadi = (long)(nazhigai) * 60;
+        }
 
-        double nazhigai = elapsedHours * 2.5;
-        long vinadi = (long)(nazhigai) * 60;
         if (vinadi < 0) vinadi = 0;
         if (vinadi > 3599) vinadi = 3599;
 
-        // Local sunrise date
-        double sunriseLocal = sunriseUTC + tzHours;
-        // Sunrise is on same local day as utcDay (approximately)
-        int srYear = utcYear, srMonth = utcMonth, srDay = utcDay;
-        if (sunriseLocal >= 24) { srDay++; if (srDay > daysInMonth(srYear, srMonth)) { srMonth++; srDay=1; if(srMonth>12){srMonth=1;srYear++;} } }
-
-        // If birth is before sunrise, use previous day as Tamil date
-        if (elapsedHours > 12 && birthUTC < sunriseUTC) {
-            // Actually before sunrise
-            srDay--; if (srDay < 1) { srMonth--; if (srMonth<1){srMonth=12;srYear--;} srDay=daysInMonth(srYear,srMonth); }
-        }
-
-        // Pack result: [vinadi, srYear, srMonth, srDay]
         return new long[]{vinadi, srYear, srMonth, srDay};
-    }
-
-    // Approximate sunrise (UTC hours) using Jean Meeus algorithm
-    private double approximateSunrise(double jd, double lat, double lon) {
-        double n = jd - 2451545.0;
-        double L = (280.46 + 0.9856474 * n) % 360.0;
-        double g = Math.toRadians((357.528 + 0.9856003 * n) % 360.0);
-        double lambda = Math.toRadians(L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g));
-        double sinDec = Math.sin(Math.toRadians(23.439)) * Math.sin(lambda);
-        double dec = Math.asin(sinDec);
-        double latRad = Math.toRadians(lat);
-        double cosH = (Math.sin(Math.toRadians(-0.8333)) - Math.sin(latRad) * sinDec)
-                    / (Math.cos(latRad) * Math.cos(dec));
-        if (Math.abs(cosH) > 1.0) cosH = Math.signum(cosH);
-        double H = Math.toDegrees(Math.acos(cosH));
-        // Sunrise hour angle → time
-        double noonUTC = 12.0 - lon / 15.0;
-        return noonUTC - H / 15.0;
     }
 
     private int daysInMonth(int y, int m) {
