@@ -105,3 +105,6 @@ NKV_Palan_Logic_Summary.docx
 # Environment files
 *.env
 *.env.*
+java_harness/out/
+java_harness/TestDebug*.java
+java_harness/TestMonthStarts.java
