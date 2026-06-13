@@ -849,11 +849,9 @@ public class VakkiamEngine {
             int utcY = year, utcM = month, utcD = day;
             while (utcH < 0)  { utcH += 24; utcD--; if (utcD < 1) { utcM--; if (utcM<1){utcM=12;utcY--;} utcD=daysInMonth(utcY,utcM); } }
             while (utcH >= 24) { utcH -= 24; utcD++; if (utcD > daysInMonth(utcY,utcM)) { utcM++; utcD=1; if(utcM>12){utcM=1;utcY++;} } }
-            // julianDayNumber() returns a value 1 too large (offset by +1 from true JDN).
-            // The correct JD at (utcY,utcM,utcD) noon is julianDayNumber()-1.
-            // So at arbitrary utcH hours: JD = (julianDayNumber()-1) + (utcH-12)/24
-            //                               = julianDayNumber() - 1 + (utcH-12)/24
-            double jdUTC = julianDayNumber(utcY, utcM, utcD) - 1.0 + (utcH - 12.0) / 24.0;
+            // julianDayNumber() returns the Julian Day Number (JDN) which corresponds to noon UTC.
+            // So JD at arbitrary utcH hours = JDN + (utcH - 12.0) / 24.0
+            double jdUTC = julianDayNumber(utcY, utcM, utcD) + (utcH - 12.0) / 24.0;
             double approxMoon = approximateMoonSidereal(jdUTC);
 
             // Pick delta=0 or delta=1 based on which table interpolation is closest
@@ -864,7 +862,10 @@ public class VakkiamEngine {
                 long todayCand = moonArcSecFromJ7(j7cand, tMonth, tDay);
                 long tomCand   = moonArcSecFromJ7(j7cand, t2Month, t2Day);
                 double[] interp = ljInterpolate(todayCand, tomCand, vinadi);
-                double diff = Math.abs((interp[0] - approxMoon + 180.0) % 360.0 - 180.0);
+                // Use floorMod for true modulo (Python-compatible), not Java '%' remainder
+                double raw = interp[0] - approxMoon + 180.0;
+                double modded = raw - 360.0 * Math.floor(raw / 360.0);  // true modulo
+                double diff = Math.abs(modded - 180.0);
                 if (diff < bestDiff) { bestDiff = diff; j7best = j7cand; }
             }
             long moonToday    = moonArcSecFromJ7(j7best, tMonth,  tDay);
