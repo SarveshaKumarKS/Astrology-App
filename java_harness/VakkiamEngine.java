@@ -180,8 +180,8 @@ public class VakkiamEngine {
     };
 
     // ── Table storage ───────────────────────────────────────────────────────
-    // Map: filename -> (rowNum -> int[])
-    private Map<String, Map<Integer, int[]>> tables = new HashMap<>();
+    // Map: filename -> (rowNum -> double[])  preserves fractional bija columns
+    private Map<String, Map<Integer, double[]>> tables = new HashMap<>();
 
     // Cache: year -> month_starts (14 Calendar objects: [0]=TNY, [1..12])
     private Map<Integer, Calendar[]> monthStartsCache = new HashMap<>();
@@ -209,8 +209,8 @@ public class VakkiamEngine {
         }
     }
 
-    private Map<Integer, int[]> parseFile(File f) throws IOException {
-        Map<Integer, int[]> result = new LinkedHashMap<>();
+    private Map<Integer, double[]> parseFile(File f) throws IOException {
+        Map<Integer, double[]> result = new LinkedHashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -221,18 +221,13 @@ public class VakkiamEngine {
                 String val = line.substring(eq + 1);
                 int rowNum = Integer.parseInt(key.substring(1));
                 String[] parts = val.split(",");
-                int[] parsed = new int[parts.length];
+                double[] parsed = new double[parts.length];
                 for (int i = 0; i < parts.length; i++) {
                     String p = parts[i].trim().replaceAll("[^0-9.\\-]", "");
                     if (p.isEmpty() || p.equals("-")) { parsed[i] = 0; continue; }
                     try {
-                        // Handle float values like "1.5" by truncating
-                        if (p.contains(".")) {
-                            parsed[i] = (int) Double.parseDouble(p);
-                        } else {
-                            parsed[i] = Integer.parseInt(p);
-                        }
-                    } catch (NumberFormatException e) {
+                        parsed[i] = Double.parseDouble(p);
+                    } catch (NumberFormatException ex) {
                         parsed[i] = 0;
                     }
                 }
@@ -242,8 +237,8 @@ public class VakkiamEngine {
         return result;
     }
 
-    private int[] getRow(String fname, int seq) {
-        Map<Integer, int[]> tbl = tables.get(fname);
+    double[] getRow(String fname, int seq) {
+        Map<Integer, double[]> tbl = tables.get(fname);
         if (tbl == null) return null;
         return tbl.get(seq);
     }
@@ -684,12 +679,12 @@ public class VakkiamEngine {
         if (j16 > 248) { j16 -= 248; j13 += 99846; }
         if (j16 == 0) j16 = 1;
 
-        int[] vakRow = getRow("sre.txt", (int) j16);
+        double[] vakRow = getRow("sre.txt", (int) j16);
         if (vakRow == null) return 0;
-        long mBArcMin = vakRow[1];
+        long mBArcMin = (long) vakRow[1];
 
-        int[] hsgRow = getRow("hsg.txt", dayInMonth);
-        long monthCorr = (hsgRow != null && hsgRow.length > month - 1) ? hsgRow[month - 1] : 0;
+        double[] hsgRow = getRow("hsg.txt", dayInMonth);
+        long monthCorr = (hsgRow != null && hsgRow.length > month - 1) ? (long) hsgRow[month - 1] : 0;
 
         return (j13 + mBArcMin * 60 + monthCorr) % FULL_CIRCLE;
     }
@@ -792,11 +787,11 @@ public class VakkiamEngine {
             long seq = cycleNum * desc.rows + rowIdx;
             if (desc.name.equals("Saturn") && seq > 580) seq -= 578;
             String fname = seq > desc.split ? desc.fileHigh : desc.fileLow;
-            int[] row = getRow(fname, (int) seq);
+            double[] row = getRow(fname, (int) seq);
             if (row == null) continue;
             boolean cond = (desc.name.equals("Saturn"))
-                ? (row[0] == expectedCycle && row[1] >= G)
-                : (row[0] == expectedCycle && row[1] >  G);
+                ? ((long)row[0] == expectedCycle && (long)row[1] >= G)
+                : ((long)row[0] == expectedCycle && (long)row[1] >  G);
             if (cond) {
                 seqFound = (int) seq;
                 break;
@@ -815,28 +810,29 @@ public class VakkiamEngine {
 
         String fnF = seqF > desc.split ? desc.fileHigh : desc.fileLow;
         String fnP = seqP > desc.split ? desc.fileHigh : desc.fileLow;
-        int[] row2 = getRow(fnF, (int) seqF);
-        int[] row1 = getRow(fnP, (int) seqP);
+        double[] row2 = getRow(fnF, (int) seqF);
+        double[] row1 = getRow(fnP, (int) seqP);
 
         if (row2 == null || row1 == null) return null;
 
-        long deg2 = row2[2], am2 = row2[3];
-        long deg1 = row1[2], am1 = row1[3];
-        long c2 = (row2.length > desc.col) ? row2[desc.col] : 0;
-        long c1 = (row1.length > desc.col) ? row1[desc.col] : 0;
-        long day2 = row2[1], day1 = row1[1];
+        long deg2 = (long) row2[2], am2 = (long) row2[3];
+        long deg1 = (long) row1[2], am1 = (long) row1[3];
+        // c1/c2: bija correction columns — preserve as double (can be -0.5 etc.)
+        double c2 = (row2.length > desc.col) ? row2[desc.col] : 0.0;
+        double c1 = (row1.length > desc.col) ? row1[desc.col] : 0.0;
+        long day2 = (long) row2[1], day1 = (long) row1[1];
 
         // Unwrap 0/360° seam
         if (deg1 < deg2 && (deg2 - deg1) > 300) deg1 += 360;
         if (deg1 > deg2 && (deg1 - deg2) > 300) deg2 += 360;
 
-        // Build bracket arcsec
+        // Build bracket arcsec (c1/c2 are double to preserve fractions)
         long bArcsec = accBija * 60;
-        long pos1 = c1 * accBija + bArcsec + (deg1 * 60 + am1) * 60;
-        long pos2 = bArcsec + accBija * c2 + (deg2 * 60 + am2) * 60;
+        double pos1 = c1 * accBija + bArcsec + (deg1 * 60 + am1) * 60;
+        double pos2 = bArcsec + accBija * c2 + (deg2 * 60 + am2) * 60;
         if (pos1 < 0 || pos2 < 0) { pos1 += FULL_CIRCLE; pos2 += FULL_CIRCLE; }
 
-        long diff;
+        double diff;
         boolean wrapped;
         if (Math.abs(Math.abs(pos2) - Math.abs(pos1)) <= 1080000) {
             diff    = Math.abs(pos2 - pos1);
@@ -857,7 +853,7 @@ public class VakkiamEngine {
         if (initGha >= 30) doff++;
 
         long fracNum = ((doff * 60 + ghaOff) * 60) + vinOff;
-        double interp = ((double) diff / (daySpan * 60L * 60L)) * fracNum;
+        double interp = (diff / (daySpan * 60L * 60L)) * fracNum;
 
         if (wrapped) pos1 += FULL_CIRCLE;
         double result = (pos1 > pos2) ? (pos1 - interp) : (pos1 + interp);
