@@ -907,10 +907,14 @@ public class VakkiamEngine {
         result[0] = sunR[0] % 360.0;
 
         // ── Moon ─────────────────────────────────────────────────────────────
-        long j7std = C + (D * 60 + E >= 1845 ? 1 : 0);
+        // Today's j7 uses this Tamil year's KY day-count C; tomorrow's must use
+        // tomorrow's year (CT). They differ only when tomorrow crosses a Tamil-
+        // year boundary (last day of year → New Year) — matching k.java f(date+1).
+        long j7std    = C  + (D  * 60 + E  >= 1845 ? 1 : 0);
+        long j7tomStd = CT + (DT * 60 + ET >= 1845 ? 1 : 0);
 
         // Compute approximate Moon sidereal longitude (Meeus simplified formula)
-        // to disambiguate between j7std (delta=0) and j7std+1 (delta=1).
+        // to disambiguate the lunar-cycle ambiguity.
         // Convert birth UTC to Julian Day Number for the formula.
         {
             // UTC time: birth local time minus tzHours offset
@@ -925,22 +929,21 @@ public class VakkiamEngine {
             double jdUTC = julianDayNumber(utcY, utcM, utcD) + (utcH - 12.0) / 24.0;
             double approxMoon = approximateMoonSidereal(jdUTC);
 
-            // Pick delta=0 or delta=1 based on which table interpolation is closest
-            long j7best = j7std;
+            // Pick the lunar cycle delta whose interpolation is closest to ephem
+            long j7best = j7std, j7tomBest = j7tomStd;
             double bestDiff = Double.MAX_VALUE;
-            for (int delta = -1; delta <= 2; delta++) {
-                long j7cand = j7std + delta;
-                long todayCand = moonArcSecFromJ7(j7cand, tMonth, tDay);
-                long tomCand   = moonArcSecFromJ7(j7cand, t2Month, t2Day);
+            for (int delta = -1; delta <= 3; delta++) {
+                long todayCand = moonArcSecFromJ7(j7std + delta,    tMonth,  tDay);
+                long tomCand   = moonArcSecFromJ7(j7tomStd + delta, t2Month, t2Day);
                 double[] interp = ljInterpolate(todayCand, tomCand, vinadi);
                 // Use floorMod for true modulo (Python-compatible), not Java '%' remainder
                 double raw = interp[0] - approxMoon + 180.0;
                 double modded = raw - 360.0 * Math.floor(raw / 360.0);  // true modulo
                 double diff = Math.abs(modded - 180.0);
-                if (diff < bestDiff) { bestDiff = diff; j7best = j7cand; }
+                if (diff < bestDiff) { bestDiff = diff; j7best = j7std + delta; j7tomBest = j7tomStd + delta; }
             }
-            long moonToday    = moonArcSecFromJ7(j7best, tMonth,  tDay);
-            long moonTomorrow = moonArcSecFromJ7(j7best, t2Month, t2Day);
+            long moonToday    = moonArcSecFromJ7(j7best,    tMonth,  tDay);
+            long moonTomorrow = moonArcSecFromJ7(j7tomBest, t2Month, t2Day);
             double[] moonR    = ljInterpolate(moonToday, moonTomorrow, vinadi);
             result[1] = moonR[0] % 360.0;
         }

@@ -898,17 +898,21 @@ class VakyaTableEngine:
 
         # ── Moon ──────────────────────────────────────────────────────────────
         ref_moon = self._astronomical_moon_sidereal(dt_utc)
-        # j7_std: D/E condition applied exactly once (k.java f(Date) line 1563)
-        j7_std = C + (1 if D * 60 + E >= 1845 else 0)
+        # j7_std: D/E condition applied exactly once (k.java f(Date) line 1563).
+        # Today's j7 uses this Tamil year's KY day-count C; tomorrow's must use
+        # *tomorrow's* year (C_tom). They differ only when tomorrow crosses a
+        # Tamil-year boundary (last day of year → New Year) — matching k.java
+        # which recomputes the KY arithmetic in f(date+1).
+        j7_std     = C     + (1 if D     * 60 + E     >= 1845 else 0)
+        j7_tom_std = C_tom + (1 if D_tom * 60 + E_tom >= 1845 else 0)
 
         if ref_moon is None:
             chosen_delta = 0
         else:
             best = None
             for delta in range(-1, 4):
-                j7_cand = j7_std + delta
-                today_cand = self._moon_arcsec_from_j7(j7_cand, tamil_month, day_in_month)
-                tom_cand   = self._moon_arcsec_from_j7(j7_cand, t_month, t_day)
+                today_cand = self._moon_arcsec_from_j7(j7_std + delta,     tamil_month, day_in_month)
+                tom_cand   = self._moon_arcsec_from_j7(j7_tom_std + delta, t_month,     t_day)
                 # Compare the interpolated (intra-day) Moon, not the raw table value
                 interp, _  = self._lj_interpolate(today_cand, tom_cand, vinadi)
                 diff = abs((interp - ref_moon + 180.0) % 360.0 - 180.0)
@@ -916,9 +920,8 @@ class VakyaTableEngine:
                     best = (diff, delta)
             chosen_delta = best[1]
 
-        j7_chosen     = j7_std + chosen_delta
-        moon_today    = self._moon_arcsec_from_j7(j7_chosen, tamil_month, day_in_month)
-        moon_tomorrow = self._moon_arcsec_from_j7(j7_chosen, t_month, t_day)
+        moon_today    = self._moon_arcsec_from_j7(j7_std + chosen_delta,     tamil_month, day_in_month)
+        moon_tomorrow = self._moon_arcsec_from_j7(j7_tom_std + chosen_delta, t_month,     t_day)
         moon_lon, _   = self._lj_interpolate(moon_today, moon_tomorrow, vinadi)
         result['Moon'] = {'longitude': moon_lon % 360.0, 'retrograde': False}
 
