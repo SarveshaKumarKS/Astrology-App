@@ -1,0 +1,42 @@
+==============================================================================
+PYTHON VakyaTableEngine vs STORED ICS REFERENCE — 729 cases
+==============================================================================
+
+Planet         N  Nak Match     Nak%  Pada Match    Pada%  PadaFail
+----------------------------------------------------------------------
+Sun          723        723  100.00%         722   99.86%         1
+Moon         709        709  100.00%         705   99.44%         4
+Mars         707        707  100.00%         707  100.00%         0
+Mercury      692        692  100.00%         691   99.86%         1
+Jupiter      690        690  100.00%         690  100.00%         0
+Venus        711        711  100.00%         710   99.86%         1
+Saturn       711        711  100.00%         711  100.00%         0
+Rahu         705        705  100.00%         705  100.00%         0
+Ketu         711        711  100.00%         711  100.00%         0
+----------------------------------------------------------------------
+TOTAL       6359       6359  100.00%        6352   99.89%         7
+
+Overall Nakshatra match: 6359/6359 = 100.00%
+Overall Pada match:      6352/6359 = 99.89%
+
+── Pada Mismatch Cases: 6 records ──
+
+[idx 21] 6/10/2024 10:38AM
+   Moon      Py=206.9084° (Visakam p3)  vs  ICS=(Visakam p2)
+
+[idx 74] 6/4/2019 1:38AM
+   Moon      Py=356.7092° (Revathi p4)  vs  ICS=(Revathi p3)
+
+[idx 97] 6/4/2017 1:38AM
+   Mercury   Py=  0.5916° (Aswini p1)  vs  ICS=(Aswini p4)
+
+[idx 472] 6/8/1986 1:38AM
+   Moon      Py=109.3029° (Ayilyam p1)  vs  ICS=(Ayilyam p3)
+   Venus     Py=153.1436° (Uthiram p2)  vs  ICS=(Uthiram p3)
+
+[idx 537] 6/4/1980 1:38AM
+   Moon      Py=231.9903° (Kettai p2)  vs  ICS=(Kettai p4)
+
+[idx 624] 6/8/1973 4:24PM
+   Sun       Py=110.0018° (Ayilyam p2)  vs  ICS=(Ayilyam p1)
+
