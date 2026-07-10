@@ -926,9 +926,27 @@ class VakyaTableEngine:
         result['Moon'] = {'longitude': moon_lon % 360.0, 'retrograde': False}
 
         # ── Table planets (Mars, Jupiter, Venus, Saturn, Mercury) ─────────────
+        # Sukran (Venus) year-boundary read: on the LAST day of the Tamil year
+        # the ICS Vakkiyam almanac carries Sukran onto the New-Year (Chithirai 1)
+        # day-values — one vakya day ahead of the other grahas. Precompute the
+        # day-after-tomorrow (Chithirai 2) Tamil date so Venus can interpolate
+        # Chithirai 1 → Chithirai 2 instead of Panguni-30 → Chithirai 1.
+        if gy_tom != gy:
+            dayafter_date = tomorrow_date + timedelta(days=1)
+            gy_da, ta_month, ta_day = self._date_to_tamil_month_day(dayafter_date)
+            if gy_da != gy_tom:
+                C_da, D_da, E_da, F_da = self._ky_year_arithmetic(gy_da)
+            else:
+                C_da, D_da, E_da, F_da = C_tom, D_tom, E_tom, F_tom
+
         for pname in ('Mars', 'Jupiter', 'Venus', 'Saturn', 'Mercury'):
-            today    = self._planet_raw_arcsec(pname, C,     D,     E,     F,     tamil_month, day_in_month)
-            tomorrow = self._planet_raw_arcsec(pname, C_tom, D_tom, E_tom, F_tom, t_month,     t_day)
+            if pname == 'Venus' and gy_tom != gy:
+                # Sukran alone advances one vakya day at the Tamil-year rollover.
+                today    = self._planet_raw_arcsec(pname, C_tom, D_tom, E_tom, F_tom, t_month,  t_day)
+                tomorrow = self._planet_raw_arcsec(pname, C_da,  D_da,  E_da,  F_da,  ta_month, ta_day)
+            else:
+                today    = self._planet_raw_arcsec(pname, C,     D,     E,     F,     tamil_month, day_in_month)
+                tomorrow = self._planet_raw_arcsec(pname, C_tom, D_tom, E_tom, F_tom, t_month,     t_day)
             if today is None:
                 result[pname] = {'longitude': 0.0, 'retrograde': False}
                 continue
