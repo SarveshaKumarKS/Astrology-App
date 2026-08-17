@@ -23,10 +23,12 @@ from astrology.karu_udayam import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection (optional — persistence is best-effort for the demo build).
+# Falls back to sensible defaults and a short server-selection timeout so the
+# core horoscope/PDF endpoints work even when no MongoDB is running.
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=2000)
+db = client[os.environ.get('DB_NAME', 'tamil_astrology')]
 
 # Create the main app without a prefix
 app = FastAPI(title="Tamil Astrology API", version="1.0.0")
@@ -199,8 +201,11 @@ async def generate_horoscope(request: HoroscopeRequest):
                     str(k): v for k, v in horoscope_dict['karu_udayam_rasi_chart']['houses_tamil'].items()
                 }
         
-        await db.horoscopes.insert_one(horoscope_dict)
-        
+        try:
+            await db.horoscopes.insert_one(horoscope_dict)
+        except Exception as db_err:
+            logging.warning(f"Skipping horoscope persistence (DB unavailable): {db_err}")
+
         # Return horoscope as JSON to properly serialize dates
         return horoscope.model_dump(mode='json')
         
@@ -406,8 +411,11 @@ async def check_compatibility(request: CompatibilityRequest):
         if 'female_details' in compatibility_dict and 'time_of_birth' in compatibility_dict['female_details']:
             compatibility_dict['female_details']['time_of_birth'] = str(compatibility_dict['female_details']['time_of_birth'])
         
-        await db.compatibility_reports.insert_one(compatibility_dict)
-        
+        try:
+            await db.compatibility_reports.insert_one(compatibility_dict)
+        except Exception as db_err:
+            logging.warning(f"Skipping compatibility persistence (DB unavailable): {db_err}")
+
         return compatibility
         
     except HTTPException:
@@ -429,8 +437,10 @@ async def create_profile(profile_data: UserProfile):
         if 'birth_details' in profile_dict and 'time_of_birth' in profile_dict['birth_details']:
             profile_dict['birth_details']['time_of_birth'] = str(profile_dict['birth_details']['time_of_birth'])
         
-        result = await db.user_profiles.insert_one(profile_dict)
-        profile_dict['_id'] = str(result.inserted_id)
+        try:
+            await db.user_profiles.insert_one(dict(profile_dict))
+        except Exception as db_err:
+            logging.warning(f"Profile not persisted (DB unavailable): {db_err}")
         return UserProfile(**profile_dict)
     except Exception as e:
         logging.error(f"Error creating profile: {str(e)}")
@@ -442,8 +452,8 @@ async def get_profiles():
         profiles = await db.user_profiles.find().to_list(1000)
         return [UserProfile(**profile) for profile in profiles]
     except Exception as e:
-        logging.error(f"Error fetching profiles: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching profiles: {str(e)}")
+        logging.warning(f"Returning empty profile list (DB unavailable): {str(e)}")
+        return []
 
 @api_router.get("/profiles/{profile_id}", response_model=UserProfile)
 async def get_profile(profile_id: str):
@@ -452,13 +462,24 @@ async def get_profile(profile_id: str):
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         return UserProfile(**profile)
+    except HTTPException:
+        raise
     except Exception as e:
-        logging.error(f"Error fetching profile: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching profile: {str(e)}")
+        logging.warning(f"Profile lookup failed (DB unavailable): {str(e)}")
+        raise HTTPException(status_code=404, detail="Profile not found")
 
 # Panchangam (Thirukkanitham only)
 @api_router.get("/panchangam/{date}")
 async def get_panchangam(date: date, language: str = "tamil"):
+    # NOTE: daily-panchangam (tithi/yoga/karana/muhurta) is not implemented in
+    # this build — ThirukkanithamCalculator has no get_daily_panchangam method.
+    # Return a clear 501 so the Panchangam screen degrades gracefully instead of
+    # surfacing a 500 stack trace during the demo.
+    if not hasattr(thirukkanitham_calc, "get_daily_panchangam"):
+        raise HTTPException(
+            status_code=501,
+            detail="Daily Panchangam is not available in this build.",
+        )
     try:
         panchangam = thirukkanitham_calc.get_daily_panchangam(date, language)
         return panchangam

@@ -77,6 +77,10 @@ interface HoroscopeData {
     date_of_birth: string;
     time_of_birth: string;
     place_of_birth: string;
+    latitude?: number;
+    longitude?: number;
+    timezone?: string;
+    time_correction?: number;
   };
   system: string;
   language: string;
@@ -325,7 +329,7 @@ export default function HoroscopeResultPage() {
           )}
           
           {/* பாவக மாறுதல் */}
-          {horoscopeData.bhava_maruthal_tamil && (
+          {horoscopeData.bhava_maruthal && (
             <Text style={styles.dasaDetailText}>
               {getText('பாவக மாறுதல்', 'Bhava Maruthal')} : {getText('சந்திரன்', 'Moon')}-{horoscopeData.bhava_maruthal['Moon'] || 'N/A'}, {getText('புதன்', 'Mercury')}-{horoscopeData.bhava_maruthal['Mercury'] || 'N/A'}
             </Text>
