@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet } from 'react-native';
+import { AuthProvider } from '../lib/auth';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -38,13 +39,15 @@ class ErrorBoundary extends React.Component<
 export default function RootLayout() {
   return (
     <ErrorBoundary>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#F8F9FA' },
-        }}
-      />
+      <AuthProvider>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#F8F9FA' },
+          }}
+        />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

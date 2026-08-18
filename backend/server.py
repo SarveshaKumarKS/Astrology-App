@@ -9,6 +9,12 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, date, time
+
+# Load environment BEFORE importing modules (e.g. auth) that read DB_NAME/MONGO_URL
+# at import time, so they bind to the correct database.
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
 from astrology.vakkiam_system import VakkiamCalculator
 from astrology.thirukkanitham_system import ThirukkanithamCalculator
 from astrology.models import BirthDetails, HoroscopeResult, CompatibilityResult
@@ -19,9 +25,8 @@ from astrology.karu_udayam import (
     resolve_karu_udayam_gregorian_date,
     strip_lagnam_from_chart,
 )
-
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+from auth import router as auth_router, get_current_user, ensure_indexes
+from fastapi import Depends
 
 # MongoDB connection (optional — persistence is best-effort for the demo build).
 # Falls back to sensible defaults and a short server-selection timeout so the
@@ -64,6 +69,7 @@ class UserProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     birth_details: BirthDetailsInput
+    user_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -427,38 +433,41 @@ async def check_compatibility(request: CompatibilityRequest):
 
 # User Profile Management
 @api_router.post("/profiles", response_model=UserProfile)
-async def create_profile(profile_data: UserProfile):
+async def create_profile(profile_data: UserProfile, current_user: dict = Depends(get_current_user)):
     try:
         profile_dict = profile_data.dict()
-        
+        # Always bind the profile to the authenticated user (ignore any client value).
+        profile_dict['user_id'] = current_user['user_id']
+
         # Convert date objects to strings for MongoDB compatibility
         if 'birth_details' in profile_dict and 'date_of_birth' in profile_dict['birth_details']:
             profile_dict['birth_details']['date_of_birth'] = str(profile_dict['birth_details']['date_of_birth'])
         if 'birth_details' in profile_dict and 'time_of_birth' in profile_dict['birth_details']:
             profile_dict['birth_details']['time_of_birth'] = str(profile_dict['birth_details']['time_of_birth'])
-        
-        try:
-            await db.user_profiles.insert_one(dict(profile_dict))
-        except Exception as db_err:
-            logging.warning(f"Profile not persisted (DB unavailable): {db_err}")
+
+        await db.user_profiles.insert_one(dict(profile_dict))
         return UserProfile(**profile_dict)
     except Exception as e:
         logging.error(f"Error creating profile: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error creating profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Could not save profile. Please try again.")
 
 @api_router.get("/profiles", response_model=List[UserProfile])
-async def get_profiles():
+async def get_profiles(current_user: dict = Depends(get_current_user)):
     try:
-        profiles = await db.user_profiles.find().to_list(1000)
+        profiles = await db.user_profiles.find(
+            {"user_id": current_user['user_id']}, {"_id": 0}
+        ).to_list(1000)
         return [UserProfile(**profile) for profile in profiles]
     except Exception as e:
         logging.warning(f"Returning empty profile list (DB unavailable): {str(e)}")
         return []
 
 @api_router.get("/profiles/{profile_id}", response_model=UserProfile)
-async def get_profile(profile_id: str):
+async def get_profile(profile_id: str, current_user: dict = Depends(get_current_user)):
     try:
-        profile = await db.user_profiles.find_one({"id": profile_id})
+        profile = await db.user_profiles.find_one(
+            {"id": profile_id, "user_id": current_user['user_id']}, {"_id": 0}
+        )
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         return UserProfile(**profile)
@@ -467,6 +476,21 @@ async def get_profile(profile_id: str):
     except Exception as e:
         logging.warning(f"Profile lookup failed (DB unavailable): {str(e)}")
         raise HTTPException(status_code=404, detail="Profile not found")
+
+@api_router.delete("/profiles/{profile_id}")
+async def delete_profile(profile_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        result = await db.user_profiles.delete_one(
+            {"id": profile_id, "user_id": current_user['user_id']}
+        )
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Could not delete profile. Please try again.")
 
 # Panchangam (Thirukkanitham only)
 @api_router.get("/panchangam/{date}")
@@ -488,6 +512,7 @@ async def get_panchangam(date: date, language: str = "tamil"):
         raise HTTPException(status_code=500, detail=f"Error getting panchangam: {str(e)}")
 
 # Include the router in the main app
+api_router.include_router(auth_router)
 app.include_router(api_router)
 
 app.add_middleware(
@@ -504,6 +529,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def startup_create_indexes():
+    await ensure_indexes()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

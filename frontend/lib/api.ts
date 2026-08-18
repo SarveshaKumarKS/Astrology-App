@@ -25,6 +25,18 @@ export function getBaseUrl(): string {
   return (url && url.trim().length > 0) ? url.trim().replace(/\/+$/, '') : 'http://localhost:8001';
 }
 
+// Module-level auth token holder. Set by the auth context on login/restore,
+// cleared on logout. Attached as a Bearer header to every request.
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
 type FetchApiOptions = RequestInit & {
   timeoutMs?: number;
   retryOnceOnNetworkError?: boolean;
@@ -43,6 +55,7 @@ async function fetchOnce(path: string, options: FetchApiOptions = {}): Promise<R
       ...init,
       signal: controller.signal,
       headers: {
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...(init.headers || {}),
       },
     });

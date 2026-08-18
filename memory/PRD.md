@@ -39,6 +39,21 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
 - GET/POST /api/profiles, GET /api/profiles/{id}, GET /api/panchangam/{date}
 
 ## Pending / Future
-- BAMINI-Tamil14.ttf font verification for PDF (pending user confirmation).
+- BAMINI font: RESOLVED — verified current PDF uses bundled `TSCu_SaiIndira.ttf`
+  (Unicode Tamil), renders crisply and consistently for all users, no Hindi/Devanagari.
 - Backend cleanup: check obsolete pdf_generator_v2/v3/kuyil.py after refactor.
-- Optional: add auth if profiles will hold real customer PII in production.
+
+## Auth / Login (added this session)
+- Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
+  (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).
+- MongoDB: `users` + `user_sessions` collections (7-day session_token, TTL index).
+- All /api/profiles endpoints now require auth and are scoped to the owner's user_id.
+- Added missing DELETE /api/profiles/{id} (owner-only) — fixes the broken delete button.
+- Frontend: `lib/auth.tsx` (AuthProvider/useAuth), `lib/api.ts` attaches Bearer token,
+  `_layout.tsx` wraps app, `profiles.tsx` shows Google login gate when signed out,
+  `horoscope-result.tsx` has a Save (bookmark) button that requires login.
+- Save Profile feature: NEW — previously the app could list/delete profiles but had no
+  way to create one (POST /api/profiles was never called). Now wired via the Save button.
+- Verified: backend auth CRUD + user isolation + 401s + logout (manual curl). Login gate UI
+  verified via screenshot. Google sign-in click-through requires a real Google account
+  (cannot be automated).

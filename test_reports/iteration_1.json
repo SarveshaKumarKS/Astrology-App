@@ -1,0 +1,46 @@
+{
+  "summary": "Backend: 13/13 pytest cases passed against the public URL — auth session/me/logout, all 4 profile endpoints return 401 without a Bearer token, seeded-session CRUD works, per-user isolation is enforced (owner sees profile, other user sees 0 and gets 404 on GET/DELETE), and open endpoints (/horoscope, /generate-pdf returning application/pdf, /compatibility) all return 200 without auth. Frontend: /profiles renders the login gate (lock icon + 'Sign in with Google' — Tamil default) without crashing; home screen loads; horoscope form is reachable without login; Horoscope Report screen shows the bookmark (Save) icon in the header. IMPORTANT: uncovered a real backend bug — DB_NAME split between auth.py (module-level DB uses fallback 'tamil_astrology' because it imports BEFORE server.py's load_dotenv) and server.py (uses 'astrology_db' from .env, post-load_dotenv). Auth writes sessions to tamil_astrology while profiles are written to astrology_db. It works today only because user_id is passed via Depends, but it will silently break if DB_NAME is ever changed via env, and it means user records live in a different DB than their profiles.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "auth.py (module init) vs server.py",
+        "issue": "load_dotenv ordering bug — auth.py is imported on server.py line 22 BEFORE load_dotenv(server.py line 26) runs, so auth's `_db = _client[os.environ.get('DB_NAME', 'tamil_astrology')]` binds to the 'tamil_astrology' fallback. Meanwhile server.py binds `db` to 'astrology_db' from backend/.env. Verified live: seeding {users,user_sessions} into `tamil_astrology` makes /api/auth/me return 200, while seeding into `astrology_db` returns 401. Result: auth users/sessions live in tamil_astrology, but /api/profiles writes user_profiles into astrology_db.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "StyleSheet shadow*", "issue": "Console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' — appears on profiles/home/horoscope-result headers using shadowColor/shadowOffset/shadowOpacity/shadowRadius. Consider migrating to boxShadow for RN 0.76+."},
+      {"component": "props.pointerEvents", "issue": "Console warning on horoscope form: 'props.pointerEvents is deprecated. Use style.pointerEvents'. Reference: /app/frontend/app/horoscope.tsx (any View passing pointerEvents as prop)."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auth_and_profiles.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix DB split: move `load_dotenv` to run BEFORE `from auth import ...` in server.py, OR read DB_NAME lazily inside auth.py request handlers (not at module import). Also consider setting DB_NAME in supervisor env so the fallback never kicks in. Then align backend/.env DB_NAME with what auth.py should use.",
+    "Optionally add a startup log line that prints the resolved DB_NAME per module so this class of bug is visible in logs.",
+    "Frontend: migrate `shadow*` StyleSheet props to `boxShadow`, and move `pointerEvents` from prop to style, to silence React Native web deprecation warnings."
+  ],
+  "critical_code_review_comments": [
+    "server.py orders `from auth import ...` (line 22) BEFORE `load_dotenv(...)` (line 26). Auth reads DB_NAME at module import time and therefore never sees the .env value. Always call load_dotenv() as the FIRST thing after standard imports (or use pydantic-settings).",
+    "auth.py holds a module-level MongoDB client + `_db` reference bound at import time — brittle to env changes and doubles the connection count when server.py also creates its own client for the same DB. Consider a single shared db module.",
+    "server.py assigns `horoscope_dict['_id'] = str(uuid.uuid4())` which overrides MongoDB's `_id`. Fine, but the returned model already carries `id`; storing a string in `_id` also breaks pymongo's expected ObjectId. It's cosmetic today because responses don't leak `_id`, but confusing.",
+    "server.py is 537 lines and doing a lot; splitting profile routes into a `profiles.py` router would improve maintainability (>500 line threshold nearly hit)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auth_and_profiles.py (new — regression suite)"
+  ],
+  "success_rate": {"backend": "100% (13/13)", "frontend": "100% of the flows in scope (profiles gate, home, horoscope form, horoscope-result with Save/bookmark header)"},
+  "seed_data_creation": "Test suite seeds users and user_sessions rows directly into `tamil_astrology` (that's what the running auth module actually uses — see critical bug above) and cleans them up after each test. Nothing left behind.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "If auth tests suddenly start returning 401 even with a valid seeded token, verify which DB the running backend's auth module is bound to — check `_db` in auth.py at process start; if server.py's load_dotenv still runs AFTER `from auth import ...`, auth is stuck on 'tamil_astrology'. Seed sessions into whichever DB auth.py actually uses. After the main agent fixes the load_dotenv ordering, flip DB_NAME_AUTH to match backend/.env's DB_NAME and re-run.",
+  "rca_of_issue": "Root cause of the DB split: Python evaluates `import auth` in server.py before `load_dotenv(ROOT_DIR / '.env')` runs. During `import auth`, auth.py evaluates `_db = _client[os.environ.get('DB_NAME', 'tamil_astrology')]` — DB_NAME is unset (not exported via supervisor), so it falls back to 'tamil_astrology'. Then server.py runs `load_dotenv` and its own `db = client[os.environ.get('DB_NAME', 'tamil_astrology')]` correctly resolves to 'astrology_db'. Reproduction: `python3 -c \"from pymongo import MongoClient; print(MongoClient().list_database_names())\"` shows BOTH `astrology_db` and `tamil_astrology`. Mitigation: (a) call `load_dotenv` in server.py BEFORE importing auth, OR (b) refactor auth.py to resolve DB lazily on first request, OR (c) hard-set DB_NAME in the supervisor `environment=` line."
+}

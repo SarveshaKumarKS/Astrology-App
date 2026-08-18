@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, fetchApi, isAbortError } from '../lib/api';
+import { useAuth } from '../lib/auth';
 
 interface UserProfile {
   id: string;
@@ -33,6 +34,7 @@ interface UserProfile {
 }
 
 export default function ProfilesPage() {
+  const { user, loading: authLoading, signingIn, login, logout } = useAuth();
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,10 +71,16 @@ export default function ProfilesPage() {
   };
 
   useEffect(() => {
-    loadProfiles();
-  }, []);
+    if (user) {
+      loadProfiles();
+    } else {
+      setProfiles([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const onRefresh = () => {
+    if (!user) return;
     setRefreshing(true);
     loadProfiles();
   };
@@ -234,7 +242,40 @@ export default function ProfilesPage() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {authLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+        </View>
+      ) : !user ? (
+        <View style={styles.loginGate}>
+          <Ionicons name="lock-closed-outline" size={64} color="#95A5A6" />
+          <Text style={styles.emptyTitle}>
+            {getText('உள்நுழையவும்', 'Sign In Required')}
+          </Text>
+          <Text style={styles.emptyDescription}>
+            {getText(
+              'உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.',
+              'Sign in with Google to securely view and manage your saved horoscopes.'
+            )}
+          </Text>
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={login}
+            disabled={signingIn}
+          >
+            {signingIn ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+                <Text style={styles.googleButtonText}>
+                  {getText('Google மூலம் உள்நுழைக', 'Sign in with Google')}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      ) : loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
           <Text style={styles.loadingText}>
@@ -248,6 +289,19 @@ export default function ProfilesPage() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
+          {/* Signed-in account row */}
+          <View style={styles.accountRow}>
+            <Ionicons name="person-circle-outline" size={22} color="#27AE60" />
+            <Text style={styles.accountEmail} numberOfLines={1}>
+              {user.email}
+            </Text>
+            <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>
+                {getText('வெளியேறு', 'Logout')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {profiles.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="person-add-outline" size={64} color="#95A5A6" />
@@ -351,6 +405,56 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loginGate: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4285F4',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 28,
+    marginTop: 8,
+    minWidth: 240,
+    minHeight: 48,
+  },
+  googleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  accountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#E8F5E9',
+  },
+  accountEmail: {
+    flex: 1,
+    fontSize: 14,
+    color: '#2C3E50',
+    marginLeft: 8,
+  },
+  logoutButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  logoutText: {
+    color: '#E74C3C',
+    fontSize: 14,
+    fontWeight: '600',
   },
   loadingText: {
     fontSize: 16,

@@ -16,7 +16,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import SouthIndianChart from '../components/SouthIndianChart';
-import { fetchApi, isAbortError } from '../lib/api';
+import { fetchApi, fetchJson, isAbortError, ApiError } from '../lib/api';
+import { useAuth } from '../lib/auth';
 
 interface PlanetaryPosition {
   planet: string;
@@ -109,8 +110,10 @@ interface HoroscopeData {
 }
 
 export default function HoroscopeResultPage() {
+  const { user, login } = useAuth();
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [horoscopeData, setHoroscopeData] = useState<HoroscopeData | null>(null);
   const params = useLocalSearchParams();
 
@@ -129,6 +132,60 @@ export default function HoroscopeResultPage() {
 
   const getText = (tamil: string, english: string) => {
     return language === 'tamil' ? tamil : english;
+  };
+
+  const saveProfile = async () => {
+    if (!horoscopeData) return;
+
+    if (!user) {
+      Alert.alert(
+        getText('உள்நுழையவும்', 'Sign In Required'),
+        getText(
+          'ஜாதகத்தை சேமிக்க Google மூலம் உள்நுழையவும்.',
+          'Sign in with Google to save this horoscope.'
+        ),
+        [
+          { text: getText('ரத்து செய்', 'Cancel'), style: 'cancel' },
+          { text: getText('உள்நுழைக', 'Sign In'), onPress: () => login() },
+        ]
+      );
+      return;
+    }
+
+    const bd = horoscopeData.birth_details;
+    setSaving(true);
+    try {
+      await fetchJson('/api/profiles', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: bd.name,
+          birth_details: {
+            name: bd.name,
+            date_of_birth: bd.date_of_birth,
+            time_of_birth: bd.time_of_birth,
+            place_of_birth: bd.place_of_birth,
+            latitude: bd.latitude ?? 0,
+            longitude: bd.longitude ?? 0,
+            timezone: bd.timezone ?? 'Asia/Kolkata',
+            time_correction: bd.time_correction ?? 0,
+          },
+        }),
+      });
+      Alert.alert(
+        getText('வெற்றி', 'Saved'),
+        getText('ஜாதகம் சேமிக்கப்பட்டது', 'Horoscope saved to your profiles')
+      );
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert(
+        getText('பிழை', 'Error'),
+        error instanceof ApiError
+          ? getText(error.detail || 'சேமிக்க முடியவில்லை', error.detail || 'Could not save')
+          : getText('சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.', 'Could not save. Please try again.')
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const extractErrorDetail = async (response: Response): Promise<string | undefined> => {
@@ -611,6 +668,18 @@ export default function HoroscopeResultPage() {
           </Text>
         </View>
         
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={saveProfile}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Ionicons name="bookmark-outline" size={22} color="#FFFFFF" />
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.languageToggle}
           onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
@@ -715,6 +784,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     minWidth: 44,
     minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveButton: {
+    minWidth: 44,
+    minHeight: 44,
+    marginRight: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
