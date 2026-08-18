@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
+import ScreenHeader from '../components/ScreenHeader';
+import { colors } from '../lib/theme';
 
 interface BirthDetails {
   name: string;
@@ -288,33 +290,22 @@ export default function CompatibilityPage() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C3E50" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {getText('திருமணப் பொருத்தம்', 'Marriage Compatibility')}
-          </Text>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.languageToggle}
-          onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
-        >
-          <Text style={styles.languageText}>
-            {language === 'tamil' ? 'த' : 'En'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title={getText('திருமணப் பொருத்தம்', 'Marriage Compatibility')}
+        onBack={() => router.back()}
+        right={
+          <TouchableOpacity
+            style={styles.langPill}
+            onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+          >
+            <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
+          </TouchableOpacity>
+        }
+      />
 
       <KeyboardAvoidingView 
         style={styles.keyboardView}
@@ -403,59 +394,32 @@ export default function CompatibilityPage() {
           onChange={handleTimeChange}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
   keyboardView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  backButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  languageToggle: {
-    backgroundColor: '#34495E',
+  langPill: {
+    backgroundColor: colors.brandSoft,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 999,
     minWidth: 44,
-    minHeight: 44,
+    minHeight: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  languageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  langPillText: {
+    color: colors.brandStrong,
+    fontSize: 13,
+    fontWeight: '700',
   },
   content: {
     flex: 1,

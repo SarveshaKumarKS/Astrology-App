@@ -25,8 +25,8 @@ from astrology.karu_udayam import (
     resolve_karu_udayam_gregorian_date,
     strip_lagnam_from_chart,
 )
-from auth import router as auth_router, get_current_user, ensure_indexes
-from fastapi import Depends
+from auth import router as auth_router, get_current_user, ensure_indexes, _resolve_user
+from fastapi import Depends, Request
 
 # MongoDB connection (optional — persistence is best-effort for the demo build).
 # Falls back to sensible defaults and a short server-selection timeout so the
@@ -68,10 +68,32 @@ class CompatibilityRequest(BaseModel):
 class UserProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    label: Optional[str] = None
     birth_details: BirthDetailsInput
     user_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ProfileRenameRequest(BaseModel):
+    label: str
+
+class FeedbackRequest(BaseModel):
+    message: str
+    screen: Optional[str] = None
+    platform: Optional[str] = None
+
+class CorrectionItem(BaseModel):
+    screen_id: str
+    field_name: str
+    original_value: str = ""
+    corrected_value: str = ""
+
+class CorrectionsPayload(BaseModel):
+    corrections: List[CorrectionItem]
+    app_version: Optional[str] = None
+    device_model: Optional[str] = None
+    platform: Optional[str] = None
+    note: Optional[str] = None
 
 # Initialize calculators
 vakkiam_calc = VakkiamCalculator()
@@ -491,6 +513,96 @@ async def delete_profile(profile_id: str, current_user: dict = Depends(get_curre
     except Exception as e:
         logging.error(f"Error deleting profile: {str(e)}")
         raise HTTPException(status_code=500, detail="Could not delete profile. Please try again.")
+
+@api_router.put("/profiles/{profile_id}")
+async def rename_profile(profile_id: str, payload: ProfileRenameRequest, current_user: dict = Depends(get_current_user)):
+    label = payload.label.strip()
+    if not label:
+        raise HTTPException(status_code=400, detail="Label cannot be empty")
+    try:
+        result = await db.user_profiles.update_one(
+            {"id": profile_id, "user_id": current_user['user_id']},
+            {"$set": {"label": label, "updated_at": datetime.utcnow()}},
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        return {"success": True, "label": label}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error renaming profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Could not rename profile. Please try again.")
+
+# Feedback / bug reports from customers during testing.
+@api_router.post("/feedback")
+async def submit_feedback(payload: FeedbackRequest, request: Request):
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Feedback message cannot be empty")
+
+    # Attach the user's email if they happen to be logged in (optional).
+    email = None
+    try:
+        user = await _resolve_user(request)
+        if user:
+            email = user.get("email")
+    except Exception:
+        pass
+
+    doc = {
+        "id": str(uuid.uuid4()),
+        "message": message[:2000],
+        "screen": (payload.screen or "")[:100],
+        "platform": (payload.platform or "")[:40],
+        "email": email,
+        "created_at": datetime.utcnow(),
+        "resolved": False,
+    }
+    try:
+        await db.feedback.insert_one(dict(doc))
+    except Exception as e:
+        logging.warning(f"Feedback not persisted (DB unavailable): {e}")
+    return {"success": True}
+
+# Correction logs: customers fix wrong on-screen values in "Correction Mode".
+@api_router.post("/corrections")
+async def submit_corrections(payload: CorrectionsPayload, request: Request):
+    items = [c for c in payload.corrections if c.corrected_value.strip()]
+    if not items:
+        raise HTTPException(status_code=400, detail="No corrections provided")
+
+    email = None
+    try:
+        user = await _resolve_user(request)
+        if user:
+            email = user.get("email")
+    except Exception:
+        pass
+
+    now = datetime.utcnow()
+    batch_id = str(uuid.uuid4())
+    docs = []
+    for c in items:
+        docs.append({
+            "id": str(uuid.uuid4()),
+            "batch_id": batch_id,
+            "screen_id": c.screen_id[:100],
+            "field_name": c.field_name[:100],
+            "original_value": (c.original_value or "")[:1000],
+            "corrected_value": (c.corrected_value or "")[:1000],
+            "app_version": (payload.app_version or "")[:40],
+            "device_model": (payload.device_model or "")[:80],
+            "platform": (payload.platform or "")[:40],
+            "note": (payload.note or "")[:1000],
+            "email": email,
+            "status": "open",
+            "created_at": now,
+        })
+    try:
+        await db.corrections.insert_many(docs)
+    except Exception as e:
+        logging.warning(f"Corrections not persisted (DB unavailable): {e}")
+    return {"success": True, "count": len(docs), "batch_id": batch_id}
 
 # Panchangam (Thirukkanitham only)
 @api_router.get("/panchangam/{date}")

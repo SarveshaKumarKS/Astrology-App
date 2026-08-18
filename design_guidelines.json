@@ -1,0 +1,105 @@
+{
+  "app_name": "Tamil Vedic Astrology",
+  "personality": "iOS-Native Clean with warm traditional-premium colors",
+  "personality_one_liner": "A light, airy, Apple-minimalist aesthetic infused with warm saffron and soft gold, elevating traditional Tamil astrology into a premium, trustworthy digital experience.",
+  "color": {
+    "surface": "#FCFAF8",
+    "onSurface": "#1A1A1A",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#1A1A1A",
+    "surfaceTertiary": "#F4EFE6",
+    "onSurfaceTertiary": "#4A4A4A",
+    "surfaceInverse": "#2B1D14",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#D97706",
+    "brandPrimary": "#C26500",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#FCE8D3",
+    "onBrandSecondary": "#9A4F00",
+    "brandTertiary": "#EEDAC2",
+    "onBrandTertiary": "#633200",
+    "success": "#2E7D32",
+    "onSuccess": "#FFFFFF",
+    "warning": "#ED6C02",
+    "onWarning": "#FFFFFF",
+    "error": "#D32F2F",
+    "onError": "#FFFFFF",
+    "info": "#0288D1",
+    "onInfo": "#FFFFFF",
+    "border": "#E8E2D9",
+    "borderStrong": "#D6C9B3",
+    "divider": "#E8E2D9"
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24,
+      "3xl": 32
+    }
+  },
+  "spacing": {
+    "rule": "Generous padding everywhere to maintain an airy Apple-like feel. Avoid dense stacking. Use safe area at the top and bottom.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 16,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "stack_only",
+  "icon_set": "Ionicons",
+  "glassmorphism": {
+    "enabled": "true",
+    "do's": [
+      "Use expo-blur (or fallback to surfaceSecondary) for the top sticky header as user scrolls down.",
+      "Use glass for floating action bars at the bottom of the Horoscope Result screen."
+    ],
+    "dont's": [
+      "Do not use glass for simple cards or form inputs.",
+      "Do not use glass on Android if performance drops (use solid surfaceSecondary).",
+      "CRITICAL: DO NOT use complete transparent background in header, overlays, any surface that has content under it."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-blur",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "GENERAL UI UX DESIGN GUIDELINES": [
+    "All interactive and key informational elements MUST include a `data-testid` attribute to facilitate robust automated testing.",
+    "Ensure minimum touch target size of 44x44pt for all buttons and interactive elements.",
+    "Apply optical alignment over strict geometric alignment for icons placed next to text.",
+    "Never use blue, purple, or indigo. Stick strictly to the warm Alabaster, Saffron, and Espresso palette provided.",
+    "Do not use transparent backgrounds for overlapping content. Always provide a solid or blurred backdrop."
+  ],
+  "instructions_to_main_agent": [
+    "CRITICAL WORKFLOW: Skip the testing agent after your changes are complete and directly push the changes to the repo.",
+    "1. 2x2 Basic Info Cards: Fix the layout using a flexible wrapping row (`flexWrap: 'wrap'`). Each card should be approximately 48% width with a gap in between. Ensure icons are properly sized (e.g., 20-24pt) and text truncates properly (`numberOfLines={1}`) to avoid horizontal cutoff.",
+    "2. Planetary Table Overflow: The planetary position table overflows on phone widths. Wrap the table component in a horizontal ScrollView (`<ScrollView horizontal showsHorizontalScrollIndicator={false}>`) so users can swipe to view hidden columns, or switch to a stacked card layout for mobile screens.",
+    "3. System Selection Cards: These look oversized. Reduce vertical padding and text sizing, ensuring the cards fit within standard phone heights (320-430pt width). Use `flex: 1` inside a row if displaying side-by-side, with a defined `maxHeight`.",
+    "4. Birthplace Input Location Button: The location icon is currently cut off. Ensure the input container uses `flexDirection: 'row'` and `alignItems: 'center'`, where the text input component uses `flex: 1` and the location button has a fixed size (e.g., 44x44pt) so it never gets pushed off screen.",
+    "5. Correction Mode Constraint: Implement Correction Mode ONLY on the Horoscope Results page. It should allow editing of the planetary positions table, Palan cards, and Rasi cards. The South Indian Kattam (chart) MUST remain completely uneditable as it is too difficult to edit safely.",
+    "Tamil text rendering requires extra breathing room. Apply a line-height multiplier of at least 1.5x (preferably 1.6x) for body text and ensure Plus Jakarta Sans gracefully falls back to the system font for Tamil characters.",
+    "Use a standard 4x4 CSS/Flex grid for the South Indian Rasi Chart. Do not use dynamic drawing or SVGs. Ensure text is centered absolutely or via flexbox.",
+    "All new or modified files should target .js (or standard React Native .js equivalents if forced by context, although the codebase contains .tsx). Ensure your solutions apply React Native styling (StyleSheet) and flexbox rules appropriately."
+  ]
+}

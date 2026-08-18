@@ -43,6 +43,21 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
   (Unicode Tamil), renders crisply and consistently for all users, no Hindi/Devanagari.
 - Backend cleanup: check obsolete pdf_generator_v2/v3/kuyil.py after refactor.
 
+## Responsive Phone UI Update
+- Reworked the horoscope form for 320–430pt phone widths: compact vertical system
+  selectors, fixed 52pt location button, stable two-column coordinate fields, safe-area
+  bottom action, and consistent saffron design tokens.
+- Reworked horoscope results into mobile-native cards. The former wide planetary table
+  is now a stacked, readable card list with no horizontal page overflow.
+- South Indian Kattam charts now scale to the available phone width and remain read-only.
+- Explicitly preloads Ionicons so header, form, and action icons render reliably.
+- Correction Mode UI is mounted only on the horoscope results screen. Editable values are
+  limited to the basic Rasi/result cards, planetary-position cards, and Palan/Dasa cards;
+  Kattam charts are never editable.
+- Self-verified at 390pt and 320pt: body scroll width equals viewport width, location icon
+  remains fully contained, coordinate fields remain contained, and Kattam is 264pt wide
+  within a 320pt viewport. TypeScript and ESLint pass.
+
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
   (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).

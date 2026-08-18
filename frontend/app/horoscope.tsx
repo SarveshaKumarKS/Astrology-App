@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   TextInput,
   Alert,
@@ -13,11 +12,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
+import ScreenHeader from '../components/ScreenHeader';
+import { colors, spacing, radius, font, shadow } from '../lib/theme';
 
 interface BirthDetails {
   name: string;
@@ -44,6 +47,7 @@ interface GeocodeResult {
 }
 
 export default function HoroscopePage() {
+  const { width } = useWindowDimensions();
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
   const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
   const [loading, setLoading] = useState(false);
@@ -52,6 +56,7 @@ export default function HoroscopePage() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(new Date());
+  const isCompact = width < 360;
   
   const [birthDetails, setBirthDetails] = useState<BirthDetails>({
     name: '',
@@ -262,47 +267,47 @@ export default function HoroscopePage() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C3E50" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {getText('ஜாதகம் கணித்தல்', 'Generate Horoscope')}
-          </Text>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.languageToggle}
-          onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
-        >
-          <Text style={styles.languageText}>
-            {language === 'tamil' ? 'த' : 'En'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title={getText('ஜாதகம் கணித்தல்', 'Generate Horoscope')}
+        onBack={() => router.back()}
+        right={
+          <TouchableOpacity
+            testID="horoscope-language-button"
+            style={styles.langPill}
+            onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+          >
+            <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
+          </TouchableOpacity>
+        }
+      />
 
       <KeyboardAvoidingView 
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView style={styles.content}>
+        <ScrollView
+          testID="horoscope-form-scroll"
+          style={styles.content}
+          contentContainerStyle={[
+            styles.contentContainer,
+            { paddingHorizontal: isCompact ? spacing.md : spacing.lg },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* System Selection */}
-          <View style={styles.systemSection}>
-            <Text style={styles.sectionTitle}>
+          <View testID="system-selection-section" style={styles.systemSection}>
+            <Text testID="system-selection-title" style={styles.sectionTitle}>
               {getText('அமைப்பு தேர்வு', 'System Selection')}
             </Text>
             
             <View style={styles.systemButtons}>
               <TouchableOpacity
+                testID="select-vakkiam-button"
                 style={[
                   styles.systemButton,
                   system === 'vakkiam' && styles.systemButtonActive
@@ -318,6 +323,7 @@ export default function HoroscopePage() {
               </TouchableOpacity>
               
               <TouchableOpacity
+                testID="select-thirukkanitham-button"
                 style={[
                   styles.systemButton,
                   system === 'thirukkanitham' && styles.systemButtonActive
@@ -333,6 +339,7 @@ export default function HoroscopePage() {
               </TouchableOpacity>
               
               <TouchableOpacity
+                testID="nkv-system-disabled-button"
                 style={[
                   styles.systemButton,
                   styles.systemButtonDisabled
@@ -353,8 +360,8 @@ export default function HoroscopePage() {
           </View>
 
           {/* Birth Details Form */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>
+          <View testID="birth-details-section" style={styles.formSection}>
+            <Text testID="birth-details-title" style={styles.sectionTitle}>
               {getText('பிறப்பு விவரங்கள்', 'Birth Details')}
             </Text>
             
@@ -364,6 +371,7 @@ export default function HoroscopePage() {
                 {getText('பெயர்', 'Name')} *
               </Text>
               <TextInput
+                testID="birth-name-input"
                 style={styles.textInput}
                 value={birthDetails.name}
                 onChangeText={(value) => handleInputChange('name', value)}
@@ -378,6 +386,7 @@ export default function HoroscopePage() {
                 {getText('தாய் பெயர்', "Mother's Name")}
               </Text>
               <TextInput
+                testID="mother-name-input"
                 style={styles.textInput}
                 value={birthDetails.mother_name}
                 onChangeText={(value) => handleInputChange('mother_name', value)}
@@ -392,6 +401,7 @@ export default function HoroscopePage() {
                 {getText('தந்தை பெயர்', "Father's Name")}
               </Text>
               <TextInput
+                testID="father-name-input"
                 style={styles.textInput}
                 value={birthDetails.father_name}
                 onChangeText={(value) => handleInputChange('father_name', value)}
@@ -406,6 +416,7 @@ export default function HoroscopePage() {
                 {getText('பிறந்த தேதி', 'Date of Birth')} *
               </Text>
               <TouchableOpacity
+                testID="birth-date-button"
                 style={styles.dateTimeButton}
                 onPress={() => setShowDatePicker(true)}
               >
@@ -428,6 +439,7 @@ export default function HoroscopePage() {
                 {getText('பிறந்த நேரம்', 'Time of Birth')} *
               </Text>
               <TouchableOpacity
+                testID="birth-time-button"
                 style={styles.dateTimeButton}
                 onPress={() => setShowTimePicker(true)}
               >
@@ -445,13 +457,16 @@ export default function HoroscopePage() {
               </Text>
               <View style={styles.placeInputContainer}>
                 <TextInput
-                  style={[styles.textInput, { flex: 1 }]}
+                  testID="birth-place-input"
+                  style={[styles.textInput, styles.placeInput]}
                   value={birthDetails.place_of_birth}
                   onChangeText={(value) => handleInputChange('place_of_birth', value)}
                   placeholder={getText('நகரம், மாநிலம், நாடு', 'City, State, Country')}
                   placeholderTextColor="#95A5A6"
                 />
                 <TouchableOpacity
+                  testID="find-location-button"
+                  accessibilityLabel={getText('இடம் கண்டறி', 'Find location')}
                   style={[styles.geocodeButton, geocoding && styles.geocodeButtonDisabled]}
                   onPress={() => geocodePlace(birthDetails.place_of_birth)}
                   disabled={geocoding || !birthDetails.place_of_birth.trim()}
@@ -459,12 +474,7 @@ export default function HoroscopePage() {
                   {geocoding ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <>
-                      <Ionicons name="location" size={16} color="#FFFFFF" />
-                      <Text style={styles.geocodeButtonText}>
-                        {getText('கண்டறி', 'Find')}
-                      </Text>
-                    </>
+                    <Ionicons name="location-outline" size={22} color={colors.onBrand} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -477,6 +487,7 @@ export default function HoroscopePage() {
                   {getText('அட்சரேகை', 'Latitude')} *
                 </Text>
                 <TextInput
+                  testID="latitude-input"
                   style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
                   value={birthDetails.latitude}
                   onChangeText={(value) => handleInputChange('latitude', value)}
@@ -492,6 +503,7 @@ export default function HoroscopePage() {
                   {getText('தீர்க்கரேகை', 'Longitude')} *
                 </Text>
                 <TextInput
+                  testID="longitude-input"
                   style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
                   value={birthDetails.longitude}
                   onChangeText={(value) => handleInputChange('longitude', value)}
@@ -509,6 +521,7 @@ export default function HoroscopePage() {
                 {getText('நேர மண்டலம்', 'Timezone')}
               </Text>
               <TextInput
+                testID="timezone-input"
                 style={[styles.textInput, { backgroundColor: '#F8F9FA' }]}
                 value={birthDetails.timezone}
                 onChangeText={(value) => handleInputChange('timezone', value)}
@@ -524,6 +537,7 @@ export default function HoroscopePage() {
                 {getText('நேரத் திருத்தம் (நிமிடங்களில்)', 'Time Correction (in minutes)')}
               </Text>
               <TextInput
+                testID="time-correction-input"
                 style={styles.textInput}
                 value={birthDetails.time_correction}
                 onChangeText={(value) => handleInputChange('time_correction', value)}
@@ -536,8 +550,9 @@ export default function HoroscopePage() {
         </ScrollView>
         
         {/* Generate Button */}
-        <View style={styles.buttonContainer}>
+        <SafeAreaView edges={['bottom']} style={styles.buttonContainer}>
           <TouchableOpacity
+            testID="generate-horoscope-button"
             style={[styles.generateButton, loading && styles.generateButtonDisabled]}
             onPress={generateHoroscope}
             disabled={loading}
@@ -550,7 +565,7 @@ export default function HoroscopePage() {
               </Text>
             )}
           </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
       
       {/* Date Picker Modal */}
@@ -559,11 +574,11 @@ export default function HoroscopePage() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {getText('தேதி தேர்ந்தெடுக்கவум்', 'Select Date')}
+                <Text testID="date-picker-title" style={styles.modalTitle}>
+                  {getText('தேதி தேர்ந்தெடுக்கவும்', 'Select Date')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Ionicons name="close" size={24} color="#2C3E50" />
+                <TouchableOpacity testID="date-picker-close-button" onPress={() => setShowDatePicker(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
               </View>
               <View style={styles.pickerContainer}>
@@ -595,19 +610,21 @@ export default function HoroscopePage() {
               </View>
               <View style={styles.modalActions}>
                 <TouchableOpacity
+                  testID="date-picker-cancel-button"
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setShowDatePicker(false)}
                 >
                   <Text style={styles.cancelButtonText}>
-                    {getText('रद्द करें', 'Cancel')}
+                    {getText('ரத்து', 'Cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="date-picker-done-button"
                   style={[styles.modalButton, styles.confirmButton]}
                   onPress={() => setShowDatePicker(false)}
                 >
                   <Text style={styles.confirmButtonText}>
-                    {getText('ठीक है', 'Done')}
+                    {getText('சரி', 'Done')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -625,8 +642,8 @@ export default function HoroscopePage() {
                 <Text style={styles.modalTitle}>
                   {getText('நேரம் தேர்ந்தெடுக்கவும்', 'Select Time')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                  <Ionicons name="close" size={24} color="#2C3E50" />
+                <TouchableOpacity testID="time-picker-close-button" onPress={() => setShowTimePicker(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
               </View>
               <View style={styles.pickerContainer}>
@@ -656,19 +673,21 @@ export default function HoroscopePage() {
               </View>
               <View style={styles.modalActions}>
                 <TouchableOpacity
+                  testID="time-picker-cancel-button"
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setShowTimePicker(false)}
                 >
                   <Text style={styles.cancelButtonText}>
-                    {getText('रद्द करें', 'Cancel')}
+                    {getText('ரத்து', 'Cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="time-picker-done-button"
                   style={[styles.modalButton, styles.confirmButton]}
                   onPress={() => setShowTimePicker(false)}
                 >
                   <Text style={styles.confirmButtonText}>
-                    {getText('ठीक है', 'Done')}
+                    {getText('சரி', 'Done')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -676,216 +695,186 @@ export default function HoroscopePage() {
           </View>
         </Modal>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
   keyboardView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  backButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  languageToggle: {
-    backgroundColor: '#34495E',
+  langPill: {
+    backgroundColor: colors.brandSoft,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 999,
     minWidth: 44,
-    minHeight: 44,
+    minHeight: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  languageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  langPillText: {
+    color: colors.brandStrong,
+    fontSize: 13,
+    fontWeight: '700',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+  },
+  contentContainer: {
+    paddingBottom: spacing.lg,
   },
   systemSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.soft,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 16,
+    fontSize: font.xl,
+    lineHeight: 30,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   systemButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: spacing.sm,
   },
   systemButton: {
-    flex: 1,
-    minWidth: 140,
-    borderWidth: 2,
-    borderColor: '#E8E8E8',
-    borderRadius: 12,
-    padding: 12,
+    width: '100%',
+    minHeight: 56,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   systemButtonActive: {
-    borderColor: '#4A90E2',
-    backgroundColor: '#F0F8FF',
+    borderColor: colors.brand,
+    backgroundColor: colors.brandSoft,
   },
   systemButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#34495E',
+    fontSize: font.base,
+    lineHeight: 22,
+    fontWeight: '700',
+    color: colors.text,
     textAlign: 'center',
   },
   systemButtonTextActive: {
-    color: '#4A90E2',
+    color: colors.brandStrong,
   },
   systemButtonDisabled: {
-    borderColor: '#D5D8DC',
-    backgroundColor: '#F2F3F4',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceTertiary,
     opacity: 0.7,
   },
   systemButtonTextDisabled: {
-    color: '#95A5A6',
+    color: colors.textMuted,
   },
   comingSoonText: {
     fontSize: 10,
     fontWeight: '500',
-    color: '#E67E22',
+    color: colors.brandStrong,
     marginTop: 4,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   formSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    marginTop: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.soft,
   },
   inputGroup: {
-    marginBottom: 20,
+    minWidth: 0,
+    marginBottom: spacing.lg,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 8,
+    fontSize: font.base,
+    lineHeight: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#2C3E50',
-    backgroundColor: '#FFFFFF',
-    minHeight: 48,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: font.lg,
+    color: colors.text,
+    backgroundColor: colors.card,
+    minHeight: 52,
   },
   dateTimeButton: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.card,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: 48,
+    minHeight: 52,
   },
   dateTimeText: {
-    fontSize: 16,
-    color: '#2C3E50',
+    flexShrink: 1,
+    fontSize: font.lg,
+    color: colors.text,
   },
   placeInputContainer: {
     flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-end',
+    gap: spacing.sm,
+    alignItems: 'center',
+    width: '100%',
   },
+  placeInput: { flex: 1, minWidth: 0 },
   geocodeButton: {
-    backgroundColor: '#27AE60',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
+    flexShrink: 0,
+    width: 52,
+    height: 52,
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 80,
-    minHeight: 48,
   },
   geocodeButtonDisabled: {
     opacity: 0.6,
   },
-  geocodeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   halfWidth: {
     flex: 1,
+    minWidth: 0,
   },
   buttonContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.card,
     borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
+    borderTopColor: colors.border,
   },
   generateButton: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: colors.brand,
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
@@ -894,9 +883,10 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   generateButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.onBrand,
+    fontSize: font.lg,
+    lineHeight: 24,
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
@@ -905,9 +895,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     width: '90%',
     maxWidth: 400,
   },
@@ -918,9 +908,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
+    fontSize: font.xl,
+    fontWeight: '700',
+    color: colors.text,
   },
   pickerContainer: {
     paddingVertical: 20,
@@ -936,7 +926,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
+    borderTopColor: colors.border,
     gap: 12,
   },
   modalButton: {
@@ -949,36 +939,36 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   cancelButton: {
-    backgroundColor: '#95A5A6',
+    backgroundColor: colors.surfaceTertiary,
   },
   confirmButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: colors.brand,
   },
   cancelButtonText: {
-    color: '#FFFFFF',
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: colors.onBrand,
     fontSize: 16,
     fontWeight: '600',
   },
   webDateInput: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#2C3E50',
-    backgroundColor: '#FFFFFF',
+    color: colors.text,
+    backgroundColor: colors.card,
     marginBottom: 8,
     textAlign: 'center',
   },
   webDateHelper: {
     fontSize: 12,
-    color: '#7F8C8D',
+    color: colors.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
   },

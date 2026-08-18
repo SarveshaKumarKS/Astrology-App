@@ -5,19 +5,24 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Alert,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import SouthIndianChart from '../components/SouthIndianChart';
+import CorrectableField from '../components/CorrectableField';
 import { fetchApi, fetchJson, isAbortError, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import ScreenHeader from '../components/ScreenHeader';
+import { CorrectionControls } from '../lib/debug';
+import { colors, radius, font } from '../lib/theme';
 
 interface PlanetaryPosition {
   planet: string;
@@ -110,12 +115,15 @@ interface HoroscopeData {
 }
 
 export default function HoroscopeResultPage() {
+  const { width } = useWindowDimensions();
   const { user, login } = useAuth();
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [horoscopeData, setHoroscopeData] = useState<HoroscopeData | null>(null);
   const params = useLocalSearchParams();
+  const isCompact = width < 360;
+  const chartSize = Math.max(236, Math.min(360, width - (isCompact ? 56 : 64)));
 
   useEffect(() => {
     if (params.data) {
@@ -206,47 +214,40 @@ export default function HoroscopeResultPage() {
     if (!horoscopeData) return null;
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+      <View testID="horoscope-basic-info-section" style={styles.section}>
+        <Text testID="horoscope-basic-info-title" style={styles.sectionTitle}>
           {getText('அடிப்படை விவரங்கள்', 'Basic Information')}
         </Text>
         
         <View style={styles.infoGrid}>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>
-              {getText('பெயர்', 'Name')}
-            </Text>
-            <Text style={styles.infoValue}>
-              {horoscopeData.birth_details.name}
-            </Text>
-          </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>
-              {getText('லக்னம்', 'Ascendant')}
-            </Text>
-            <Text style={styles.infoValue}>
-              {getText(horoscopeData.ascendant_tamil, horoscopeData.ascendant)}
-            </Text>
-          </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>
-              {getText('ராசி', 'Moon Sign')}
-            </Text>
-            <Text style={styles.infoValue}>
-              {getText(horoscopeData.moon_sign_tamil, horoscopeData.moon_sign)}
-            </Text>
-          </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>
-              {getText('நட்சத்திரம்', 'Nakshatra')}
-            </Text>
-            <Text style={styles.infoValue}>
-              {getText(horoscopeData.nakshatra_tamil, horoscopeData.nakshatra)}
-            </Text>
-          </View>
+          <CorrectableField
+            screenId="horoscope_result"
+            field="Name"
+            label={getText('பெயர்', 'Name')}
+            value={horoscopeData.birth_details.name}
+            testID="result-name-card"
+          />
+          <CorrectableField
+            screenId="horoscope_result"
+            field="Ascendant"
+            label={getText('லக்னம்', 'Ascendant')}
+            value={getText(horoscopeData.ascendant_tamil, horoscopeData.ascendant)}
+            testID="result-ascendant-card"
+          />
+          <CorrectableField
+            screenId="horoscope_result"
+            field="MoonSign"
+            label={getText('ராசி', 'Moon Sign')}
+            value={getText(horoscopeData.moon_sign_tamil, horoscopeData.moon_sign)}
+            testID="result-rasi-card"
+          />
+          <CorrectableField
+            screenId="horoscope_result"
+            field="Nakshatra"
+            label={getText('நட்சத்திரம்', 'Nakshatra')}
+            value={getText(horoscopeData.nakshatra_tamil, horoscopeData.nakshatra)}
+            testID="result-nakshatra-card"
+          />
         </View>
       </View>
     );
@@ -256,58 +257,67 @@ export default function HoroscopeResultPage() {
     if (!horoscopeData?.planetary_positions) return null;
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+      <View testID="planetary-positions-section" style={styles.section}>
+        <Text testID="planetary-positions-title" style={styles.sectionTitle}>
           {getText('கிரக நிலைகள்', 'Planetary Positions')}
         </Text>
-        
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View style={styles.planetaryTable}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, { width: 80 }]}>
-                {getText('கிரகம்', 'Planet')}
-              </Text>
-              <Text style={[styles.tableHeaderText, { width: 90 }]}>
-                {getText('பாகை', 'Degree')}
-              </Text>
-              <Text style={[styles.tableHeaderText, { width: 100 }]}>
-                {getText('நட்சத்திரம்', 'Nakshatra')}
-              </Text>
-              <Text style={[styles.tableHeaderText, { width: 60 }]}>
-                {getText('பாதம்', 'Pada')}
-              </Text>
-              <Text style={[styles.tableHeaderText, { width: 90 }]}>
-                {getText('ராசி பாகை', 'Sign Degree')}
-              </Text>
-              <Text style={[styles.tableHeaderText, { width: 90 }]}>
-                {getText('ராசி', 'Sign')}
-              </Text>
-            </View>
-            
-            {horoscopeData.planetary_positions.map((planet, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={[styles.tableCellText, { width: 80 }]}>
-                  {getText(planet.planet_tamil, planet.planet)}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 90 }]}>
-                  {planet.longitude_dms || 'N/A'}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 100 }]}>
-                  {getText(planet.nakshatra_name_tamil, planet.nakshatra_name)}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 60 }]}>
-                  {planet.nakshatra_pada || 'N/A'}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 90 }]}>
-                  {planet.longitude_in_sign_dms || 'N/A'}
-                </Text>
-                <Text style={[styles.tableCellText, { width: 90 }]}>
-                  {getText(planet.sign_name_tamil, planet.sign_name)}
-                </Text>
+
+        <View style={styles.planetList}>
+          {horoscopeData.planetary_positions.map((planet, index) => (
+            <View key={`${planet.planet}-${index}`} testID={`planet-position-card-${index}`} style={styles.planetCard}>
+              <CorrectableField
+                variant="row"
+                screenId="horoscope_result"
+                field={`Planet.${index}.Name`}
+                label={getText('கிரகம்', 'Planet')}
+                value={getText(planet.planet_tamil, planet.planet)}
+                testID={`planet-${index}-name`}
+              />
+              <View style={styles.planetGrid}>
+                <CorrectableField
+                  variant="row"
+                  screenId="horoscope_result"
+                  field={`Planet.${index}.Degree`}
+                  label={getText('பாகை', 'Degree')}
+                  value={planet.longitude_dms || 'N/A'}
+                  testID={`planet-${index}-degree`}
+                />
+                <CorrectableField
+                  variant="row"
+                  screenId="horoscope_result"
+                  field={`Planet.${index}.Nakshatra`}
+                  label={getText('நட்சத்திரம்', 'Nakshatra')}
+                  value={getText(planet.nakshatra_name_tamil, planet.nakshatra_name)}
+                  testID={`planet-${index}-nakshatra`}
+                />
+                <CorrectableField
+                  variant="row"
+                  screenId="horoscope_result"
+                  field={`Planet.${index}.Pada`}
+                  label={getText('பாதம்', 'Pada')}
+                  value={String(planet.nakshatra_pada || 'N/A')}
+                  testID={`planet-${index}-pada`}
+                />
+                <CorrectableField
+                  variant="row"
+                  screenId="horoscope_result"
+                  field={`Planet.${index}.SignDegree`}
+                  label={getText('ராசி பாகை', 'Sign Degree')}
+                  value={planet.longitude_in_sign_dms || 'N/A'}
+                  testID={`planet-${index}-sign-degree`}
+                />
+                <CorrectableField
+                  variant="row"
+                  screenId="horoscope_result"
+                  field={`Planet.${index}.Sign`}
+                  label={getText('ராசி', 'Sign')}
+                  value={getText(planet.sign_name_tamil, planet.sign_name)}
+                  testID={`planet-${index}-sign`}
+                />
               </View>
-            ))}
-          </View>
-        </ScrollView>
+            </View>
+          ))}
+        </View>
       </View>
     );
   };
@@ -322,8 +332,8 @@ export default function HoroscopeResultPage() {
     }
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+      <View testID={`chart-section-${chart.chart_type}`} style={styles.section}>
+        <Text testID={`chart-title-${chart.chart_type}`} style={styles.sectionTitle}>
           {getText(titleTamil, title)}
         </Text>
         {subtitle ? <Text style={styles.chartMetaText}>{subtitle}</Text> : null}
@@ -332,6 +342,7 @@ export default function HoroscopeResultPage() {
           <SouthIndianChart 
             houses={housesForChart}
             title={getText(titleTamil, title).toUpperCase()}
+            size={chartSize}
           />
         </View>
       </View>
@@ -356,41 +367,62 @@ export default function HoroscopeResultPage() {
     const currentDasa = horoscopeData.current_dasa;
     const retrogradePlanets = horoscopeData.retrograde_planets_tamil || [];
     const firstRetrograde = retrogradePlanets.length > 0 ? retrogradePlanets[0] : null;
+    const balanceValue = currentDasa.balance_years !== undefined && currentDasa.first_dasha_planet
+      ? `${getText(currentDasa.first_dasha_planet_tamil || '', currentDasa.first_dasha_planet)} ${getText('திசை', 'Dasha')} · ${currentDasa.balance_years} ${getText('வருஷம்', 'years')}, ${currentDasa.balance_months || 0} ${getText('மாதம்', 'months')}, ${currentDasa.balance_days || 0} ${getText('நாள்', 'days')}`
+      : null;
+    const currentBhuktiValue = currentDasa.current_bhukti_planet && currentDasa.current_bhukti_end_date
+      ? `${getText(currentDasa.planet_tamil, currentDasa.planet)} ${getText('திசை', 'Dasha')} ${formatDateDDMMYYYY(currentDasa.end_date)} ${getText('வரை', 'until')} · ${getText(currentDasa.current_bhukti_planet_tamil || '', currentDasa.current_bhukti_planet)} ${getText('புக்தி', 'Bhukti')} ${formatDateDDMMYYYY(currentDasa.current_bhukti_end_date)} ${getText('வரை', 'until')}`
+      : null;
+    const bhavaValue = horoscopeData.bhava_maruthal
+      ? `${getText('சந்திரன்', 'Moon')}-${horoscopeData.bhava_maruthal.Moon || 'N/A'}, ${getText('புதன்', 'Mercury')}-${horoscopeData.bhava_maruthal.Mercury || 'N/A'}`
+      : null;
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {getText('தசா காலங்கள்', 'Dasa Periods')}
+      <View testID="palan-details-section" style={styles.section}>
+        <Text testID="palan-details-title" style={styles.sectionTitle}>
+          {getText('பலன் மற்றும் தசா விவரங்கள்', 'Palan & Dasa Details')}
         </Text>
-        
-        <View style={styles.currentDasaCard}>
-          {/* கிரக வக்ர நிலை */}
-          {firstRetrograde && (
-            <Text style={styles.dasaDetailText}>
-              {getText('கிரக வக்ர நிலை', 'Retrograde Planet')} : {firstRetrograde}
-            </Text>
-          )}
-          
-          {/* திசை இருப்பு */}
-          {currentDasa.balance_years !== undefined && currentDasa.first_dasha_planet_tamil && (
-            <Text style={styles.dasaDetailText}>
-              {getText('திசை இருப்பு', 'Dasha Balance')} : {currentDasa.first_dasha_planet_tamil} {getText('திசை', 'Dasha')} {currentDasa.balance_years} {getText('வருஷம்', 'years')}, {currentDasa.balance_months} {getText('மாதம்', 'months')}, {currentDasa.balance_days} {getText('நாள்', 'days')}
-            </Text>
-          )}
-          
-          {/* நடப்பு திசை-புக்தி */}
-          {currentDasa.current_bhukti_planet && currentDasa.current_bhukti_end_date && (
-            <Text style={styles.dasaDetailText}>
-              {getText('நடப்பு திசை-புக்தி', 'Current Dasha-Bhukti')} : {getText(currentDasa.planet_tamil, currentDasa.planet)} {getText('திசை', 'Dasha')} {formatDateDDMMYYYY(currentDasa.end_date)} {getText('வரை', 'until')}, {getText(currentDasa.current_bhukti_planet_tamil || '', currentDasa.current_bhukti_planet)} {getText('புக்தி', 'Bhukti')} {formatDateDDMMYYYY(currentDasa.current_bhukti_end_date)} {getText('வரை', 'until')}.
-            </Text>
-          )}
-          
-          {/* பாவக மாறுதல் */}
-          {horoscopeData.bhava_maruthal && (
-            <Text style={styles.dasaDetailText}>
-              {getText('பாவக மாறுதல்', 'Bhava Maruthal')} : {getText('சந்திரன்', 'Moon')}-{horoscopeData.bhava_maruthal['Moon'] || 'N/A'}, {getText('புதன்', 'Mercury')}-{horoscopeData.bhava_maruthal['Mercury'] || 'N/A'}
-            </Text>
-          )}
+        <View style={styles.palanGrid}>
+          {firstRetrograde ? (
+            <CorrectableField
+              variant="row"
+              screenId="horoscope_result"
+              field="Palan.RetrogradePlanet"
+              label={getText('கிரக வக்ர நிலை', 'Retrograde Planet')}
+              value={getText(firstRetrograde, horoscopeData.retrograde_planets?.[0] || firstRetrograde)}
+              testID="palan-retrograde-card"
+            />
+          ) : null}
+          {balanceValue ? (
+            <CorrectableField
+              variant="row"
+              screenId="horoscope_result"
+              field="Palan.DashaBalance"
+              label={getText('திசை இருப்பு', 'Dasha Balance')}
+              value={balanceValue}
+              testID="palan-dasha-balance-card"
+            />
+          ) : null}
+          {currentBhuktiValue ? (
+            <CorrectableField
+              variant="row"
+              screenId="horoscope_result"
+              field="Palan.CurrentDashaBhukti"
+              label={getText('நடப்பு திசை-புக்தி', 'Current Dasha-Bhukti')}
+              value={currentBhuktiValue}
+              testID="palan-current-bhukti-card"
+            />
+          ) : null}
+          {bhavaValue ? (
+            <CorrectableField
+              variant="row"
+              screenId="horoscope_result"
+              field="Palan.BhavaMaruthal"
+              label={getText('பாவக மாறுதல்', 'Bhava Maruthal')}
+              value={bhavaValue}
+              testID="palan-bhava-card"
+            />
+          ) : null}
         </View>
       </View>
     );
@@ -638,59 +670,56 @@ export default function HoroscopeResultPage() {
 
   if (!horoscopeData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={colors.brand} />
           <Text style={styles.loadingText}>
             {getText('ஜாதகம் ஏற்றுகிறது...', 'Loading horoscope...')}
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C3E50" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {getText('ஜாதக அறிக்கை', 'Horoscope Report')}
-          </Text>
-        </View>
-        
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={saveProfile}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Ionicons name="bookmark-outline" size={22} color="#FFFFFF" />
-          )}
-        </TouchableOpacity>
+      <ScreenHeader
+        title={getText('ஜாதக அறிக்கை', 'Horoscope Report')}
+        onBack={() => router.back()}
+        right={
+          <View style={styles.headerActions}>
+            <TouchableOpacity testID="save-horoscope-button" style={styles.headerIconBtn} onPress={saveProfile} disabled={saving}>
+              {saving ? (
+                <ActivityIndicator size="small" color={colors.brandStrong} />
+              ) : (
+                <Ionicons name="bookmark-outline" size={22} color={colors.brandStrong} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              testID="result-language-button"
+              style={styles.langPill}
+              onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+            >
+              <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
+            </TouchableOpacity>
+          </View>
+        }
+      />
 
-        <TouchableOpacity 
-          style={styles.languageToggle}
-          onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
-        >
-          <Text style={styles.languageText}>
-            {language === 'tamil' ? 'த' : 'En'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <CorrectionControls />
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        testID="horoscope-result-scroll"
+        style={styles.content}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingHorizontal: isCompact ? 12 : 16 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {renderBasicInfo()}
         {renderPlanetaryPositions()}
         {horoscopeData.rasi_chart && renderChart(
@@ -713,95 +742,77 @@ export default function HoroscopeResultPage() {
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.actionContainer}>
-        <View style={styles.actionButtonRow}>
+      <SafeAreaView edges={['bottom']} style={styles.actionContainer}>
+        <View style={[styles.actionButtonRow, isCompact && styles.actionButtonColumn]}>
           <TouchableOpacity
+            testID="generate-horoscope-pdf-button"
             style={styles.actionButton}
             onPress={generatePDF}
             disabled={loading}
           >
-            <Ionicons name="document-text-outline" size={20} color="#FFFFFF" />
+            <Ionicons name="document-text-outline" size={20} color={colors.onBrand} />
             <Text style={styles.actionButtonText}>
               {getText('PDF உருவாக்கு', 'Generate PDF')}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
+            testID="generate-palan-pdf-button"
             style={[styles.actionButton, styles.palanButton]}
             onPress={generatePalanPDF}
             disabled={loading}
           >
-            <Ionicons name="star-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>
+            <Ionicons name="star-outline" size={20} color={colors.brandStrong} />
+            <Text style={[styles.actionButtonText, { color: colors.brandStrong }]}>
               {getText('பலன் PDF', 'Palan PDF')}
             </Text>
           </TouchableOpacity>
         </View>
         {loading && (
-          <ActivityIndicator size="small" color="#4A90E2" style={{ marginTop: 8 }} />
+          <ActivityIndicator size="small" color={colors.brand} style={{ marginTop: 8 }} />
         )}
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
-  header: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    gap: 4,
   },
-  backButton: {
+  headerIconBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  langPill: {
+    backgroundColor: colors.brandSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
     minWidth: 44,
     minHeight: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 2,
   },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  languageToggle: {
-    backgroundColor: '#34495E',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveButton: {
-    minWidth: 44,
-    minHeight: 44,
-    marginRight: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  languageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  langPillText: {
+    color: colors.brandStrong,
+    fontSize: font.sm,
+    fontWeight: '700',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+  },
+  contentContainer: {
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
@@ -810,185 +821,92 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#7F8C8D',
+    color: colors.textSecondary,
     marginTop: 16,
   },
   section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#8A6B3F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 16,
+    fontSize: 20,
+    lineHeight: 30,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
   },
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
-  infoCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    padding: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4A90E2',
-  },
-  infoLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#7F8C8D',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-  },
-  planetaryTable: {
-    borderRadius: 8,
-    overflow: 'hidden',
+  planetList: { gap: 12 },
+  planetCard: {
+    minWidth: 0,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 10,
+    gap: 8,
   },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#4A90E2',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-  },
-  tableHeaderText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  tableCellText: {
-    fontSize: 11,
-    color: '#2C3E50',
-    textAlign: 'center',
-  },
+  planetGrid: { gap: 8 },
   chartContainer: {
     alignItems: 'center',
+    width: '100%',
+    overflow: 'hidden',
   },
   chartMetaText: {
     fontSize: 14,
-    color: '#2C3E50',
+    lineHeight: 22,
+    color: colors.textSecondary,
     marginBottom: 10,
     fontWeight: '500',
   },
-  chartGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: 300,
-    height: 300,
-    borderWidth: 2,
-    borderColor: '#2C3E50',
-  },
-  chartHouse: {
-    width: '25%',
-    height: '25%',
-    borderWidth: 1,
-    borderColor: '#7F8C8D',
-    padding: 4,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-  },
-  houseNumber: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#E74C3C',
-    position: 'absolute',
-    top: 2,
-    right: 2,
-  },
-  planetsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  planetInHouse: {
-    fontSize: 8,
-    color: '#2C3E50',
-    fontWeight: '600',
-    textAlign: 'center',
-    marginVertical: 1,
-  },
-  currentDasaCard: {
-    backgroundColor: '#E8F4FD',
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4A90E2',
-  },
-  dasaHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dasaTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginLeft: 8,
-  },
-  dasaPlanet: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    marginBottom: 12,
-  },
-  dasaDetails: {
-    gap: 4,
-  },
-  dasaDetailText: {
-    fontSize: 14,
-    color: '#2C3E50',
-  },
+  palanGrid: { gap: 10 },
   actionContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 6,
+    backgroundColor: colors.card,
     borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
+    borderTopColor: colors.border,
   },
   actionButtonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
+  actionButtonColumn: { flexDirection: 'column' },
   actionButton: {
     flex: 1,
-    backgroundColor: '#E74C3C',
+    backgroundColor: colors.brand,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
+    minHeight: 50,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
     gap: 8,
   },
   palanButton: {
-    backgroundColor: '#8E44AD',
+    backgroundColor: colors.brandSoft,
   },
   actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.onBrand,
+    flexShrink: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

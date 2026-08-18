@@ -4,14 +4,26 @@ import { View, Text, StyleSheet } from 'react-native';
 interface ChartProps {
   houses: { [key: number]: string[] };
   title: string;
+  size?: number;
 }
 
-const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
+const SouthIndianChart: React.FC<ChartProps> = ({ houses, title, size = 320 }) => {
+  const border = 2;
+  const cellBorder = 1;
+  const cellSize = (size - border * 2 - cellBorder * 3) / 4;
+
   const renderCell = (sign: number, isCenter: boolean = false) => {
     if (isCenter) {
       return (
-        <View style={[styles.cell, styles.centerCell]}>
-          <Text style={styles.centerText}>{title}</Text>
+        <View
+          testID="south-indian-chart-center"
+          style={[
+            styles.cell,
+            styles.centerCell,
+            { width: cellSize * 2 + cellBorder * 2, height: cellSize * 2 + cellBorder * 2 },
+          ]}
+        >
+          <Text style={[styles.centerText, { fontSize: Math.max(12, size * 0.044) }]}>{title}</Text>
         </View>
       );
     }
@@ -32,9 +44,9 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
     }
 
     return (
-      <View style={styles.cell}>
+      <View testID={`south-indian-chart-house-${sign}`} style={[styles.cell, { width: cellSize, height: cellSize }]}>
         <Text style={styles.signNumber}>{sign}</Text>
-        <Text style={styles.planetStack}>
+        <Text style={[styles.planetStack, { fontSize: Math.max(9, size * 0.032), lineHeight: Math.max(12, size * 0.043) }]} numberOfLines={4}>
           {planetLabels.join('\n')}
         </Text>
         {ascLabel && (
@@ -45,9 +57,9 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
   };
 
   return (
-    <View style={styles.chart}>
+    <View testID="south-indian-chart" style={[styles.chart, { width: size, height: size }]}>
       {/* Row 1 - Shifted clockwise */}
-      <View style={styles.row}>
+      <View style={[styles.row, { height: cellSize }]}>
         {renderCell(12)}
         {renderCell(1)}
         {renderCell(2)}
@@ -55,21 +67,21 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
       </View>
       
       {/* Row 2 - Shifted clockwise */}
-      <View style={styles.row}>
+      <View style={[styles.row, { height: cellSize }]}>
         {renderCell(11)}
         {renderCell(0, true)}
         {renderCell(4)}
       </View>
       
       {/* Row 3 - Shifted clockwise */}
-      <View style={styles.row}>
+      <View style={[styles.row, { height: cellSize }]}>
         {renderCell(10)}
-        <View style={styles.centerSpacer} />
+        <View style={[styles.centerSpacer, { width: cellSize * 2 + cellBorder * 2, height: cellSize }]} />
         {renderCell(5)}
       </View>
       
       {/* Row 4 - Shifted clockwise */}
-      <View style={styles.row}>
+      <View style={[styles.row, { height: cellSize }]}>
         {renderCell(9)}
         {renderCell(8)}
         {renderCell(7)}
@@ -79,41 +91,27 @@ const SouthIndianChart: React.FC<ChartProps> = ({ houses, title }) => {
   );
 };
 
-const CHART_SIZE = 360;
-const BORDER = 2;
-const CELL_BORDER = 1;
-const CELL_SIZE = (CHART_SIZE - BORDER * 2 - CELL_BORDER * 3) / 4;
-
 const styles = StyleSheet.create({
   chart: {
-    width: CHART_SIZE,
-    height: CHART_SIZE,
     backgroundColor: '#FFFBEA',
-    borderWidth: BORDER,
+    borderWidth: 2,
     borderColor: '#333',
   },
   row: {
     flexDirection: 'row',
-    height: CELL_SIZE,
   },
   cell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderWidth: CELL_BORDER,
+    borderWidth: 1,
     borderColor: '#333',
     padding: 6,
     backgroundColor: '#FFFBEA',
   },
   centerCell: {
-    width: CELL_SIZE * 2 + CELL_BORDER * 2,
-    height: CELL_SIZE * 2 + CELL_BORDER * 2,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0,
   },
   centerSpacer: {
-    width: CELL_SIZE * 2 + CELL_BORDER * 2,
-    height: CELL_SIZE,
     borderWidth: 0,
   },
   centerText: {

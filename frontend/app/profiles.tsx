@@ -1,74 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TextInput,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ApiError, fetchJson, fetchApi, isAbortError } from '../lib/api';
+import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import ScreenHeader from '../components/ScreenHeader';
+import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme';
 
 interface UserProfile {
   id: string;
   name: string;
+  label?: string;
   birth_details: {
     name: string;
     date_of_birth: string;
     time_of_birth: string;
     place_of_birth: string;
-    latitude: number;
-    longitude: number;
-    timezone: string;
-    time_correction: number;
   };
   created_at: string;
   updated_at: string;
 }
 
 export default function ProfilesPage() {
-  const { user, loading: authLoading, signingIn, login, logout } = useAuth();
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { user, loading: authLoading, signingIn, login } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
 
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
+  // Rename modal state
+  const [renameTarget, setRenameTarget] = useState<UserProfile | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
-  const loadProfiles = async () => {
+  const loadProfiles = useCallback(async () => {
     try {
       const data = await fetchJson<UserProfile[]>('/api/profiles', { method: 'GET' });
       setProfiles(data);
     } catch (error) {
       console.error('Error loading profiles:', error);
       Alert.alert(
-        getText('பிழை', 'Error'),
+        'பிழை / Error',
         error instanceof ApiError
-          ? getText(
-              error.detail || 'சேவையக பிழை ஏற்பட்டது',
-              error.detail || 'Server error'
-            )
+          ? error.detail || 'Server error'
           : isAbortError(error)
-            ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
-            : getText(
-                'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
-                'Network/server error. Please try again.'
-              )
+            ? 'நேரம் முடிந்தது / Request timed out'
+            : 'இணைய பிழை / Network error'
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -77,7 +73,7 @@ export default function ProfilesPage() {
       setProfiles([]);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, loadProfiles]);
 
   const onRefresh = () => {
     if (!user) return;
@@ -85,509 +81,314 @@ export default function ProfilesPage() {
     loadProfiles();
   };
 
-  const generateHoroscope = (profile: UserProfile) => {
-    Alert.alert(
-      getText('ஜாதகம் உருவாக்க', 'Generate Horoscope'),
-      getText(`${profile.name} க்கான ஜாதகம் உருவாக்க விரும்புகிறீர்களா?`, `Generate horoscope for ${profile.name}?`),
-      [
-        {
-          text: getText('ரத்து செய்', 'Cancel'),
-          style: 'cancel'
-        },
-        {
-          text: getText('உருவாக்கு', 'Generate'),
-          onPress: () => {
-            // Navigate to horoscope generation with pre-filled data
-            router.push({
-              pathname: '/horoscope',
-              params: {
-                prefill: JSON.stringify(profile.birth_details)
-              }
-            });
-          }
-        }
-      ]
-    );
+  const openRename = (profile: UserProfile) => {
+    setRenameTarget(profile);
+    setRenameValue(profile.label || profile.birth_details.name || '');
   };
 
-  const deleteProfile = (profileId: string, profileName: string) => {
+  const submitRename = async () => {
+    if (!renameTarget || !renameValue.trim()) return;
+    setRenaming(true);
+    try {
+      await fetchJson(`/api/profiles/${renameTarget.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ label: renameValue.trim() }),
+      });
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === renameTarget.id ? { ...p, label: renameValue.trim() } : p))
+      );
+      setRenameTarget(null);
+    } catch (error) {
+      Alert.alert('பிழை / Error', error instanceof ApiError ? error.detail || 'Could not rename' : 'Could not rename');
+    } finally {
+      setRenaming(false);
+    }
+  };
+
+  const generateHoroscope = (profile: UserProfile) => {
+    router.push({
+      pathname: '/horoscope',
+      params: { prefill: JSON.stringify(profile.birth_details) },
+    });
+  };
+
+  const deleteProfile = (profile: UserProfile) => {
+    const displayName = profile.label || profile.birth_details.name;
     Alert.alert(
-      getText('நீக்க உறுதிப்படுத்தல்', 'Confirm Delete'),
-      getText(`${profileName} என்ற சுயவிவரத்தை நீக்க விரும்புகிறீர்களா?`, `Do you want to delete ${profileName} profile?`),
+      'நீக்கு / Delete',
+      `"${displayName}" — நீக்க விரும்புகிறீர்களா? / Delete this chart?`,
       [
+        { text: 'ரத்து / Cancel', style: 'cancel' },
         {
-          text: getText('ரத்து செய்', 'Cancel'),
-          style: 'cancel'
-        },
-        {
-          text: getText('நீக்கு', 'Delete'),
+          text: 'நீக்கு / Delete',
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetchApi(`/api/profiles/${profileId}`, { method: 'DELETE' });
-              
-              if (response.ok) {
-                setProfiles(profiles.filter(p => p.id !== profileId));
-                Alert.alert(
-                  getText('வெற்றி', 'Success'),
-                  getText('சுயவிவரம் நீக்கப்பட்டது', 'Profile deleted successfully')
-                );
-              } else {
-                throw new Error('Failed to delete profile');
-              }
+              await fetchJson(`/api/profiles/${profile.id}`, { method: 'DELETE' });
+              setProfiles((prev) => prev.filter((p) => p.id !== profile.id));
             } catch (error) {
-              console.error('Error deleting profile:', error);
-              Alert.alert(
-                getText('பிழை', 'Error'),
-                error instanceof ApiError
-                  ? getText(
-                      error.detail || 'சேவையக பிழை ஏற்பட்டது',
-                      error.detail || 'Server error'
-                    )
-                  : isAbortError(error)
-                    ? getText('நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.', 'Request timed out. Please try again.')
-                    : getText(
-                        'இணைய இணைப்பு/சேவையக பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
-                        'Network/server error. Please try again.'
-                      )
-              );
+              Alert.alert('பிழை / Error', error instanceof ApiError ? error.detail || 'Could not delete' : 'Could not delete');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+      const d = new Date(dateString);
+      return d.toLocaleDateString();
+    } catch {
+      return dateString;
+    }
   };
 
-  const renderProfile = (profile: UserProfile) => (
-    <View key={profile.id} style={styles.profileCard}>
-      <View style={styles.profileHeader}>
-        <View style={styles.profileIcon}>
-          <Ionicons name="person" size={24} color="#4A90E2" />
+  const renderProfile = (profile: UserProfile) => {
+    const displayName = profile.label || profile.birth_details.name;
+    return (
+      <View key={profile.id} style={styles.card}>
+        <View style={styles.cardTop}>
+          <View style={styles.avatar}>
+            <Ionicons name="star" size={18} color={colors.brandStrong} />
+          </View>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardName} numberOfLines={1}>{displayName}</Text>
+            <Text style={styles.cardMeta} numberOfLines={1}>
+              {profile.birth_details.place_of_birth} · {formatDate(profile.birth_details.date_of_birth)} · {profile.birth_details.time_of_birth}
+            </Text>
+          </View>
         </View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{profile.birth_details.name}</Text>
-          <Text style={styles.profilePlace}>{profile.birth_details.place_of_birth}</Text>
-          <Text style={styles.profileDate}>
-            {formatDate(profile.birth_details.date_of_birth)} • {profile.birth_details.time_of_birth}
-          </Text>
+
+        <View style={styles.cardActions}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => generateHoroscope(profile)}>
+            <Ionicons name="planet-outline" size={18} color={colors.brandStrong} />
+            <Text style={styles.actionText}>ஜாதகம்</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => openRename(profile)}>
+            <Ionicons name="create-outline" size={18} color={colors.brandStrong} />
+            <Text style={styles.actionText}>மறுபெயர்</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => deleteProfile(profile)}>
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+            <Text style={[styles.actionText, { color: colors.error }]}>நீக்கு</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => deleteProfile(profile.id, profile.birth_details.name)}
-        >
-          <Ionicons name="trash-outline" size={20} color="#E74C3C" />
-        </TouchableOpacity>
       </View>
-      
-      <View style={styles.profileActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => generateHoroscope(profile)}
-        >
-          <Ionicons name="planet-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionButtonText}>
-            {getText('ஜாதகம்', 'Horoscope')}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            Alert.alert(
-              getText('விரைவில்', 'Coming Soon'),
-              getText('இந்த அம்சம் விரைவில் கிடைக்கும்', 'This feature will be available soon')
-            );
-          }}
-        >
-          <Ionicons name="heart-outline" size={20} color="#E74C3C" />
-          <Text style={styles.actionButtonText}>
-            {getText('பொருத்தம்', 'Compatibility')}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C3E50" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {getText('சேமிக்கப்பட்ட விவரங்கள்', 'Saved Profiles')}
-          </Text>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.languageToggle}
-          onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
-        >
-          <Text style={styles.languageText}>
-            {language === 'tamil' ? 'த' : 'En'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenHeader title="சேமித்த ஜாதகங்கள்" onBack={() => router.back()} />
 
       {authLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.brand} />
         </View>
       ) : !user ? (
-        <View style={styles.loginGate}>
-          <Ionicons name="lock-closed-outline" size={64} color="#95A5A6" />
-          <Text style={styles.emptyTitle}>
-            {getText('உள்நுழையவும்', 'Sign In Required')}
+        <View style={styles.gate}>
+          <View style={styles.gateIcon}>
+            <Ionicons name="lock-closed-outline" size={40} color={colors.brandStrong} />
+          </View>
+          <Text style={styles.gateTitle}>உள்நுழையவும் / Sign In</Text>
+          <Text style={styles.gateText}>
+            உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.
           </Text>
-          <Text style={styles.emptyDescription}>
-            {getText(
-              'உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.',
-              'Sign in with Google to securely view and manage your saved horoscopes.'
-            )}
-          </Text>
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={login}
-            disabled={signingIn}
-          >
+          <TouchableOpacity style={styles.googleBtn} onPress={login} disabled={signingIn}>
             {signingIn ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.onBrand} />
             ) : (
               <>
-                <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-                <Text style={styles.googleButtonText}>
-                  {getText('Google மூலம் உள்நுழைக', 'Sign in with Google')}
-                </Text>
+                <Ionicons name="logo-google" size={18} color={colors.onBrand} />
+                <Text style={styles.googleBtnText}>Sign in with Google</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
       ) : loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.loadingText}>
-            {getText('ஏற்றுகிறது...', 'Loading...')}
-          </Text>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.brand} />
         </View>
       ) : (
         <ScrollView
-          style={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
+          contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxxl }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+          showsVerticalScrollIndicator={false}
         >
-          {/* Signed-in account row */}
-          <View style={styles.accountRow}>
-            <Ionicons name="person-circle-outline" size={22} color="#27AE60" />
-            <Text style={styles.accountEmail} numberOfLines={1}>
-              {user.email}
-            </Text>
-            <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-              <Text style={styles.logoutText}>
-                {getText('வெளியேறு', 'Logout')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
           {profiles.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="person-add-outline" size={64} color="#95A5A6" />
-              <Text style={styles.emptyTitle}>
-                {getText('சுயவிவரங்கள் இல்லை', 'No Profiles Found')}
+            <View style={styles.empty}>
+              <View style={styles.gateIcon}>
+                <Ionicons name="bookmark-outline" size={40} color={colors.brandStrong} />
+              </View>
+              <Text style={styles.gateTitle}>ஜாதகங்கள் இல்லை / No Saved Charts</Text>
+              <Text style={styles.gateText}>
+                ஜாதகம் உருவாக்கியபின், மேலே உள்ள 🔖 பொத்தானை அழுத்தி சேமிக்கவும்.
               </Text>
-              <Text style={styles.emptyDescription}>
-                {getText(
-                  'ஜாதகம் உருவாக்கும்போது உங்கள் விவரங்களை சேமிக்கவும்',
-                  'Save your details while generating horoscope'
-                )}
-              </Text>
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={() => router.push('/horoscope')}
-              >
-                <Text style={styles.createButtonText}>
-                  {getText('ஜாதகம் உருவாக்கு', 'Create Horoscope')}
-                </Text>
+              <TouchableOpacity style={styles.googleBtn} onPress={() => router.push('/horoscope')}>
+                <Text style={styles.googleBtnText}>ஜாதகம் உருவாக்கு</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.profilesList}>
-              <Text style={styles.sectionTitle}>
-                {getText(`${profiles.length} சுயவிவரங்கள்`, `${profiles.length} Profiles`)}
-              </Text>
+            <>
+              <Text style={styles.countLabel}>{profiles.length} ஜாதகங்கள்</Text>
               {profiles.map(renderProfile)}
-            </View>
-          )}
-          
-          {/* Add New Profile Button */}
-          {profiles.length > 0 && (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push('/horoscope')}
-            >
-              <Ionicons name="add" size={24} color="#FFFFFF" />
-              <Text style={styles.addButtonText}>
-                {getText('புதிய ஜாதகம்', 'New Horoscope')}
-              </Text>
-            </TouchableOpacity>
+            </>
           )}
         </ScrollView>
       )}
+
+      {/* Rename modal */}
+      <Modal visible={!!renameTarget} transparent animationType="slide" onRequestClose={() => setRenameTarget(null)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>மறுபெயரிடு / Rename Chart</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="பெயர் / Label"
+              placeholderTextColor={colors.textMuted}
+              value={renameValue}
+              onChangeText={setRenameValue}
+              autoFocus
+            />
+            <View style={styles.sheetActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setRenameTarget(null)}>
+                <Text style={styles.cancelText}>ரத்து / Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sendBtn, (!renameValue.trim() || renaming) && { opacity: 0.5 }]}
+                onPress={submitRename}
+                disabled={!renameValue.trim() || renaming}
+              >
+                {renaming ? <ActivityIndicator color={colors.onBrand} /> : <Text style={styles.sendText}>சேமி / Save</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  backButton: {
-    minWidth: 44,
-    minHeight: 44,
+  container: { flex: 1, backgroundColor: colors.bg },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xxl },
+  empty: { alignItems: 'center', paddingTop: spacing.xxxl },
+  gateIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.brandSoft,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: spacing.lg,
   },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
+  gateTitle: { fontSize: font.xl, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  gateText: {
+    fontSize: font.base,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    lineHeight: lineHeights.body,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  languageToggle: {
-    backgroundColor: '#34495E',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  languageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loginGate: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  googleButton: {
+  googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4285F4',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 28,
-    marginTop: 8,
-    minWidth: 240,
+    backgroundColor: colors.brand,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
+    marginTop: spacing.xl,
+    gap: spacing.sm,
+    minWidth: 220,
     minHeight: 48,
   },
-  googleButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
+  googleBtnText: { color: colors.onBrand, fontSize: font.lg, fontWeight: '700' },
+  countLabel: {
+    fontSize: font.sm,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
   },
-  accountRow: {
-    flexDirection: 'row',
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadow.card,
+  },
+  cardTop: { flexDirection: 'row', alignItems: 'center' },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.brandSoft,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#E8F5E9',
+    marginRight: spacing.md,
   },
-  accountEmail: {
+  cardInfo: { flex: 1 },
+  cardName: { fontSize: font.lg, fontWeight: '700', color: colors.text },
+  cardMeta: { fontSize: font.sm, color: colors.textSecondary, marginTop: 2 },
+  cardActions: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+    justifyContent: 'space-between',
+  },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingHorizontal: 6 },
+  actionText: { fontSize: font.base, fontWeight: '600', color: colors.brandStrong },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  sheetTitle: { fontSize: font.xl, fontWeight: '700', color: colors.text },
+  input: {
+    backgroundColor: colors.surfaceTertiary,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    fontSize: font.lg,
+    color: colors.text,
+    marginTop: spacing.lg,
+  },
+  sheetActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
+  cancelBtn: {
     flex: 1,
-    fontSize: 14,
-    color: '#2C3E50',
-    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceTertiary,
   },
-  logoutButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  logoutText: {
-    color: '#E74C3C',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    marginTop: 16,
-  },
-  emptyContainer: {
+  cancelText: { color: colors.textSecondary, fontSize: font.base, fontWeight: '700' },
+  sendBtn: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 32,
-    lineHeight: 20,
-  },
-  createButton: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  profilesList: {
-    paddingTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 16,
-  },
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  profileIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F0F8FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 4,
-  },
-  profilePlace: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    marginBottom: 2,
-  },
-  profileDate: {
-    fontSize: 13,
-    color: '#95A5A6',
-  },
-  deleteButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand,
+    minHeight: 48,
   },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginLeft: 8,
-  },
-  addButton: {
-    backgroundColor: '#27AE60',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 16,
-    marginBottom: 32,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
+  sendText: { color: colors.onBrand, fontSize: font.base, fontWeight: '700' },
 });
