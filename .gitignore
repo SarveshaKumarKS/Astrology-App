@@ -108,3 +108,8 @@ NKV_Palan_Logic_Summary.docx
 java_harness/out/
 java_harness/TestDebug*.java
 java_harness/TestMonthStarts.java
+.env
+.env.*
+credentials.json
+*.key
+.credentials
