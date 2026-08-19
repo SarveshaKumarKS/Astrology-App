@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,28 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme';
 import { useAuth } from '../lib/auth';
-import { useDebug } from '../lib/debug';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { toggleMode } = useDebug();
   const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
-  const tapTimes = useRef<number[]>([]);
 
   const appVersion =
     (Constants.expoConfig?.version as string) ||
     ((Constants as any).manifest?.version as string) ||
     '1.0.0';
-
-  // Hidden gesture: triple-tap the version label to toggle Correction Mode.
-  const handleVersionTap = () => {
-    const now = Date.now();
-    tapTimes.current = [...tapTimes.current, now].filter((t) => now - t < 1200);
-    if (tapTimes.current.length >= 3) {
-      tapTimes.current = [];
-      toggleMode();
-    }
-  };
 
   const getText = (tamil: string, english: string) =>
     language === 'tamil' ? tamil : english;
@@ -148,10 +135,9 @@ export default function HomePage() {
           </Text>
         </View>
 
-        {/* Version (triple-tap to toggle Correction Mode) */}
-        <TouchableOpacity testID="app-version-correction-toggle" activeOpacity={1} onPress={handleVersionTap} style={styles.versionWrap}>
+        <View testID="app-version-label" style={styles.versionWrap}>
           <Text style={styles.versionText}>{getText('பதிப்பு', 'Version')} {appVersion}</Text>
-        </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

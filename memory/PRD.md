@@ -71,6 +71,14 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
 - Deployment scan: PASS. Expo Doctor: 18/18. Independent regression: frontend 100%,
   backend 23/23, health 200, no broken scoped flow or API.
 
+## User-Friendly Correction Mode Entry
+- Removed the hidden triple-tap gesture from the Home screen version label.
+- Horoscope Results now shows a visible “Found a wrong value?” correction control.
+- Tapping Correct opens a cross-platform confirmation modal explaining editable values
+  and that Kattam charts remain read-only.
+- Active mode has explicit Review and Exit controls; all existing correction logging and
+  submission behavior remains unchanged.
+
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
   (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).

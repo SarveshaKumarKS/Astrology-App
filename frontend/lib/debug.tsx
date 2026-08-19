@@ -97,14 +97,72 @@ export function useDebug(): DebugContextValue {
 /** Result-screen-only controls. Keeping this outside the provider prevents
  * Correction Mode UI from leaking onto forms, profiles, or other screens. */
 export function CorrectionControls() {
-  const { correctionMode, corrections, removeCorrection } = useDebug();
+  const { correctionMode, toggleMode, corrections, removeCorrection } = useDebug();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const entries = Object.entries(corrections);
   const count = entries.length;
 
-  if (!correctionMode) return null;
+  const confirmEnter = () => {
+    setConfirmOpen(true);
+  };
+
+  if (!correctionMode) {
+    return (
+      <>
+        <View testID="correction-mode-entry" style={styles.entryBar}>
+          <View style={styles.entryCopy}>
+            <View style={styles.entryIcon}>
+              <Ionicons name="construct-outline" size={18} color={colors.brandStrong} />
+            </View>
+            <View style={styles.entryTextWrap}>
+              <Text testID="correction-mode-entry-title" style={styles.entryTitle}>Found a wrong value?</Text>
+              <Text style={styles.entrySubtitle} numberOfLines={1}>Open Correction Mode to report it</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            testID="correction-mode-enter-button"
+            style={styles.enterBtn}
+            onPress={confirmEnter}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.enterBtnText}>Correct</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
+          <View testID="correction-mode-confirmation" style={styles.confirmOverlay}>
+            <View style={styles.confirmDialog}>
+              <View style={styles.confirmIcon}>
+                <Ionicons name="construct-outline" size={24} color={colors.brandStrong} />
+              </View>
+              <Text testID="correction-mode-confirmation-title" style={styles.confirmTitle}>Enter Correction Mode?</Text>
+              <Text style={styles.confirmBody}>
+                Edit incorrect result values and submit them for review. Kattam charts stay read-only.
+              </Text>
+              <View style={styles.actions}>
+                <TouchableOpacity testID="correction-mode-confirm-cancel" style={styles.cancelBtn} onPress={() => setConfirmOpen(false)}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="correction-mode-confirm-enter"
+                  style={styles.sendBtn}
+                  onPress={() => {
+                    setConfirmOpen(false);
+                    toggleMode();
+                  }}
+                >
+                  <Text style={styles.sendText}>Enter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </>
+    );
+  }
 
   const submit = async () => {
     if (count === 0) return;
@@ -140,14 +198,19 @@ export function CorrectionControls() {
           <Ionicons name="build-outline" size={16} color={colors.brandStrong} />
           <Text style={styles.bannerText} numberOfLines={1}>Correction Mode</Text>
         </View>
-        <TouchableOpacity
-          testID="correction-review-button"
-          style={styles.reviewBtn}
-          onPress={() => setReviewOpen(true)}
-        >
-          <Text style={styles.reviewBtnText}>Review{count ? ` (${count})` : ''}</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.onBrand} />
-        </TouchableOpacity>
+        <View style={styles.bannerActions}>
+          <TouchableOpacity testID="correction-mode-exit-button" style={styles.exitBtn} onPress={toggleMode}>
+            <Text style={styles.exitBtnText}>Exit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="correction-review-button"
+            style={styles.reviewBtn}
+            onPress={() => setReviewOpen(true)}
+          >
+            <Text style={styles.reviewBtnText}>Review{count ? ` (${count})` : ''}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.onBrand} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal visible={reviewOpen} transparent animationType="slide" onRequestClose={() => setReviewOpen(false)}>
@@ -210,6 +273,66 @@ export function CorrectionControls() {
 }
 
 const styles = StyleSheet.create({
+  entryBar: {
+    minHeight: 64,
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  entryCopy: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  entryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryTextWrap: { flex: 1, minWidth: 0 },
+  entryTitle: { color: colors.text, fontSize: font.base, lineHeight: 20, fontWeight: '700' },
+  entrySubtitle: { color: colors.textSecondary, fontSize: font.sm, lineHeight: 18 },
+  enterBtn: {
+    minWidth: 76,
+    minHeight: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  enterBtnText: { color: colors.brandStrong, fontSize: font.sm, fontWeight: '800' },
+  confirmOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    backgroundColor: 'rgba(43, 29, 20, 0.36)',
+  },
+  confirmDialog: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: radius.xl,
+    backgroundColor: colors.card,
+    padding: spacing.xl,
+  },
+  confirmIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  confirmTitle: { color: colors.text, fontSize: font.xl, lineHeight: 28, fontWeight: '800' },
+  confirmBody: { color: colors.textSecondary, fontSize: font.base, lineHeight: 22, marginTop: spacing.sm },
   banner: {
     backgroundColor: colors.brandSoft,
     flexDirection: 'row',
@@ -222,6 +345,18 @@ const styles = StyleSheet.create({
   },
   bannerLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   bannerText: { flexShrink: 1, color: colors.brandStrong, fontSize: font.sm, fontWeight: '800' },
+  bannerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  exitBtn: {
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.card,
+  },
+  exitBtnText: { color: colors.textSecondary, fontSize: font.sm, fontWeight: '700' },
   reviewBtn: {
     backgroundColor: colors.brand,
     flexDirection: 'row',
