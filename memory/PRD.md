@@ -79,6 +79,28 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
 - Active mode has explicit Review and Exit controls; all existing correction logging and
   submission behavior remains unchanged.
 
+## Grouped Correction Logging
+- Each correction submission now creates exactly one MongoDB `corrections` document.
+- The document includes `birth_details` with name, place of birth, date of birth, and
+  time of birth; `corrections` is a JSON list containing every changed field.
+- App/device/note/email context is grouped under `metadata`.
+- Correction persistence now returns HTTP 503 if MongoDB cannot save the document instead
+  of incorrectly reporting success.
+- Backend regression includes the grouped schema and passes 24/24 tests.
+
+## Global Language + Native Date/Time
+- Added one app-level Tamil/English language provider. The Home selection now propagates
+  through Horoscope, Horoscope Results, Compatibility, Panchangam, Account, and Saved Charts.
+- The selected language is persisted with SecureStore on Android/iOS and retained across
+  navigation in preview web.
+- Correction Mode functionality remains intact and intentionally stays English-only.
+- Replaced the Horoscope legacy date/time modal with native Android/iOS pickers and a
+  reliable mobile-first numeric fallback for web preview.
+- Compatibility and Panchangam now use the same shared date/time picker behavior.
+- Restored `/api/panchangam/{date}` with real Swiss Ephemeris calculations for Chennai/IST,
+  including Panchangam elements, solar/lunar rise-set times, Rahu/Yama/Gulika periods,
+  and Abhijit Muhurta; no placeholder data is used.
+
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
   (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).

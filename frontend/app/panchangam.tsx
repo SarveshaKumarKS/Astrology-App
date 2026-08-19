@@ -12,11 +12,12 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors, shadow } from '../lib/theme';
+import { useLanguage } from '../lib/language';
+import NativeDateTimePicker from '../components/NativeDateTimePicker';
 
 interface PanchangamData {
   date: string;
@@ -61,16 +62,12 @@ interface PanchangamData {
 }
 
 export default function PanchangamPage() {
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { language, toggleLanguage, getText } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [panchangamData, setPanchangamData] = useState<PanchangamData | null>(null);
-
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
 
   const loadPanchangam = async (date: Date = selectedDate) => {
     try {
@@ -110,11 +107,9 @@ export default function PanchangamPage() {
     loadPanchangam();
   };
 
-  const handleDateChange = (event: any, date?: Date) => {
+  const handleDateChange = (date: Date) => {
     setShowDatePicker(false);
-    if (date) {
-      setSelectedDate(date);
-    }
+    setSelectedDate(date);
   };
 
   const formatTime = (timeString: string) => {
@@ -164,8 +159,9 @@ export default function PanchangamPage() {
         onBack={() => router.back()}
         right={
           <TouchableOpacity
+            testID="panchangam-language-button"
             style={styles.langPill}
-            onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+            onPress={toggleLanguage}
           >
             <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
           </TouchableOpacity>
@@ -175,12 +171,13 @@ export default function PanchangamPage() {
       {/* Date Selection */}
       <View style={styles.dateSection}>
         <TouchableOpacity
+          testID="panchangam-date-button"
           style={styles.dateSelector}
           onPress={() => setShowDatePicker(true)}
         >
           <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
           <Text style={styles.dateText}>
-            {selectedDate.toLocaleDateString('en-GB', {
+            {selectedDate.toLocaleDateString(language === 'tamil' ? 'ta-IN' : 'en-GB', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -349,15 +346,17 @@ export default function PanchangamPage() {
         </View>
       )}
 
-      {/* Date Picker */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
+      <NativeDateTimePicker
+        visible={showDatePicker}
+        mode="date"
+        value={selectedDate}
+        title={getText('தேதியைத் தேர்ந்தெடுக்கவும்', 'Select date')}
+        cancelLabel={getText('ரத்து', 'Cancel')}
+        confirmLabel={getText('சரி', 'Done')}
+        testID="panchangam-date-picker"
+        onCancel={() => setShowDatePicker(false)}
+        onConfirm={handleDateChange}
+      />
     </View>
   );
 }

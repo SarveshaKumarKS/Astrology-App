@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timezone
 
 # Load environment BEFORE importing modules (e.g. auth) that read DB_NAME/MONGO_URL
 # at import time, so they bind to the correct database.
@@ -28,12 +28,10 @@ from astrology.karu_udayam import (
 from auth import router as auth_router, get_current_user, ensure_indexes, _resolve_user
 from fastapi import Depends, Request
 
-# MongoDB connection (optional — persistence is best-effort for the demo build).
-# Falls back to sensible defaults and a short server-selection timeout so the
-# core horoscope/PDF endpoints work even when no MongoDB is running.
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+mongo_url = os.environ['MONGO_URL']
+database_name = os.environ['DB_NAME']
 client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=2000)
-db = client[os.environ.get('DB_NAME', 'tamil_astrology')]
+db = client[database_name]
 
 # Create the main app without a prefix
 app = FastAPI(title="Tamil Astrology API", version="1.0.0")
@@ -88,12 +86,22 @@ class CorrectionItem(BaseModel):
     original_value: str = ""
     corrected_value: str = ""
 
-class CorrectionsPayload(BaseModel):
-    corrections: List[CorrectionItem]
+class CorrectionBirthDetails(BaseModel):
+    name: str = ""
+    place_of_birth: str = ""
+    date_of_birth: str = ""
+    time_of_birth: str = ""
+
+class CorrectionMetadata(BaseModel):
     app_version: Optional[str] = None
     device_model: Optional[str] = None
     platform: Optional[str] = None
     note: Optional[str] = None
+
+class CorrectionsPayload(BaseModel):
+    birth_details: CorrectionBirthDetails
+    corrections: List[CorrectionItem]
+    metadata: CorrectionMetadata = Field(default_factory=CorrectionMetadata)
 
 # Initialize calculators
 vakkiam_calc = VakkiamCalculator()
@@ -579,43 +587,47 @@ async def submit_corrections(payload: CorrectionsPayload, request: Request):
     except Exception:
         pass
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     batch_id = str(uuid.uuid4())
-    docs = []
-    for c in items:
-        docs.append({
-            "id": str(uuid.uuid4()),
-            "batch_id": batch_id,
+    correction_list = [
+        {
             "screen_id": c.screen_id[:100],
             "field_name": c.field_name[:100],
             "original_value": (c.original_value or "")[:1000],
             "corrected_value": (c.corrected_value or "")[:1000],
-            "app_version": (payload.app_version or "")[:40],
-            "device_model": (payload.device_model or "")[:80],
-            "platform": (payload.platform or "")[:40],
-            "note": (payload.note or "")[:1000],
+        }
+        for c in items
+    ]
+    doc = {
+        "id": str(uuid.uuid4()),
+        "batch_id": batch_id,
+        "birth_details": {
+            "name": payload.birth_details.name[:200],
+            "place_of_birth": payload.birth_details.place_of_birth[:500],
+            "date_of_birth": payload.birth_details.date_of_birth[:40],
+            "time_of_birth": payload.birth_details.time_of_birth[:40],
+        },
+        "corrections": correction_list,
+        "metadata": {
+            "app_version": (payload.metadata.app_version or "")[:40],
+            "device_model": (payload.metadata.device_model or "")[:80],
+            "platform": (payload.metadata.platform or "")[:40],
+            "note": (payload.metadata.note or "")[:1000],
             "email": email,
-            "status": "open",
-            "created_at": now,
-        })
+        },
+        "status": "open",
+        "created_at": now,
+    }
     try:
-        await db.corrections.insert_many(docs)
+        await db.corrections.insert_one(dict(doc))
     except Exception as e:
-        logging.warning(f"Corrections not persisted (DB unavailable): {e}")
-    return {"success": True, "count": len(docs), "batch_id": batch_id}
+        logging.error(f"Corrections not persisted: {e}")
+        raise HTTPException(status_code=503, detail="Could not save corrections. Please try again.")
+    return {"success": True, "count": len(correction_list), "batch_id": batch_id}
 
 # Panchangam (Thirukkanitham only)
 @api_router.get("/panchangam/{date}")
 async def get_panchangam(date: date, language: str = "tamil"):
-    # NOTE: daily-panchangam (tithi/yoga/karana/muhurta) is not implemented in
-    # this build — ThirukkanithamCalculator has no get_daily_panchangam method.
-    # Return a clear 501 so the Panchangam screen degrades gracefully instead of
-    # surfacing a 500 stack trace during the demo.
-    if not hasattr(thirukkanitham_calc, "get_daily_panchangam"):
-        raise HTTPException(
-            status_code=501,
-            detail="Daily Panchangam is not available in this build.",
-        )
     try:
         panchangam = thirukkanitham_calc.get_daily_panchangam(date, language)
         return panchangam

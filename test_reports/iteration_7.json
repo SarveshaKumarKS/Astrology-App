@@ -1,0 +1,52 @@
+{
+  "summary": "Backend + mobile-web frontend regression completed on preview. Requested language propagation, native/web picker behavior, Panchangam API/data rendering, correction mode behavior, and viewport checks passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "Runtime console",
+        "issue": "Deprecation warning observed: props.pointerEvents is deprecated; use style.pointerEvents"
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_panchangam_api.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/artifacts_iter8/home_loaded_390.jpeg",
+    "/app/test_reports/artifacts_iter8/final_mobile_validation.jpeg",
+    "/app/test_reports/artifacts_iter8/final_runB.jpeg",
+    "/root/.emergent/automation_output/20260819_052809/console_20260819_052809.log",
+    "/root/.emergent/automation_output/20260819_052929/console_20260819_052929.log",
+    "/root/.emergent/automation_output/20260819_053056/console_20260819_053056.log"
+  ],
+  "action_items": [
+    "Remove deprecated pointerEvents prop usage to keep console clean and future-safe.",
+    "Align backend env handling with fail-fast policy (avoid fallback defaults for MONGO_URL/DB_NAME).",
+    "Update stale Panchangam endpoint comment in backend/server.py that still references old 501-disabled behavior."
+  ],
+  "critical_code_review_comments": [
+    "Language provider propagation works across Home, Horoscope, Compatibility, Panchangam, Saved Charts, and Account during in-app navigation in both English and Tamil.",
+    "Horoscope/Compatibility/Panchangam shared NativeDateTimePicker behavior is stable on web fallback (cancel, reopen, set, confirm) and correctly scopes updates to selected person in compatibility.",
+    "backend/server.py still uses default fallbacks for MONGO_URL and DB_NAME, which conflicts with the environment-only/fail-fast guideline.",
+    "backend/server.py Panchangam route contains obsolete comments about feature unavailability though endpoint currently returns live data."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_panchangam_api.py",
+    "/app/test_reports/iteration_7.json"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 pytest passed including new Panchangam API regression)",
+    "frontend": "96% (all requested functional flows passed; one non-blocking console deprecation warning)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use in-app navigation (screen-header-back-button) for language propagation assertions. Full page reload can reset web language state and is not equivalent to in-app flow continuity.",
+  "rca_of_issue": "Previously reported Panchangam 501 regression is not reproducible now. Direct API check and pytest confirm /api/panchangam/2026-08-19?language=english returns 200 with real tithi/nakshatra/yoga/karana, rise-set, Rahu/Yama/Gulika, and Abhijit fields."
+}

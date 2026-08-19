@@ -23,6 +23,7 @@ import { useAuth } from '../lib/auth';
 import ScreenHeader from '../components/ScreenHeader';
 import { CorrectionControls } from '../lib/debug';
 import { colors, radius, font, shadow } from '../lib/theme';
+import { useLanguage } from '../lib/language';
 
 interface PlanetaryPosition {
   planet: string;
@@ -117,7 +118,7 @@ interface HoroscopeData {
 export default function HoroscopeResultPage() {
   const { width } = useWindowDimensions();
   const { user, login } = useAuth();
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { language, toggleLanguage, getText } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [horoscopeData, setHoroscopeData] = useState<HoroscopeData | null>(null);
@@ -130,17 +131,12 @@ export default function HoroscopeResultPage() {
       try {
         const data = JSON.parse(params.data as string);
         setHoroscopeData(data);
-        setLanguage(data.language || 'tamil');
       } catch (error) {
         console.error('Error parsing horoscope data:', error);
         Alert.alert('Error', 'Failed to load horoscope data');
       }
     }
   }, [params.data]);
-
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
 
   const saveProfile = async () => {
     if (!horoscopeData) return;
@@ -701,7 +697,7 @@ export default function HoroscopeResultPage() {
             <TouchableOpacity
               testID="result-language-button"
               style={styles.langPill}
-              onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+              onPress={toggleLanguage}
             >
               <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
             </TouchableOpacity>
@@ -709,7 +705,14 @@ export default function HoroscopeResultPage() {
         }
       />
 
-      <CorrectionControls />
+      <CorrectionControls
+        birthDetails={{
+          name: horoscopeData.birth_details.name,
+          place_of_birth: horoscopeData.birth_details.place_of_birth,
+          date_of_birth: horoscopeData.birth_details.date_of_birth,
+          time_of_birth: horoscopeData.birth_details.time_of_birth,
+        }}
+      />
 
       <ScrollView
         testID="horoscope-result-scroll"

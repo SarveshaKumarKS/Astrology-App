@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, time, timedelta
 from typing import Dict, List
 import math
 import swisseph as swe
@@ -30,6 +30,116 @@ class ThirukkanithamCalculator(AstronomicalCalculations):
     def __init__(self):
         super().__init__()
         self.system_name = "thirukkanitham"
+
+    def get_daily_panchangam(self, target_date: date, language: str = "tamil") -> Dict:
+        """Calculate a Chennai/IST daily Panchangam using Swiss Ephemeris."""
+        latitude, longitude, timezone_offset = 13.0827, 80.2707, 5.5
+        local_noon = time(12, 0)
+        details = self.calculate_panchangam_details(
+            target_date, local_noon, latitude, longitude, timezone_offset
+        )
+
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        jd = self.get_julian_day(target_date, local_noon, timezone_offset)
+        moon_longitude = swe.calc_ut(jd, swe.MOON, _SWE_FLAGS)[0][0] % 360.0
+        nakshatra_number = self.get_nakshatra_from_longitude(moon_longitude)
+
+        utc_midnight = datetime.combine(target_date, time.min) - timedelta(hours=timezone_offset)
+        jd_midnight = swe.julday(
+            utc_midnight.year,
+            utc_midnight.month,
+            utc_midnight.day,
+            utc_midnight.hour + utc_midnight.minute / 60.0,
+        )
+
+        def event_time(body: int, event: int) -> str:
+            result = swe.rise_trans(
+                jd_midnight, body, event, (longitude, latitude, 0.0)
+            )[1][0]
+            local = swe.revjul(result + timezone_offset / 24.0)[3]
+            hours = int(local) % 24
+            minutes = int(round((local % 1) * 60))
+            if minutes == 60:
+                hours = (hours + 1) % 24
+                minutes = 0
+            return f"{hours:02d}:{minutes:02d}"
+
+        moonrise = event_time(swe.MOON, swe.CALC_RISE)
+        moonset = event_time(swe.MOON, swe.CALC_SET)
+
+        def minutes(value: str) -> int:
+            hours, mins = value.split(":")
+            return int(hours) * 60 + int(mins)
+
+        def clock(value: float) -> str:
+            total = int(round(value)) % (24 * 60)
+            return f"{total // 60:02d}:{total % 60:02d}"
+
+        sunrise_minutes = minutes(details["sunrise_time"])
+        sunset_minutes = minutes(details["sunset_time"])
+        daylight_segment = (sunset_minutes - sunrise_minutes) / 8.0
+
+        def segment(index: int) -> Dict[str, str]:
+            start = sunrise_minutes + daylight_segment * index
+            return {"start": clock(start), "end": clock(start + daylight_segment)}
+
+        weekday = target_date.weekday()  # Monday = 0
+        rahu_indices = [1, 6, 4, 5, 3, 2, 7]
+        yama_indices = [3, 2, 1, 0, 6, 5, 4]
+        gulika_indices = [5, 4, 3, 2, 1, 0, 6]
+        rahu_kalam = segment(rahu_indices[weekday])
+        yama_gandam = segment(yama_indices[weekday])
+        gulika_kalam = segment(gulika_indices[weekday])
+
+        solar_noon = (sunrise_minutes + sunset_minutes) / 2.0
+        abhijit_muhurta = {
+            "start": clock(solar_noon - 24),
+            "end": clock(solar_noon + 24),
+        }
+
+        return {
+            "date": target_date.isoformat(),
+            "tithi": details["tithi"],
+            "tithi_tamil": details["tithi_tamil"],
+            "nakshatra": NAKSHATRAS[nakshatra_number],
+            "nakshatra_tamil": NAKSHATRAS_TAMIL[nakshatra_number],
+            "yoga": details["yoga"],
+            "yoga_tamil": details["yoga_tamil"],
+            "karana": details["karana"],
+            "karana_tamil": details["karana_tamil"],
+            "sunrise": details["sunrise_time"],
+            "sunset": details["sunset_time"],
+            "moonrise": moonrise,
+            "moonset": moonset,
+            "rahu_kalam": rahu_kalam,
+            "yama_gandam": yama_gandam,
+            "gulika_kalam": gulika_kalam,
+            "abhijit_muhurta": abhijit_muhurta,
+            "auspicious_times": [
+                {
+                    "name": "Abhijit Muhurta",
+                    "tamil": "அபிஜித் முகூர்த்தம்",
+                    "description": f"{abhijit_muhurta['start']} - {abhijit_muhurta['end']}",
+                }
+            ],
+            "inauspicious_times": [
+                {
+                    "name": "Rahu Kalam",
+                    "tamil": "ராகு காலம்",
+                    "description": f"{rahu_kalam['start']} - {rahu_kalam['end']}",
+                },
+                {
+                    "name": "Yama Gandam",
+                    "tamil": "எமகண்டம்",
+                    "description": f"{yama_gandam['start']} - {yama_gandam['end']}",
+                },
+                {
+                    "name": "Gulika Kalam",
+                    "tamil": "குளிகை காலம்",
+                    "description": f"{gulika_kalam['start']} - {gulika_kalam['end']}",
+                },
+            ],
+        }
 
     # ---------- Modern Drik-ganita Calculation Methods ----------
     

@@ -33,6 +33,7 @@ export default function CorrectableField({ screenId, field, label, value, varian
 
   const existing = getCorrection(screenId, field);
   const corrected = existing?.corrected_value;
+  const fieldTestID = testID || `correctable-${field.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
   const startEdit = () => {
     setDraft(corrected ?? value ?? '');
@@ -47,7 +48,7 @@ export default function CorrectableField({ screenId, field, label, value, varian
   return (
     <>
       <TouchableOpacity
-        testID={testID || `correctable-${field.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+        testID={fieldTestID}
         activeOpacity={correctionMode ? 0.7 : 1}
         onPress={correctionMode ? startEdit : undefined}
         style={[
@@ -74,34 +75,36 @@ export default function CorrectableField({ screenId, field, label, value, varian
         )}
       </TouchableOpacity>
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.overlay}
-        >
-          <View testID="correction-edit-dialog" style={styles.dialog}>
-            <Text testID="correction-edit-title" style={styles.dialogTitle}>{label}</Text>
-            <Text testID="correction-original-value" style={styles.original}>Original: {value || '—'}</Text>
-            <TextInput
-              testID="correction-value-input"
-              style={styles.input}
-              value={draft}
-              onChangeText={setDraft}
-              placeholder="சரியான மதிப்பு / Correct value"
-              placeholderTextColor={colors.textMuted}
-              autoFocus
-            />
-            <View style={styles.actions}>
-              <TouchableOpacity testID="correction-cancel-button" style={styles.cancelBtn} onPress={() => setOpen(false)}>
-                <Text style={styles.cancelText}>ரத்து / Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity testID="correction-save-button" style={styles.saveBtn} onPress={save}>
-                <Text style={styles.saveText}>சேமி / Save</Text>
-              </TouchableOpacity>
+      {open ? (
+        <Modal visible transparent animationType="none" onRequestClose={() => setOpen(false)}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.overlay}
+          >
+            <View testID={`${fieldTestID}-edit-dialog`} style={styles.dialog}>
+              <Text testID={`${fieldTestID}-edit-title`} style={styles.dialogTitle}>{label}</Text>
+              <Text testID={`${fieldTestID}-original-value`} style={styles.original}>Original: {value || '—'}</Text>
+              <TextInput
+                testID={`${fieldTestID}-correction-input`}
+                style={styles.input}
+                value={draft}
+                onChangeText={setDraft}
+                placeholder="சரியான மதிப்பு / Correct value"
+                placeholderTextColor={colors.textMuted}
+                autoFocus
+              />
+              <View style={styles.actions}>
+                <TouchableOpacity testID={`${fieldTestID}-correction-cancel`} style={styles.cancelBtn} onPress={() => setOpen(false)}>
+                  <Text style={styles.cancelText}>ரத்து / Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity testID={`${fieldTestID}-correction-save`} style={styles.saveBtn} onPress={save}>
+                  <Text style={styles.saveText}>சேமி / Save</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+          </KeyboardAvoidingView>
+        </Modal>
+      ) : null}
     </>
   );
 }

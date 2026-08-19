@@ -14,11 +14,12 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors, shadow } from '../lib/theme';
+import { useLanguage } from '../lib/language';
+import NativeDateTimePicker from '../components/NativeDateTimePicker';
 
 interface BirthDetails {
   name: string;
@@ -32,7 +33,7 @@ interface BirthDetails {
 }
 
 export default function CompatibilityPage() {
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { language, toggleLanguage, getText } = useLanguage();
   const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState<{show: boolean, person: 'male' | 'female'}>({show: false, person: 'male'});
@@ -61,10 +62,6 @@ export default function CompatibilityPage() {
     time_correction: '0',
   });
 
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
-
   const handleInputChange = (person: 'male' | 'female', field: keyof BirthDetails, value: string) => {
     if (person === 'male') {
       setMaleDetails(prev => ({ ...prev, [field]: value }));
@@ -73,27 +70,21 @@ export default function CompatibilityPage() {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (selectedDate: Date) => {
     const person = showDatePicker.person;
     setShowDatePicker({show: false, person: 'male'});
-    if (selectedDate) {
-      // Format date without timezone conversion to avoid date shifting
-      const year = selectedDate.getFullYear();
-      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-      const day = selectedDate.getDate().toString().padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      
-      handleInputChange(person, 'date_of_birth', dateString);
-    }
+    const year = selectedDate.getFullYear();
+    const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = selectedDate.getDate().toString().padStart(2, '0');
+    handleInputChange(person, 'date_of_birth', `${year}-${month}-${day}`);
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
+  const handleTimeChange = (selectedTime: Date) => {
+    const person = showTimePicker.person;
     setShowTimePicker({show: false, person: 'male'});
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      handleInputChange(showTimePicker.person, 'time_of_birth', `${hours}:${minutes}`);
-    }
+    const hours = selectedTime.getHours().toString().padStart(2, '0');
+    const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+    handleInputChange(person, 'time_of_birth', `${hours}:${minutes}`);
   };
 
   const validateForm = (): boolean => {
@@ -202,6 +193,7 @@ export default function CompatibilityPage() {
           {getText('பெயர்', 'Name')} *
         </Text>
         <TextInput
+          testID={`${person}-name-input`}
           style={styles.textInput}
           value={details.name}
           onChangeText={(value) => handleInputChange(person, 'name', value)}
@@ -216,6 +208,7 @@ export default function CompatibilityPage() {
           {getText('பிறந்த தேதி', 'Date of Birth')} *
         </Text>
         <TouchableOpacity
+          testID={`${person}-birth-date-button`}
           style={styles.dateTimeButton}
           onPress={() => setShowDatePicker({show: true, person})}
         >
@@ -232,6 +225,7 @@ export default function CompatibilityPage() {
           {getText('பிறந்த நேரம்', 'Time of Birth')} *
         </Text>
         <TouchableOpacity
+          testID={`${person}-birth-time-button`}
           style={styles.dateTimeButton}
           onPress={() => setShowTimePicker({show: true, person})}
         >
@@ -248,6 +242,7 @@ export default function CompatibilityPage() {
           {getText('பிறந்த இடம்', 'Place of Birth')} *
         </Text>
         <TextInput
+          testID={`${person}-birth-place-input`}
           style={styles.textInput}
           value={details.place_of_birth}
           onChangeText={(value) => handleInputChange(person, 'place_of_birth', value)}
@@ -263,6 +258,7 @@ export default function CompatibilityPage() {
             {getText('அட்சரேகை', 'Latitude')} *
           </Text>
           <TextInput
+            testID={`${person}-latitude-input`}
             style={styles.textInput}
             value={details.latitude}
             onChangeText={(value) => handleInputChange(person, 'latitude', value)}
@@ -277,6 +273,7 @@ export default function CompatibilityPage() {
             {getText('தீர்க்கரேகை', 'Longitude')} *
           </Text>
           <TextInput
+            testID={`${person}-longitude-input`}
             style={styles.textInput}
             value={details.longitude}
             onChangeText={(value) => handleInputChange(person, 'longitude', value)}
@@ -299,8 +296,9 @@ export default function CompatibilityPage() {
         onBack={() => router.back()}
         right={
           <TouchableOpacity
+            testID="compatibility-language-button"
             style={styles.langPill}
-            onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+            onPress={toggleLanguage}
           >
             <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
           </TouchableOpacity>
@@ -320,6 +318,7 @@ export default function CompatibilityPage() {
             
             <View style={styles.systemButtons}>
               <TouchableOpacity
+                testID="compatibility-vakkiam-button"
                 style={[
                   styles.systemButton,
                   system === 'vakkiam' && styles.systemButtonActive
@@ -335,6 +334,7 @@ export default function CompatibilityPage() {
               </TouchableOpacity>
               
               <TouchableOpacity
+                testID="compatibility-thirukkanitham-button"
                 style={[
                   styles.systemButton,
                   system === 'thirukkanitham' && styles.systemButtonActive
@@ -359,6 +359,7 @@ export default function CompatibilityPage() {
         {/* Check Button */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
+            testID="generate-compatibility-button"
             style={[styles.checkButton, loading && styles.checkButtonDisabled]}
             onPress={checkCompatibility}
             disabled={loading}
@@ -374,26 +375,30 @@ export default function CompatibilityPage() {
         </View>
       </KeyboardAvoidingView>
       
-      {/* Date Picker */}
-      {showDatePicker.show && (
-        <DateTimePicker
-          value={new Date(showDatePicker.person === 'male' ? maleDetails.date_of_birth : femaleDetails.date_of_birth)}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
-      )}
-      
-      {/* Time Picker */}
-      {showTimePicker.show && (
-        <DateTimePicker
-          value={new Date(`2000-01-01T${showTimePicker.person === 'male' ? maleDetails.time_of_birth : femaleDetails.time_of_birth}:00`)}
-          mode="time"
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
+      <NativeDateTimePicker
+        visible={showDatePicker.show}
+        mode="date"
+        value={new Date(`${showDatePicker.person === 'male' ? maleDetails.date_of_birth : femaleDetails.date_of_birth}T12:00:00`)}
+        title={getText('பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்', 'Select date of birth')}
+        cancelLabel={getText('ரத்து', 'Cancel')}
+        confirmLabel={getText('சரி', 'Done')}
+        testID={`${showDatePicker.person}-compatibility-date-picker`}
+        maximumDate={new Date()}
+        onCancel={() => setShowDatePicker({show: false, person: 'male'})}
+        onConfirm={handleDateChange}
+      />
+
+      <NativeDateTimePicker
+        visible={showTimePicker.show}
+        mode="time"
+        value={new Date(`2000-01-01T${showTimePicker.person === 'male' ? maleDetails.time_of_birth : femaleDetails.time_of_birth}:00`)}
+        title={getText('பிறந்த நேரத்தைத் தேர்ந்தெடுக்கவும்', 'Select time of birth')}
+        cancelLabel={getText('ரத்து', 'Cancel')}
+        confirmLabel={getText('சரி', 'Done')}
+        testID={`${showTimePicker.person}-compatibility-time-picker`}
+        onCancel={() => setShowTimePicker({show: false, person: 'male'})}
+        onConfirm={handleTimeChange}
+      />
     </View>
   );
 }

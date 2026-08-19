@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 EMERGENT_SESSION_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 SESSION_TTL_DAYS = 7
 
-mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+mongo_url = os.environ["MONGO_URL"]
+database_name = os.environ["DB_NAME"]
 _client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=2000)
-_db = _client[os.environ.get("DB_NAME", "tamil_astrology")]
+_db = _client[database_name]
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

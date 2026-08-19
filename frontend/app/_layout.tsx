@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../lib/auth';
 import { DebugProvider } from '../lib/debug';
+import { LanguageProvider } from '../lib/language';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -50,17 +51,19 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <AuthProvider>
-          <DebugProvider>
-            <StatusBar style="dark" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: '#FCFAF8' },
-              }}
-            />
-          </DebugProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <DebugProvider>
+              <StatusBar style="dark" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: '#FCFAF8' },
+                }}
+              />
+            </DebugProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
   );

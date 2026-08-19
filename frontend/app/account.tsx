@@ -20,9 +20,11 @@ import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme
 import { useAuth } from '../lib/auth';
 import ScreenHeader from '../components/ScreenHeader';
 import { fetchApi } from '../lib/api';
+import { useLanguage } from '../lib/language';
 
 export default function AccountPage() {
   const { user, loading, signingIn, login, logout } = useAuth();
+  const { getText } = useLanguage();
   const [reportOpen, setReportOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -44,24 +46,24 @@ export default function AccountPage() {
       });
       setMessage('');
       setReportOpen(false);
-      Alert.alert('நன்றி / Thank you', 'உங்கள் கருத்து பதிவு செய்யப்பட்டது.\nYour feedback has been logged.');
+      Alert.alert(getText('நன்றி', 'Thank you'), getText('உங்கள் கருத்து பதிவு செய்யப்பட்டது.', 'Your feedback has been logged.'));
     } catch {
-      Alert.alert('பிழை / Error', 'அனுப்ப முடியவில்லை. மீண்டும் முயற்சிக்கவும்.\nCould not send. Please try again.');
+      Alert.alert(getText('பிழை', 'Error'), getText('அனுப்ப முடியவில்லை. மீண்டும் முயற்சிக்கவும்.', 'Could not send. Please try again.'));
     } finally {
       setSending(false);
     }
   };
 
   const confirmLogout = () => {
-    Alert.alert('வெளியேறு / Logout', 'நிச்சயமாக வெளியேற விரும்புகிறீர்களா?\nAre you sure you want to log out?', [
-      { text: 'ரத்து / Cancel', style: 'cancel' },
-      { text: 'வெளியேறு / Logout', style: 'destructive', onPress: () => logout() },
+    Alert.alert(getText('வெளியேறு', 'Logout'), getText('நிச்சயமாக வெளியேற விரும்புகிறீர்களா?', 'Are you sure you want to log out?'), [
+      { text: getText('ரத்து', 'Cancel'), style: 'cancel' },
+      { text: getText('வெளியேறு', 'Logout'), style: 'destructive', onPress: () => logout() },
     ]);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="கணக்கு / Account" onBack={() => router.back()} />
+      <ScreenHeader title={getText('கணக்கு', 'Account')} onBack={() => router.back()} />
 
       {loading ? (
         <View style={styles.center}>
@@ -72,17 +74,17 @@ export default function AccountPage() {
           <View style={styles.avatarLarge}>
             <Ionicons name="person-outline" size={40} color={colors.brandStrong} />
           </View>
-          <Text style={styles.gateTitle}>உள்நுழையவும் / Sign In</Text>
+          <Text style={styles.gateTitle}>{getText('உள்நுழையவும்', 'Sign In')}</Text>
           <Text style={styles.gateText}>
-            உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.
+            {getText('உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.', 'Sign in with Google to securely access your saved horoscopes.')}
           </Text>
-          <TouchableOpacity style={styles.googleBtn} onPress={login} disabled={signingIn}>
+          <TouchableOpacity testID="account-google-signin-button" style={styles.googleBtn} onPress={login} disabled={signingIn}>
             {signingIn ? (
               <ActivityIndicator color={colors.onBrand} />
             ) : (
               <>
                 <Ionicons name="logo-google" size={18} color={colors.onBrand} />
-                <Text style={styles.googleBtnText}>Sign in with Google</Text>
+                <Text style={styles.googleBtnText}>{getText('Google மூலம் உள்நுழைக', 'Sign in with Google')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -98,40 +100,40 @@ export default function AccountPage() {
                 <Text style={styles.initials}>{initials}</Text>
               </View>
             )}
-            <Text style={styles.name}>{user.name || 'User'}</Text>
+            <Text style={styles.name}>{user.name || getText('பயனர்', 'User')}</Text>
             <Text style={styles.email}>{user.email}</Text>
           </View>
 
           {/* Settings group */}
           <View style={styles.group}>
-            <TouchableOpacity style={styles.row} onPress={() => setReportOpen(true)}>
+            <TouchableOpacity testID="account-report-issue-button" style={styles.row} onPress={() => setReportOpen(true)}>
               <View style={[styles.rowIcon, { backgroundColor: colors.brandSoft }]}>
                 <Ionicons name="chatbox-ellipses-outline" size={20} color={colors.brandStrong} />
               </View>
               <View style={styles.rowBody}>
-                <Text style={styles.rowTitle}>சிக்கலைத் தெரிவிக்க / Report an Issue</Text>
-                <Text style={styles.rowSub}>சோதனையின்போது கண்ட தவறுகளைப் பதிவு செய்க</Text>
+                <Text style={styles.rowTitle}>{getText('சிக்கலைத் தெரிவிக்க', 'Report an Issue')}</Text>
+                <Text style={styles.rowSub}>{getText('சோதனையின்போது கண்ட தவறுகளைப் பதிவு செய்க', 'Report an error or share feedback')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
             </TouchableOpacity>
 
             <View style={styles.rowDivider} />
 
-            <TouchableOpacity style={styles.row} onPress={() => router.push('/profiles')}>
+            <TouchableOpacity testID="account-saved-charts-button" style={styles.row} onPress={() => router.push('/profiles')}>
               <View style={[styles.rowIcon, { backgroundColor: colors.brandSoft }]}>
                 <Ionicons name="bookmark-outline" size={20} color={colors.brandStrong} />
               </View>
               <View style={styles.rowBody}>
-                <Text style={styles.rowTitle}>சேமித்த ஜாதகங்கள் / Saved Charts</Text>
+                <Text style={styles.rowTitle}>{getText('சேமித்த ஜாதகங்கள்', 'Saved Charts')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Logout */}
-          <TouchableOpacity style={styles.logoutBtn} onPress={confirmLogout}>
+          <TouchableOpacity testID="account-logout-button" style={styles.logoutBtn} onPress={confirmLogout}>
             <Ionicons name="log-out-outline" size={20} color={colors.error} />
-            <Text style={styles.logoutText}>வெளியேறு / Logout</Text>
+            <Text style={styles.logoutText}>{getText('வெளியேறு', 'Logout')}</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -144,13 +146,14 @@ export default function AccountPage() {
         >
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>சிக்கலைத் தெரிவிக்க / Report an Issue</Text>
+            <Text style={styles.sheetTitle}>{getText('சிக்கலைத் தெரிவிக்க', 'Report an Issue')}</Text>
             <Text style={styles.sheetHint}>
-              நீங்கள் கண்ட தவறு அல்லது கருத்தை எழுதுங்கள். எங்கள் குழு அதைச் சரிசெய்யும்.
+              {getText('நீங்கள் கண்ட தவறு அல்லது கருத்தை எழுதுங்கள். எங்கள் குழு அதைச் சரிசெய்யும்.', 'Describe the problem or feedback. Our team will review it.')}
             </Text>
             <TextInput
+              testID="account-feedback-input"
               style={styles.input}
-              placeholder="எ.கா. நேரக் கணக்கீட்டில் தவறு... / e.g. wrong time calculation..."
+              placeholder={getText('எ.கா. நேரக் கணக்கீட்டில் தவறு...', 'e.g. wrong time calculation...')}
               placeholderTextColor={colors.textMuted}
               value={message}
               onChangeText={setMessage}
@@ -158,10 +161,11 @@ export default function AccountPage() {
               textAlignVertical="top"
             />
             <View style={styles.sheetActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setReportOpen(false)}>
-                <Text style={styles.cancelText}>ரத்து / Cancel</Text>
+              <TouchableOpacity testID="account-feedback-cancel-button" style={styles.cancelBtn} onPress={() => setReportOpen(false)}>
+                <Text style={styles.cancelText}>{getText('ரத்து', 'Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="account-feedback-submit-button"
                 style={[styles.sendBtn, (!message.trim() || sending) && { opacity: 0.5 }]}
                 onPress={submitFeedback}
                 disabled={!message.trim() || sending}
@@ -169,7 +173,7 @@ export default function AccountPage() {
                 {sending ? (
                   <ActivityIndicator color={colors.onBrand} />
                 ) : (
-                  <Text style={styles.sendText}>அனுப்பு / Send</Text>
+                  <Text style={styles.sendText}>{getText('அனுப்பு', 'Send')}</Text>
                 )}
               </TouchableOpacity>
             </View>

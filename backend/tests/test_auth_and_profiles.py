@@ -300,6 +300,60 @@ class TestFeedback:
         mongo_db.feedback.delete_many({"message": marker})
 
 
+# ---------- POST /api/corrections grouped submission ----------
+
+class TestCorrections:
+    def test_corrections_store_one_document_with_birth_context(self, mongo_db):
+        payload = {
+            "birth_details": {
+                "name": "Correction Test",
+                "place_of_birth": "Chennai",
+                "date_of_birth": "1990-05-15",
+                "time_of_birth": "08:30:00",
+            },
+            "corrections": [
+                {
+                    "screen_id": "horoscope_result",
+                    "field_name": "MoonSign",
+                    "original_value": "Rishabam",
+                    "corrected_value": "Mithunam",
+                },
+                {
+                    "screen_id": "horoscope_result",
+                    "field_name": "Nakshatra",
+                    "original_value": "Rohini",
+                    "corrected_value": "Mrigashirsha",
+                },
+            ],
+            "metadata": {
+                "app_version": "1.0.0",
+                "device_model": "test-device",
+                "platform": "test",
+                "note": "Grouped correction test",
+            },
+        }
+
+        r = requests.post(f"{API}/corrections", json=payload, timeout=30)
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["success"] is True
+        assert body["count"] == 2
+
+        doc = mongo_db.corrections.find_one(
+            {"batch_id": body["batch_id"]}, {"_id": 0}
+        )
+        try:
+            assert doc is not None
+            assert doc["birth_details"] == payload["birth_details"]
+            assert isinstance(doc["corrections"], list)
+            assert len(doc["corrections"]) == 2
+            assert doc["corrections"][0]["field_name"] == "MoonSign"
+            assert doc["metadata"]["note"] == "Grouped correction test"
+            assert "field_name" not in doc
+        finally:
+            mongo_db.corrections.delete_one({"batch_id": body["batch_id"]})
+
+
 # ---------- Open endpoints (no auth required) ----------
 
 class TestOpenEndpoints:

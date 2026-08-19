@@ -20,6 +20,7 @@ import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme';
+import { useLanguage } from '../lib/language';
 
 interface UserProfile {
   id: string;
@@ -37,6 +38,7 @@ interface UserProfile {
 
 export default function ProfilesPage() {
   const { user, loading: authLoading, signingIn, login } = useAuth();
+  const { language, getText } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -53,18 +55,18 @@ export default function ProfilesPage() {
     } catch (error) {
       console.error('Error loading profiles:', error);
       Alert.alert(
-        'பிழை / Error',
+        getText('பிழை', 'Error'),
         error instanceof ApiError
           ? error.detail || 'Server error'
           : isAbortError(error)
-            ? 'நேரம் முடிந்தது / Request timed out'
-            : 'இணைய பிழை / Network error'
+            ? getText('நேரம் முடிந்தது', 'Request timed out')
+            : getText('இணைய பிழை', 'Network error')
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [getText]);
 
   useEffect(() => {
     if (user) {
@@ -99,7 +101,7 @@ export default function ProfilesPage() {
       );
       setRenameTarget(null);
     } catch (error) {
-      Alert.alert('பிழை / Error', error instanceof ApiError ? error.detail || 'Could not rename' : 'Could not rename');
+      Alert.alert(getText('பிழை', 'Error'), error instanceof ApiError ? error.detail || getText('மறுபெயரிட முடியவில்லை', 'Could not rename') : getText('மறுபெயரிட முடியவில்லை', 'Could not rename'));
     } finally {
       setRenaming(false);
     }
@@ -115,19 +117,19 @@ export default function ProfilesPage() {
   const deleteProfile = (profile: UserProfile) => {
     const displayName = profile.label || profile.birth_details.name;
     Alert.alert(
-      'நீக்கு / Delete',
-      `"${displayName}" — நீக்க விரும்புகிறீர்களா? / Delete this chart?`,
+      getText('நீக்கு', 'Delete'),
+      getText(`"${displayName}" — நீக்க விரும்புகிறீர்களா?`, `Delete "${displayName}"?`),
       [
-        { text: 'ரத்து / Cancel', style: 'cancel' },
+        { text: getText('ரத்து', 'Cancel'), style: 'cancel' },
         {
-          text: 'நீக்கு / Delete',
+          text: getText('நீக்கு', 'Delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await fetchJson(`/api/profiles/${profile.id}`, { method: 'DELETE' });
               setProfiles((prev) => prev.filter((p) => p.id !== profile.id));
             } catch (error) {
-              Alert.alert('பிழை / Error', error instanceof ApiError ? error.detail || 'Could not delete' : 'Could not delete');
+              Alert.alert(getText('பிழை', 'Error'), error instanceof ApiError ? error.detail || getText('நீக்க முடியவில்லை', 'Could not delete') : getText('நீக்க முடியவில்லை', 'Could not delete'));
             }
           },
         },
@@ -138,7 +140,7 @@ export default function ProfilesPage() {
   const formatDate = (dateString: string) => {
     try {
       const d = new Date(dateString);
-      return d.toLocaleDateString();
+      return d.toLocaleDateString(language === 'tamil' ? 'ta-IN' : 'en-GB');
     } catch {
       return dateString;
     }
@@ -161,17 +163,17 @@ export default function ProfilesPage() {
         </View>
 
         <View style={styles.cardActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => generateHoroscope(profile)}>
+          <TouchableOpacity testID={`profile-${profile.id}-open-button`} style={styles.actionBtn} onPress={() => generateHoroscope(profile)}>
             <Ionicons name="planet-outline" size={18} color={colors.brandStrong} />
-            <Text style={styles.actionText}>ஜாதகம்</Text>
+            <Text style={styles.actionText}>{getText('ஜாதகம்', 'Horoscope')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => openRename(profile)}>
+          <TouchableOpacity testID={`profile-${profile.id}-rename-button`} style={styles.actionBtn} onPress={() => openRename(profile)}>
             <Ionicons name="create-outline" size={18} color={colors.brandStrong} />
-            <Text style={styles.actionText}>மறுபெயர்</Text>
+            <Text style={styles.actionText}>{getText('மறுபெயர்', 'Rename')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => deleteProfile(profile)}>
+          <TouchableOpacity testID={`profile-${profile.id}-delete-button`} style={styles.actionBtn} onPress={() => deleteProfile(profile)}>
             <Ionicons name="trash-outline" size={18} color={colors.error} />
-            <Text style={[styles.actionText, { color: colors.error }]}>நீக்கு</Text>
+            <Text style={[styles.actionText, { color: colors.error }]}>{getText('நீக்கு', 'Delete')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -180,7 +182,7 @@ export default function ProfilesPage() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader title="சேமித்த ஜாதகங்கள்" onBack={() => router.back()} />
+      <ScreenHeader title={getText('சேமித்த ஜாதகங்கள்', 'Saved Charts')} onBack={() => router.back()} />
 
       {authLoading ? (
         <View style={styles.center}>
@@ -191,17 +193,17 @@ export default function ProfilesPage() {
           <View style={styles.gateIcon}>
             <Ionicons name="lock-closed-outline" size={40} color={colors.brandStrong} />
           </View>
-          <Text style={styles.gateTitle}>உள்நுழையவும் / Sign In</Text>
+          <Text style={styles.gateTitle}>{getText('உள்நுழையவும்', 'Sign In')}</Text>
           <Text style={styles.gateText}>
-            உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.
+            {getText('உங்கள் சேமித்த ஜாதகங்களை பாதுகாப்பாக பார்க்க Google மூலம் உள்நுழையவும்.', 'Sign in with Google to securely access saved horoscopes.')}
           </Text>
-          <TouchableOpacity style={styles.googleBtn} onPress={login} disabled={signingIn}>
+          <TouchableOpacity testID="profiles-google-signin-button" style={styles.googleBtn} onPress={login} disabled={signingIn}>
             {signingIn ? (
               <ActivityIndicator color={colors.onBrand} />
             ) : (
               <>
                 <Ionicons name="logo-google" size={18} color={colors.onBrand} />
-                <Text style={styles.googleBtnText}>Sign in with Google</Text>
+                <Text style={styles.googleBtnText}>{getText('Google மூலம் உள்நுழைக', 'Sign in with Google')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -221,17 +223,17 @@ export default function ProfilesPage() {
               <View style={styles.gateIcon}>
                 <Ionicons name="bookmark-outline" size={40} color={colors.brandStrong} />
               </View>
-              <Text style={styles.gateTitle}>ஜாதகங்கள் இல்லை / No Saved Charts</Text>
+              <Text style={styles.gateTitle}>{getText('ஜாதகங்கள் இல்லை', 'No Saved Charts')}</Text>
               <Text style={styles.gateText}>
-                ஜாதகம் உருவாக்கியபின், மேலே உள்ள 🔖 பொத்தானை அழுத்தி சேமிக்கவும்.
+                {getText('ஜாதகம் உருவாக்கியபின், சேமிப்பு பொத்தானை அழுத்தவும்.', 'Create a horoscope, then tap the save button to keep it here.')}
               </Text>
-              <TouchableOpacity style={styles.googleBtn} onPress={() => router.push('/horoscope')}>
-                <Text style={styles.googleBtnText}>ஜாதகம் உருவாக்கு</Text>
+              <TouchableOpacity testID="profiles-generate-horoscope-button" style={styles.googleBtn} onPress={() => router.push('/horoscope')}>
+                <Text style={styles.googleBtnText}>{getText('ஜாதகம் உருவாக்கு', 'Generate Horoscope')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
-              <Text style={styles.countLabel}>{profiles.length} ஜாதகங்கள்</Text>
+              <Text style={styles.countLabel}>{getText(`${profiles.length} ஜாதகங்கள்`, `${profiles.length} charts`)}</Text>
               {profiles.map(renderProfile)}
             </>
           )}
@@ -243,25 +245,27 @@ export default function ProfilesPage() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>மறுபெயரிடு / Rename Chart</Text>
+            <Text style={styles.sheetTitle}>{getText('மறுபெயரிடு', 'Rename Chart')}</Text>
             <TextInput
+              testID="profile-rename-input"
               style={styles.input}
-              placeholder="பெயர் / Label"
+              placeholder={getText('பெயர்', 'Label')}
               placeholderTextColor={colors.textMuted}
               value={renameValue}
               onChangeText={setRenameValue}
               autoFocus
             />
             <View style={styles.sheetActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setRenameTarget(null)}>
-                <Text style={styles.cancelText}>ரத்து / Cancel</Text>
+              <TouchableOpacity testID="profile-rename-cancel-button" style={styles.cancelBtn} onPress={() => setRenameTarget(null)}>
+                <Text style={styles.cancelText}>{getText('ரத்து', 'Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="profile-rename-submit-button"
                 style={[styles.sendBtn, (!renameValue.trim() || renaming) && { opacity: 0.5 }]}
                 onPress={submitRename}
                 disabled={!renameValue.trim() || renaming}
               >
-                {renaming ? <ActivityIndicator color={colors.onBrand} /> : <Text style={styles.sendText}>சேமி / Save</Text>}
+                {renaming ? <ActivityIndicator color={colors.onBrand} /> : <Text style={styles.sendText}>{getText('சேமி', 'Save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>

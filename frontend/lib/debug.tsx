@@ -23,6 +23,13 @@ export interface CorrectionItem {
   corrected_value: string;
 }
 
+export interface CorrectionBirthDetails {
+  name: string;
+  place_of_birth: string;
+  date_of_birth: string;
+  time_of_birth: string;
+}
+
 interface DebugContextValue {
   correctionMode: boolean;
   toggleMode: () => void;
@@ -96,7 +103,7 @@ export function useDebug(): DebugContextValue {
 
 /** Result-screen-only controls. Keeping this outside the provider prevents
  * Correction Mode UI from leaking onto forms, profiles, or other screens. */
-export function CorrectionControls() {
+export function CorrectionControls({ birthDetails }: { birthDetails: CorrectionBirthDetails }) {
   const { correctionMode, toggleMode, corrections, removeCorrection } = useDebug();
   const [reviewOpen, setReviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -132,7 +139,7 @@ export function CorrectionControls() {
           </TouchableOpacity>
         </View>
 
-        <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
+        {confirmOpen ? <Modal visible transparent animationType="none" onRequestClose={() => setConfirmOpen(false)}>
           <View testID="correction-mode-confirmation" style={styles.confirmOverlay}>
             <View style={styles.confirmDialog}>
               <View style={styles.confirmIcon}>
@@ -159,7 +166,7 @@ export function CorrectionControls() {
               </View>
             </View>
           </View>
-        </Modal>
+        </Modal> : null}
       </>
     );
   }
@@ -172,11 +179,14 @@ export function CorrectionControls() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          birth_details: birthDetails,
           corrections: entries.map(([, value]) => value),
-          app_version: APP_VERSION,
-          device_model: DEVICE_MODEL,
-          platform: Platform.OS,
-          note: note.trim(),
+          metadata: {
+            app_version: APP_VERSION,
+            device_model: DEVICE_MODEL,
+            platform: Platform.OS,
+            note: note.trim(),
+          },
         }),
       });
       if (!response.ok) throw new Error('Correction submission failed');
@@ -213,19 +223,23 @@ export function CorrectionControls() {
         </View>
       </View>
 
-      <Modal visible={reviewOpen} transparent animationType="slide" onRequestClose={() => setReviewOpen(false)}>
+      {reviewOpen ? <Modal visible transparent animationType="none" onRequestClose={() => setReviewOpen(false)}>
         <View testID="correction-review-modal" style={styles.overlay}>
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Text testID="correction-review-title" style={styles.sheetTitle}>Submit Corrections</Text>
             <Text testID="correction-device-meta" style={styles.meta}>v{APP_VERSION} · {DEVICE_MODEL}</Text>
+            <Text testID="correction-birth-context" style={styles.birthContext} numberOfLines={2}>
+              {birthDetails.name || 'Unnamed'} · {birthDetails.date_of_birth || 'No date'} · {birthDetails.time_of_birth || 'No time'}{`\n`}
+              {birthDetails.place_of_birth || 'No location'}
+            </Text>
 
             {count === 0 ? (
               <Text testID="correction-empty-message" style={styles.emptyText}>
                 No corrections yet. Tap a highlighted result value to fix it.
               </Text>
             ) : (
-              <ScrollView style={{ maxHeight: 280 }}>
+              <ScrollView style={styles.correctionsList} contentContainerStyle={styles.correctionsListContent}>
                 {entries.map(([key, value]) => (
                   <View key={key} testID={`correction-review-item-${key}`} style={styles.row}>
                     <View style={{ flex: 1, minWidth: 0 }}>
@@ -267,7 +281,7 @@ export function CorrectionControls() {
             </View>
           </View>
         </View>
-      </Modal>
+      </Modal> : null}
     </>
   );
 }
@@ -372,13 +386,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
+    maxHeight: '92%',
     padding: spacing.xl,
     paddingBottom: spacing.xxl,
   },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.lg },
   sheetTitle: { fontSize: font.xl, fontWeight: '700', color: colors.text },
   meta: { fontSize: font.sm, color: colors.textMuted, marginTop: 2, marginBottom: spacing.md },
+  birthContext: {
+    color: colors.textSecondary,
+    backgroundColor: colors.surfaceTertiary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    fontSize: font.sm,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
   emptyText: { fontSize: font.base, color: colors.textSecondary, lineHeight: 22, paddingVertical: spacing.lg },
+  correctionsList: { flexShrink: 1, maxHeight: 220 },
+  correctionsListContent: { paddingBottom: spacing.xs },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

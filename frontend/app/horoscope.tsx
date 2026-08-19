@@ -11,16 +11,16 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Modal,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors, spacing, radius, font, shadow } from '../lib/theme';
+import { useLanguage } from '../lib/language';
+import NativeDateTimePicker from '../components/NativeDateTimePicker';
 
 interface BirthDetails {
   name: string;
@@ -48,14 +48,18 @@ interface GeocodeResult {
 
 export default function HoroscopePage() {
   const { width } = useWindowDimensions();
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { language, toggleLanguage, getText } = useLanguage();
   const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(() => {
+    const noon = new Date();
+    noon.setHours(12, 0, 0, 0);
+    return noon;
+  });
   const isCompact = width < 360;
   
   const [birthDetails, setBirthDetails] = useState<BirthDetails>({
@@ -70,10 +74,6 @@ export default function HoroscopePage() {
     timezone: 'IST',
     time_correction: '0',
   });
-
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
 
   const handleInputChange = (field: keyof BirthDetails, value: string) => {
     setBirthDetails(prev => ({ ...prev, [field]: value }));
@@ -163,8 +163,7 @@ export default function HoroscopePage() {
     return 'UTC';
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || new Date();
+  const handleDateChange = (currentDate: Date) => {
     setShowDatePicker(false);
     setSelectedDate(currentDate);
     
@@ -177,8 +176,7 @@ export default function HoroscopePage() {
     handleInputChange('date_of_birth', dateString);
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    const currentTime = selectedTime || new Date();
+  const handleTimeChange = (currentTime: Date) => {
     setShowTimePicker(false);
     setSelectedTime(currentTime);
     
@@ -278,7 +276,7 @@ export default function HoroscopePage() {
           <TouchableOpacity
             testID="horoscope-language-button"
             style={styles.langPill}
-            onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+            onPress={toggleLanguage}
           >
             <Text style={styles.langPillText}>{language === 'tamil' ? 'த' : 'EN'}</Text>
           </TouchableOpacity>
@@ -568,133 +566,30 @@ export default function HoroscopePage() {
         </SafeAreaView>
       </KeyboardAvoidingView>
       
-      {/* Date Picker Modal */}
-      {showDatePicker && (
-        <Modal transparent={true} animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text testID="date-picker-title" style={styles.modalTitle}>
-                  {getText('தேதி தேர்ந்தெடுக்கவும்', 'Select Date')}
-                </Text>
-                <TouchableOpacity testID="date-picker-close-button" onPress={() => setShowDatePicker(false)}>
-                  <Ionicons name="close" size={24} color={colors.text} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.pickerContainer}>
-{Platform.OS === 'web' ? (
-                  <>
-                    <TextInput
-                      style={styles.webDateInput}
-                      value={birthDetails.date_of_birth}
-                      onChangeText={(value) => {
-                        handleInputChange('date_of_birth', value);
-                        setSelectedDate(new Date(value));
-                      }}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#95A5A6"
-                    />
-                    <Text style={styles.webDateHelper}>
-                      {getText('வடிவம்: YYYY-MM-DD (உதா: 2000-01-15)', 'Format: YYYY-MM-DD (e.g., 2000-01-15)')}
-                    </Text>
-                  </>
-                ) : (
-                  <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    display="default"
-                    onChange={handleDateChange}
-                    maximumDate={new Date()}
-                  />
-                )}
-              </View>
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  testID="date-picker-cancel-button"
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setShowDatePicker(false)}
-                >
-                  <Text style={styles.cancelButtonText}>
-                    {getText('ரத்து', 'Cancel')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  testID="date-picker-done-button"
-                  style={[styles.modalButton, styles.confirmButton]}
-                  onPress={() => setShowDatePicker(false)}
-                >
-                  <Text style={styles.confirmButtonText}>
-                    {getText('சரி', 'Done')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-      
-      {/* Time Picker Modal */}
-      {showTimePicker && (
-        <Modal transparent={true} animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {getText('நேரம் தேர்ந்தெடுக்கவும்', 'Select Time')}
-                </Text>
-                <TouchableOpacity testID="time-picker-close-button" onPress={() => setShowTimePicker(false)}>
-                  <Ionicons name="close" size={24} color={colors.text} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.pickerContainer}>
-{Platform.OS === 'web' ? (
-                  <>
-                    <TextInput
-                      style={styles.webDateInput}
-                      value={birthDetails.time_of_birth}
-                      onChangeText={(value) => {
-                        handleInputChange('time_of_birth', value);
-                      }}
-                      placeholder="HH:MM"
-                      placeholderTextColor="#95A5A6"
-                    />
-                    <Text style={styles.webDateHelper}>
-                      {getText('வடிவம்: HH:MM (உதா: 14:30)', 'Format: HH:MM (e.g., 14:30)')}
-                    </Text>
-                  </>
-                ) : (
-                  <DateTimePicker
-                    value={selectedTime}
-                    mode="time"
-                    display="default"
-                    onChange={handleTimeChange}
-                  />
-                )}
-              </View>
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  testID="time-picker-cancel-button"
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setShowTimePicker(false)}
-                >
-                  <Text style={styles.cancelButtonText}>
-                    {getText('ரத்து', 'Cancel')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  testID="time-picker-done-button"
-                  style={[styles.modalButton, styles.confirmButton]}
-                  onPress={() => setShowTimePicker(false)}
-                >
-                  <Text style={styles.confirmButtonText}>
-                    {getText('சரி', 'Done')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
+      <NativeDateTimePicker
+        visible={showDatePicker}
+        mode="date"
+        value={selectedDate}
+        title={getText('பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்', 'Select date of birth')}
+        cancelLabel={getText('ரத்து', 'Cancel')}
+        confirmLabel={getText('சரி', 'Done')}
+        testID="birth-date-picker"
+        maximumDate={new Date()}
+        onCancel={() => setShowDatePicker(false)}
+        onConfirm={handleDateChange}
+      />
+
+      <NativeDateTimePicker
+        visible={showTimePicker}
+        mode="time"
+        value={selectedTime}
+        title={getText('பிறந்த நேரத்தைத் தேர்ந்தெடுக்கவும்', 'Select time of birth')}
+        cancelLabel={getText('ரத்து', 'Cancel')}
+        confirmLabel={getText('சரி', 'Done')}
+        testID="birth-time-picker"
+        onCancel={() => setShowTimePicker(false)}
+        onConfirm={handleTimeChange}
+      />
     </View>
   );
 }

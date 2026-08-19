@@ -1,79 +1,58 @@
 {
-  "theme": "light",
   "typography": {
-    "fonts": "System defaults (Inter, SF Pro) for an Apple-minimalist aesthetic.",
-    "hierarchy": {
-      "h1": "text-2xl font-semibold tracking-tight text-gray-900",
-      "h2": "text-xl font-medium tracking-tight text-gray-900",
-      "body": "text-base text-gray-600",
-      "small": "text-sm text-gray-500"
-    }
+    "primary_font": "System",
+    "headings": "System Bold, tight tracking",
+    "body": "System Regular, 16px min for readability",
+    "hierarchy": "Apple minimalist approach. H1: 32px, H2: 24px, Body: 16px, Caption: 12px."
   },
   "colors": {
-    "primary_saffron": "#F58220",
-    "primary_saffron_light": "#FFF3E8",
-    "background": "#FBFBFD",
-    "surface": "#FFFFFF",
-    "text_primary": "#1D1D1F",
-    "text_secondary": "#86868B",
-    "border": "#E5E5EA"
+    "primary": "#FF9933", 
+    "background": "#FFFFFF",
+    "surface": "#F2F2F7",
+    "text_primary": "#000000",
+    "text_secondary": "#8E8E93",
+    "border": "#C6C6C8"
   },
   "visual_enhancers": {
-    "shadows": "shadow-sm for cards, shadow-lg for floating elements.",
-    "radii": "rounded-2xl for cards, rounded-full for pill buttons and FABs.",
-    "surfaces": "Use white background for standard cards. For sticky toolbars, use Apple-style glassmorphism (bg-white/80 backdrop-blur-xl)."
+    "shadows": "Subtle ambient shadows on floating elements, 0px 4px 12px rgba(0,0,0,0.05)",
+    "borders": "1px solid #C6C6C8 for separators, avoiding transparent backgrounds on overlays",
+    "corner_radius": "12px for standard cards, 8px for smaller inputs"
   },
-  "component_guidelines": {
-    "CorrectionModeTrigger": {
-      "type": "Floating Action Button (FAB)",
-      "position": "fixed bottom-6 right-6 z-40",
-      "design": "Circular button (h-14 w-14) with soft shadow (shadow-lg), white background, and a Saffron or gray pencil/edit icon. Avoids header crowding.",
-      "interaction": "On click -> Opens Confirmation Dialog."
-    },
-    "ConfirmationDialog": {
-      "type": "Shadcn AlertDialog",
-      "design": "Apple-style alert. Title: 'Enter Correction Mode?', Description: 'You are about to edit the horoscope details. Kattam charts will remain read-only.', Actions: 'Cancel' (ghost), 'Enter Mode' (Saffron primary).",
-      "test_ids": {
-        "confirm": "correction-mode-confirm",
-        "cancel": "correction-mode-cancel"
-      }
-    },
-    "ActiveModeToolbar": {
-      "type": "Sticky Bottom Bar",
-      "position": "fixed bottom-0 left-0 right-0 z-50",
-      "design": "Glassmorphism background (bg-white/80 backdrop-blur-xl) with a top border. Contains 'Exit' (ghost button, left) and 'Review' (Saffron pill button, right).",
-      "animation": "Slide up from bottom."
-    }
+  "component_name": {
+    "DatePicker": "Native Date/Time Picker (@react-native-community/datetimepicker)",
+    "LanguageToggle": "Segmented Control or high-contrast Saffron Pill Toggle"
+  },
+  "grids": {
+    "base": "Mobile-first, 1-column flow, generous vertical spacing (16px to 24px between blocks)"
   },
   "layouts": {
-    "mobile_constraints": "Designed strictly for 320–430pt screens. The header is untouched. All new controls are moved to the bottom (FAB and Bottom Toolbar) to maintain the minimalist top section."
+    "padding": "Generous edge padding (16px - 24px). Touch targets must be minimum 44x44pt for 320-430pt screen reliability.",
+    "alignment": "Left-aligned content for readability, centered bottom-anchored CTA buttons."
   },
   "motion": {
-    "toolbar": "Slide-in from bottom (translate-y-full to translate-y-0) with spring animation.",
-    "dialog": "Fade-in and subtle scale-up (scale-95 to scale-100).",
-    "interactions": "Active states on buttons scale down slightly (active:scale-95)."
+    "transitions": "React Native default LayoutAnimation or Reanimated smooth springs for toggle switches.",
+    "interactions": "Opacity feedback on touchable elements (activeOpacity: 0.7)"
   },
   "accessibility": {
-    "touch_targets": "Minimum 44x44px for all buttons (FAB, Review, Exit, Cancel, Confirm).",
-    "contrast": "Saffron (#F58220) with white text may need a slightly darker shade or bold text to pass APCA/WCAG contrast ratios.",
-    "aria": "Use aria-labels for the FAB ('Enter Correction Mode')."
+    "touch_targets": "MINIMUM 44x44 points for all interactive elements.",
+    "contrast": "Text must meet WCAG AA standards (4.5:1).",
+    "test_ids": "All interactive and key informational elements MUST include a data-testid attribute (e.g., data-testid='language-toggle-btn', data-testid='date-picker-input')."
   },
+  "media": {
+    "images": "High-quality, minimal distractions. 80vh max height on mobile constraints."
+  },
+  "3d_libraries": {
+    "usage": "Not applicable for this standard mobile application fix."
+  },
+  "image_urls": {},
   "instructions_to_main_agent": [
-    "Remove the existing triple-tap logic to enter Correction Mode.",
-    "Add the CorrectionModeTrigger (FAB) to the Horoscope Results view.",
-    "Wire the FAB to trigger the Shadcn AlertDialog for confirmation.",
-    "Upon confirmation, toggle the app state to Correction Mode.",
-    "When in Correction Mode, hide the FAB and display the ActiveModeToolbar at the bottom.",
-    "Ensure Kattam charts remain strictly read-only while Rasi, planetary, and Palan cards become editable.",
-    "Do NOT add buttons to the header."
+    "APP-WIDE LANGUAGE CONTEXT: Implement a React Context (`LanguageContext.js`) at the root of the app (`App.js`). The state must be set on the first screen and consumed by every subsequent screen to switch between Tamil and English.",
+    "CORRECTION MODE EXCEPTION: Do not apply the `LanguageContext` strings to Correction Mode. Keep its existing functionality completely intact without localizing it.",
+    "NATIVE DATE/TIME PICKER: Replace the buggy 'old UI' date/time selector. Install/Use `@react-native-community/datetimepicker` (or standard Expo native pickers) to summon the native iOS/Android bottom-sheet/wheel interfaces. Ensure it triggers flawlessly on click.",
+    "UI PRESERVATION: Maintain the 'Apple-minimalist saffron UI'. Use the Saffron brand color (#FF9933) for primary actions and toggles. Ensure stark white/black contrasts.",
+    "TOUCH RELIABILITY: Ensure the date/time trigger inputs and the language toggle have a minimum touch area of 44x44pt.",
+    "TESTING: Add `data-testid` to the new Date picker trigger, the Time picker trigger, and the Language Toggle buttons.",
+    "NO TRANSPARENT BACKGROUNDS: Ensure modals, headers, and pickers have a solid background (e.g., white or Saffron) to prevent overlap issues."
   ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "Do not converge toward generic outputs. Ensure Apple-minimalist feel with generous padding (p-4 to p-6) and refined borders.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur). NEVER use completely transparent backgrounds where content underlaps.",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use modern button styles (pill-shaped, rounded-full) with interaction animations.",
-    "Every interaction needs micro-animations (hover, active, focus).",
-    "All interactive and key informational elements MUST include a 'data-testid' attribute.",
-    "Do not use AI assistant Emoji characters for icons. Use lucide-react."
-  ]
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": "You tend to converge toward generic outputs. Ensure the saffron Apple-minimalist design feels premium, not like a cheap template. Create depth through layered design elements with z-index hierarchy. Ensure native UI paradigms (like native date pickers) are properly integrated without visual glitches. NEVER use AI assistant Emoji characters for icons. Every interaction needs micro-feedback (opacity changes on press). Do NOT apply generic transparent backgrounds to overlays; use frosted glass or solid surfaces."
 }

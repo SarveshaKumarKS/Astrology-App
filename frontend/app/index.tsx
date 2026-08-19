@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,18 +13,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme';
 import { useAuth } from '../lib/auth';
+import { useLanguage } from '../lib/language';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
+  const { language, toggleLanguage, getText } = useLanguage();
 
   const appVersion =
     (Constants.expoConfig?.version as string) ||
     ((Constants as any).manifest?.version as string) ||
     '1.0.0';
-
-  const getText = (tamil: string, english: string) =>
-    language === 'tamil' ? tamil : english;
 
   const services: Array<{
     title: string;
@@ -67,7 +65,7 @@ export default function HomePage() {
         <TouchableOpacity
           testID="home-language-button"
           style={styles.langChip}
-          onPress={() => setLanguage(language === 'tamil' ? 'english' : 'tamil')}
+          onPress={toggleLanguage}
         >
           <Ionicons name="language-outline" size={16} color={colors.brandStrong} />
           <Text style={styles.langChipText}>{language === 'tamil' ? 'தமிழ்' : 'EN'}</Text>
