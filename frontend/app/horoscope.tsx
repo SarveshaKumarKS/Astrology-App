@@ -574,6 +574,7 @@ export default function HoroscopePage() {
         cancelLabel={getText('ரத்து', 'Cancel')}
         confirmLabel={getText('சரி', 'Done')}
         testID="birth-date-picker"
+        language={language}
         maximumDate={new Date()}
         onCancel={() => setShowDatePicker(false)}
         onConfirm={handleDateChange}
@@ -587,6 +588,7 @@ export default function HoroscopePage() {
         cancelLabel={getText('ரத்து', 'Cancel')}
         confirmLabel={getText('சரி', 'Done')}
         testID="birth-time-picker"
+        language={language}
         onCancel={() => setShowTimePicker(false)}
         onConfirm={handleTimeChange}
       />

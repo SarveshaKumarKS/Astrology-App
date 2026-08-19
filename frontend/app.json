@@ -36,7 +36,6 @@
           "backgroundColor": "#000000"
         }
       ],
-      "@react-native-community/datetimepicker",
       "expo-font",
       "expo-web-browser",
       "expo-secure-store"

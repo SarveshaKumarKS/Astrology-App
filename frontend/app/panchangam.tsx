@@ -354,6 +354,7 @@ export default function PanchangamPage() {
         cancelLabel={getText('ரத்து', 'Cancel')}
         confirmLabel={getText('சரி', 'Done')}
         testID="panchangam-date-picker"
+        language={language}
         onCancel={() => setShowDatePicker(false)}
         onConfirm={handleDateChange}
       />

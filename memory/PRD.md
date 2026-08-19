@@ -88,18 +88,26 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
   of incorrectly reporting success.
 - Backend regression includes the grouped schema and passes 24/24 tests.
 
-## Global Language + Native Date/Time
+## Global Language + Shared Date/Time
 - Added one app-level Tamil/English language provider. The Home selection now propagates
   through Horoscope, Horoscope Results, Compatibility, Panchangam, Account, and Saved Charts.
 - The selected language is persisted with SecureStore on Android/iOS and retained across
   navigation in preview web.
 - Correction Mode functionality remains intact and intentionally stays English-only.
-- Replaced the Horoscope legacy date/time modal with native Android/iOS pickers and a
-  reliable mobile-first numeric fallback for web preview.
+- Replaced the Horoscope legacy date/time modal with the shared cross-platform picker.
 - Compatibility and Panchangam now use the same shared date/time picker behavior.
 - Restored `/api/panchangam/{date}` with real Swiss Ephemeris calculations for Chennai/IST,
   including Panchangam elements, solar/lunar rise-set times, Rahu/Yama/Gulika periods,
   and Abhijit Muhurta; no placeholder data is used.
+
+## Unified Saffron Calendar + Clock
+- Replaced OS-native Android and iOS date/time dialogs with one branded React Native picker,
+  so customers no longer see a blue Android Material dialog or a blank iOS spinner.
+- Date mode uses a true month calendar with previous/next navigation, selected/today states,
+  maximum-date handling, and Tamil/English month/week labels.
+- Time mode uses a saffron clock control with hour/minute steppers, AM/PM selection, and
+  quick :00/:15/:30/:45 minute actions while still allowing one-minute precision.
+- The same picker is reused in Horoscope, Compatibility, and Panchangam at 320–430pt widths.
 
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`

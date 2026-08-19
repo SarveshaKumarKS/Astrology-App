@@ -1,58 +1,60 @@
 {
+  "theme_strategy": "Apple-Minimalist with Saffron Accents (Light-mode prioritized, high-contrast)",
   "typography": {
-    "primary_font": "System",
-    "headings": "System Bold, tight tracking",
-    "body": "System Regular, 16px min for readability",
-    "hierarchy": "Apple minimalist approach. H1: 32px, H2: 24px, Body: 16px, Caption: 12px."
+    "headings": "Outfit, sans-serif (tracking-tight)",
+    "body": "Manrope, sans-serif",
+    "numbers": "Tabular lining enabled (font-variant-numeric: tabular-nums) for stable clock and calendar displays",
+    "forbidden": "Inter for headings, generic sans for brand moments, Roboto"
   },
   "colors": {
-    "primary": "#FF9933", 
+    "brand_saffron": "#FF9933",
+    "brand_saffron_hover": "#E68A2E",
+    "brand_saffron_surface": "#FFF4E6",
     "background": "#FFFFFF",
-    "surface": "#F2F2F7",
-    "text_primary": "#000000",
+    "surface_modal": "#F2F2F7",
+    "text_primary": "#1C1C1E",
     "text_secondary": "#8E8E93",
-    "border": "#C6C6C8"
+    "overlay": "bg-black/50 backdrop-blur-sm",
+    "border_subtle": "rgba(60,60,67,0.1)"
   },
+  "layouts_and_grids": {
+    "modal_container": "Fixed bottom for mobile (Action Sheet style), rounded-t-3xl. Width w-full max-w-md mx-auto. For screens > 430px, center as standard modal.",
+    "calendar_grid": "7-column grid (grid-cols-7) with tight gaps (gap-1 or gap-2). Center-aligned content.",
+    "time_picker_grid": "3-column grid for Hour | Minute | AM/PM. CSS scroll-snap layout."
+  },
+  "components": [
+    {
+      "name": "CrossPlatformDateTimePickerModal",
+      "path": "/app/frontend/src/components/ui/CustomDateTimePicker.js",
+      "instructions": "Replace native <input type='date' /> and <input type='time' /> entirely. Create a custom React portal/modal. The modal background MUST be bg-black/50 backdrop-blur-md (No pure transparency). Must support internal state for selection that only commits to parent state when 'Done' is tapped. If 'Cancel' is tapped, discard internal changes."
+    },
+    {
+      "name": "CalendarMonthView",
+      "path": "/app/frontend/src/components/ui/CalendarView.js",
+      "instructions": "True calendar UI. Header: Month/Year with Prev/Next chevrons. Days: 44x44px minimum touch targets. Active day gets bg-[#FF9933] text-white rounded-full shadow-md. Today's date (if unselected) gets text-[#FF9933]. Tamil/English localized headers must be supported via props."
+    },
+    {
+      "name": "ScrollSnapTimePicker",
+      "path": "/app/frontend/src/components/ui/TimePicker.js",
+      "instructions": "Apple-style vertical dials for time selection. Create 3 columns (Hour, Min, AM/PM). Use CSS 'overflow-y-scroll snap-y snap-mandatory' and hide scrollbars. Each tick must be snap-align-center. Apply a fade mask (mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent)) to the container. Selected item in the center gets high contrast text-primary, unselected gets text-secondary."
+    }
+  ],
   "visual_enhancers": {
-    "shadows": "Subtle ambient shadows on floating elements, 0px 4px 12px rgba(0,0,0,0.05)",
-    "borders": "1px solid #C6C6C8 for separators, avoiding transparent backgrounds on overlays",
-    "corner_radius": "12px for standard cards, 8px for smaller inputs"
-  },
-  "component_name": {
-    "DatePicker": "Native Date/Time Picker (@react-native-community/datetimepicker)",
-    "LanguageToggle": "Segmented Control or high-contrast Saffron Pill Toggle"
-  },
-  "grids": {
-    "base": "Mobile-first, 1-column flow, generous vertical spacing (16px to 24px between blocks)"
-  },
-  "layouts": {
-    "padding": "Generous edge padding (16px - 24px). Touch targets must be minimum 44x44pt for 320-430pt screen reliability.",
-    "alignment": "Left-aligned content for readability, centered bottom-anchored CTA buttons."
-  },
-  "motion": {
-    "transitions": "React Native default LayoutAnimation or Reanimated smooth springs for toggle switches.",
-    "interactions": "Opacity feedback on touchable elements (activeOpacity: 0.7)"
+    "shadows": "Soft diffuse shadows for modal: shadow-[0_-8px_30px_rgba(0,0,0,0.12)]",
+    "radius": "Modal: rounded-t-[32px] (mobile) or rounded-3xl (desktop), Highlighted Days: rounded-full",
+    "motion": "Slide up animation: translate-y-full to translate-y-0 with duration-300 ease-out. Overlay fade in."
   },
   "accessibility": {
-    "touch_targets": "MINIMUM 44x44 points for all interactive elements.",
-    "contrast": "Text must meet WCAG AA standards (4.5:1).",
-    "test_ids": "All interactive and key informational elements MUST include a data-testid attribute (e.g., data-testid='language-toggle-btn', data-testid='date-picker-input')."
+    "touch_targets": "Strict minimum 44x44px minimum touch targets on ALL interactive elements (days, chevrons, done/cancel buttons).",
+    "data_testids": "MANDATORY on all elements. Example: data-testid='custom-datepicker-trigger', data-testid='calendar-day-15', data-testid='time-picker-hour-wheel', data-testid='picker-done-btn', data-testid='picker-cancel-btn'."
   },
-  "media": {
-    "images": "High-quality, minimal distractions. 80vh max height on mobile constraints."
-  },
-  "3d_libraries": {
-    "usage": "Not applicable for this standard mobile application fix."
-  },
-  "image_urls": {},
-  "instructions_to_main_agent": [
-    "APP-WIDE LANGUAGE CONTEXT: Implement a React Context (`LanguageContext.js`) at the root of the app (`App.js`). The state must be set on the first screen and consumed by every subsequent screen to switch between Tamil and English.",
-    "CORRECTION MODE EXCEPTION: Do not apply the `LanguageContext` strings to Correction Mode. Keep its existing functionality completely intact without localizing it.",
-    "NATIVE DATE/TIME PICKER: Replace the buggy 'old UI' date/time selector. Install/Use `@react-native-community/datetimepicker` (or standard Expo native pickers) to summon the native iOS/Android bottom-sheet/wheel interfaces. Ensure it triggers flawlessly on click.",
-    "UI PRESERVATION: Maintain the 'Apple-minimalist saffron UI'. Use the Saffron brand color (#FF9933) for primary actions and toggles. Ensure stark white/black contrasts.",
-    "TOUCH RELIABILITY: Ensure the date/time trigger inputs and the language toggle have a minimum touch area of 44x44pt.",
-    "TESTING: Add `data-testid` to the new Date picker trigger, the Time picker trigger, and the Language Toggle buttons.",
-    "NO TRANSPARENT BACKGROUNDS: Ensure modals, headers, and pickers have a solid background (e.g., white or Saffron) to prevent overlap issues."
-  ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": "You tend to converge toward generic outputs. Ensure the saffron Apple-minimalist design feels premium, not like a cheap template. Create depth through layered design elements with z-index hierarchy. Ensure native UI paradigms (like native date pickers) are properly integrated without visual glitches. NEVER use AI assistant Emoji characters for icons. Every interaction needs micro-feedback (opacity changes on press). Do NOT apply generic transparent backgrounds to overlays; use frosted glass or solid surfaces."
+  "universal_guidelines_for_main_agent": [
+    "NEVER use native <input type='date'>, <input type='time'>, or <input type='datetime-local'> to guarantee identical cross-platform (iOS/Android) rendering.",
+    "Do not mutate actual parent form state until 'Done' is pressed. Implement local state within the picker component.",
+    "Ensure responsive layout scales correctly between 320px and 430px (iPhone SE to Pro Max).",
+    "Tamil/English language support: Title and action labels ('Done', 'Cancel') must accept localized string props.",
+    "Do not center-align the main app layout wrapper. Align text predictably.",
+    "No AI emojis in UI components.",
+    "Ensure the modal overlay background is explicitly defined (bg-black/50) to prevent transparency overlap issues."
+  ]
 }

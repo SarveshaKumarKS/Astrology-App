@@ -383,6 +383,7 @@ export default function CompatibilityPage() {
         cancelLabel={getText('ரத்து', 'Cancel')}
         confirmLabel={getText('சரி', 'Done')}
         testID={`${showDatePicker.person}-compatibility-date-picker`}
+        language={language}
         maximumDate={new Date()}
         onCancel={() => setShowDatePicker({show: false, person: 'male'})}
         onConfirm={handleDateChange}
@@ -396,6 +397,7 @@ export default function CompatibilityPage() {
         cancelLabel={getText('ரத்து', 'Cancel')}
         confirmLabel={getText('சரி', 'Done')}
         testID={`${showTimePicker.person}-compatibility-time-picker`}
+        language={language}
         onCancel={() => setShowTimePicker({show: false, person: 'male'})}
         onConfirm={handleTimeChange}
       />
