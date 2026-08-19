@@ -109,6 +109,16 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
   quick :00/:15/:30/:45 minute actions while still allowing one-minute precision.
 - The same picker is reused in Horoscope, Compatibility, and Panchangam at 320–430pt widths.
 
+## Remote Backend Import — Enhancements_PDF
+- Fetched remote commit `4a26c8e5a83e34b2a46893fdd0b908c5ddd4a0d3` from
+  `github.com/kishanguptab/Astrology-App`, branch `Enhancements_PDF`.
+- Imported its backend-only Vakyakarana change in `astrology/vakkiam_system.py`;
+  no frontend/UI files were modified.
+- Vakkiam Lagna now uses the Vakyakarana treatise ayanamsa rather than Lahiri:
+  `(Kali year - 3600) × (120/121) ÷ 60` degrees.
+- Added formula and tropical-to-sidereal ascendant regression coverage. Independent
+  backend verification passes 29/29 tests plus health and live Vakkiam horoscope APIs.
+
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
   (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).

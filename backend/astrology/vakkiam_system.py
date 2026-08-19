@@ -554,23 +554,35 @@ class VakkiamCalculator(AstronomicalCalculations):
             return False
         return self.vakya_ephemeris.engine.check_retrograde(planet, jd)
 
-    def calculate_ascendant_traditional(self, jd: float, latitude: float, longitude: float) -> float:
-        """Lagna exactly as ICS Vakkiam Pro computes it.
+    # Vakyakarana ayanamsa (Vakyakarana, IJHS 36.3-4 (2001), p.129):
+    #   dY = Kali year - 3600
+    #   ayanamsa = [dY - dY/121] / 60  degrees   (= dY * (120/121) / 60)
+    # i.e. zero at Kali 3600 and ~59.5"/yr. Verified against the treatise:
+    #   K4383 (AD 1282) -> 12.942 deg = 12 deg 56' 31", matching the paper.
+    VAKYAKARANA_KALI_EPOCH_JD = 588465.5      # Kali Yuga start (18 Feb 3102 BCE)
+    VAKYAKARANA_SIDEREAL_YEAR = 365.258681    # treatise solar year (365.25 + 5/576)
 
-        Decompiling the ICS APK (classes.dex) shows the chart Lagna is NOT a Vakya
-        table lookup — it is the standard astronomical sidereal ascendant:
-          * class `be` = Moshier/ELP-2000 ephemeris (Swiss Ephemeris derived)
-          * `beVar.a(1)` sets ayanamsa mode 1 = LAHIRI
-          * class `as` builds Placidus house cusps from the birth latitude; the
-            first cusp minus the Lahiri ayanamsa is the sidereal Lagna.
-        Swiss Ephemeris (pyswisseph) reproduces this to sub-arcsecond — its Lahiri
-        ayanamsa matches ICS's `be.a(1)` constants (t0=2415020.0, ayan=22.46047,
-        rate=50.290966"/yr) to within 1 arcsecond.  jd here is already UT-based.
-        Planets remain Vakya-table values (that is what ICS itself uses).
+    def vakyakarana_ayanamsa(self, jd: float) -> float:
+        """Ayanamsa in degrees as prescribed by the Vakyakarana treatise."""
+        kali_year = (jd - self.VAKYAKARANA_KALI_EPOCH_JD) / self.VAKYAKARANA_SIDEREAL_YEAR
+        return (kali_year - 3600.0) * (120.0 / 121.0) / 60.0
+
+    def calculate_ascendant_traditional(self, jd: float, latitude: float, longitude: float) -> float:
+        """Lagna using the Vakyakarana treatise's own ayanamsa.
+
+        The ascendant is the astronomical (Placidus) rising point, converted to
+        the sidereal (nirayana) frame with the ayanamsa prescribed by the
+        Vakyakarana itself — NOT Lahiri.  We therefore take the *tropical*
+        ascendant from Swiss Ephemeris and subtract `vakyakarana_ayanamsa(jd)`.
+
+        (Previously this used Swiss Ephemeris' Lahiri sidereal ascendant to match
+        ICS Vakkiam Pro; it now follows the treatise, which runs ~1 deg higher in
+        ayanamsa than Lahiri for modern dates.)  jd here is already UT-based.
+        Planets remain Vakya-table values (that is what the Vakya system uses).
         """
-        swe.set_sid_mode(swe.SIDM_LAHIRI, 0, 0)
-        _, ascmc = swe.houses_ex(jd, latitude, longitude, b'P', swe.FLG_SIDEREAL)
-        return ascmc[0] % 360.0
+        _, ascmc = swe.houses_ex(jd, latitude, longitude, b'P')  # tropical cusps
+        tropical_asc = ascmc[0] % 360.0
+        return (tropical_asc - self.vakyakarana_ayanamsa(jd)) % 360.0
 
     def calculate_sidereal_time_meeus(self, jd: float, longitude: float) -> float:
         """Calculate Local Sidereal Time using Meeus formula"""
@@ -919,11 +931,6 @@ class VakkiamCalculator(AstronomicalCalculations):
         The Moon longitude is adjusted by a calibration factor to match traditional Vakkiam dasa calculations.
         This adjustment accounts for the difference in how Vakkiam calculates dasa periods.
         """
-        from astrology.models import DasaPeriod
-        from astrology.constants import DASA_YEARS, DASA_ORDER, PLANET_NAMES
-        from dateutil.relativedelta import relativedelta
-        from datetime import timedelta
-        
         # Determine nakshatra lord from Moon's nakshatra
         nakshatra_lord = self.get_nakshatra_lord(birth_nakshatra)
         
@@ -1087,11 +1094,6 @@ class VakkiamCalculator(AstronomicalCalculations):
         """Calculate bhukti (antar dasha) periods within a mahadasha for Vakkiam system.
         Uses the standard Vimshottari formula with Vakkiam-specific date adjustments.
         """
-        from astrology.models import DasaPeriod
-        from astrology.constants import DASA_YEARS, DASA_ORDER, PLANET_NAMES
-        from dateutil.relativedelta import relativedelta
-        from datetime import timedelta
-        
         # Get the mahadasha planet and its position in DASA_ORDER
         maha_planet = maha_dasa.planet
         maha_idx = DASA_ORDER.index(maha_planet)
@@ -1191,5 +1193,7 @@ class VakkiamCalculator(AstronomicalCalculations):
         return Chart(chart_type="navamsa", houses=signs, houses_tamil=signs_tamil, ascendant_house=nav_asc_sign)
 
     def _parse_timezone(self, tz_str):
-        try: return float(tz_str)
-        except: return 5.5
+        try:
+            return float(tz_str)
+        except (TypeError, ValueError):
+            return 5.5

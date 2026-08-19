@@ -563,7 +563,7 @@ class AstronomicalCalculations:
             
             sunrise_time = f"{int(sunrise_tuple[3]):02d}:{int((sunrise_tuple[3] % 1) * 60):02d}"
             sunset_time = f"{int(sunset_tuple[3]):02d}:{int((sunset_tuple[3] % 1) * 60):02d}"
-        except:
+        except Exception:
             sunrise_time = "06:00"
             sunset_time = "18:00"
         
@@ -637,7 +637,7 @@ class AstronomicalCalculations:
                 diff_minutes += 24 * 60
             nazhigai = diff_minutes / 24.0  # 1 nazhigai = 24 minutes
             udayadi_nazhigai = f"{int(nazhigai)}.{int((nazhigai % 1) * 60):02d}"
-        except:
+        except Exception:
             udayadi_nazhigai = "N/A"
         
         # Ayanamsa - use provided value if available (for Vakkiam), otherwise use Swiss Ephemeris
