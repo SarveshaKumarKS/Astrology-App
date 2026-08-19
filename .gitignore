@@ -95,3 +95,6 @@ java_harness/TestMonthStarts.java
 credentials.json
 *.key
 .credentials
+.env
+.env.*
+*.env
