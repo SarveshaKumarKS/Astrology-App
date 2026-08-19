@@ -16,7 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import ScreenHeader from '../components/ScreenHeader';
-import { colors } from '../lib/theme';
+import { colors, shadow } from '../lib/theme';
 
 interface PanchangamData {
   date: string;
@@ -437,11 +437,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    ...shadow.soft,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -470,11 +466,7 @@ const styles = StyleSheet.create({
     padding: 16,
     flex: 1,
     minWidth: '45%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    ...shadow.soft,
   },
   timeHeader: {
     flexDirection: 'row',

@@ -22,7 +22,7 @@ import { fetchApi, fetchJson, isAbortError, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import ScreenHeader from '../components/ScreenHeader';
 import { CorrectionControls } from '../lib/debug';
-import { colors, radius, font } from '../lib/theme';
+import { colors, radius, font, shadow } from '../lib/theme';
 
 interface PlanetaryPosition {
   planet: string;
@@ -831,11 +831,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: '#8A6B3F',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadow.soft,
   },
   sectionTitle: {
     fontSize: 20,

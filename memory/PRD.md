@@ -58,6 +58,19 @@ repo (github.com/kishanguptab/Astrology-App), fixes breakages, verifies services
   remains fully contained, coordinate fields remain contained, and Kattam is 264pt wide
   within a 320pt viewport. TypeScript and ESLint pass.
 
+## Deployment / Expo Go Compatibility Fix
+- Root cause of the preview QR error: the frontend had been moved to Expo SDK 55 while
+  this workspace and its Expo Go runtime use SDK 54.
+- Aligned Expo, React Native, Expo Router, and all native modules to SDK 54-compatible
+  versions using Expo's installer. The served Android manifest now reports `54.0.0`.
+- Removed the duplicate npm lockfile so deployment consistently uses Yarn.
+- Fixed invalid short hex colors and normalized app/adaptive/favicon artwork to 512x512.
+- Removed startup creation of the MongoDB session TTL index; expired sessions remain
+  rejected by application logic. Removed the historical preview DB TTL index once without
+  deleting session records.
+- Deployment scan: PASS. Expo Doctor: 18/18. Independent regression: frontend 100%,
+  backend 23/23, health 200, no broken scoped flow or API.
+
 ## Auth / Login (added this session)
 - Emergent-managed Google Auth. Backend module: `/app/backend/auth.py`
   (POST /api/auth/session, GET /api/auth/me, POST /api/auth/logout, get_current_user dep).

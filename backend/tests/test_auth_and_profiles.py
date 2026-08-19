@@ -326,3 +326,43 @@ class TestOpenEndpoints:
         }
         r = requests.post(f"{API}/compatibility", json=payload, timeout=60)
         assert r.status_code == 200, r.text[:400]
+
+
+# ---------- Session expiry + index behavior regression checks ----------
+
+class TestSessionExpiryAndIndexes:
+    def test_expired_seeded_session_rejected(self, mongo_db):
+        """Auth should enforce expires_at in app logic (even without TTL index)."""
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        email = f"TEST_expired_{uuid.uuid4().hex[:6]}@test.local"
+        token = f"tok_{uuid.uuid4().hex}"
+        now = datetime.now(timezone.utc)
+
+        mongo_db.users.insert_one({
+            "user_id": user_id,
+            "email": email,
+            "name": "expired-user",
+            "created_at": now,
+            "last_login": now,
+        })
+        mongo_db.user_sessions.insert_one({
+            "session_token": token,
+            "user_id": user_id,
+            "created_at": now - timedelta(days=8),
+            "expires_at": now - timedelta(minutes=1),
+        })
+
+        try:
+            r = requests.get(f"{API}/auth/me", headers=_auth(token), timeout=30)
+            assert r.status_code == 401
+        finally:
+            _cleanup_user(mongo_db, user_id)
+
+    def test_no_ttl_index_on_user_sessions(self, mongo_db):
+        """Startup should not create a TTL index automatically on user_sessions."""
+        info = mongo_db.user_sessions.index_information()
+        ttl_indexes = [
+            name for name, details in info.items()
+            if isinstance(details, dict) and "expireAfterSeconds" in details
+        ]
+        assert ttl_indexes == []

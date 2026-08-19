@@ -1,0 +1,56 @@
+{
+  "summary": "Validated SDK-compatibility regression scope on public preview URL. Frontend preview loads and Home -> Generate Horoscope navigation works. Backend health is healthy and core pytest suite passes except one TTL-index state check.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "MongoDB user_sessions indexes",
+        "issue": "TTL index `expires_at_1` (expireAfterSeconds: 0) still exists in DB state, even though startup code no longer creates TTL indexes.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "Style shadow props",
+        "issue": "Console warnings: \"shadow*\" deprecated; use boxShadow."
+      },
+      {
+        "component": "pointerEvents prop",
+        "issue": "Console warning: props.pointerEvents deprecated; use style.pointerEvents."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auth_and_profiles.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/frontend_home_mobile.jpg"
+  ],
+  "action_items": [
+    "Drop legacy TTL index `expires_at_1` on `user_sessions` via one-time migration if TTL removal is required in production behavior.",
+    "Keep app-level expiry logic (already verified): expired session token returns 401 on /api/auth/me.",
+    "Optional cleanup: resolve React Native deprecation warnings (`shadow*`, `pointerEvents`)."
+  ],
+  "critical_code_review_comments": [
+    "Startup code review confirmed no TTL index creation calls (no `expireAfterSeconds` in auth.py/server.py).",
+    "Both backend auth and main server currently bind DB with load_dotenv before auth import in server.py; DB split issue from prior iteration is resolved.",
+    "Backend still uses env fallbacks for MONGO_URL/DB_NAME in code; strict env-only fail-fast would be safer for deployment consistency."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auth_and_profiles.py",
+    "/app/test_reports/iteration_2.json"
+  ],
+  "success_rate": {
+    "backend": "95.65% (22/23)",
+    "frontend": "100% (2/2 scoped flows)"
+  },
+  "seed_data_creation": "Pytest seeds temporary users/sessions for auth/profile tests and cleans up after tests.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "SDK is resolved at 54.0.0 (expo config). Expo doctor passed 18/18. Public /api/health is healthy. One failing check is DB state: pre-existing TTL index on user_sessions remains.",
+  "rca_of_issue": "RCA: Not a startup-code regression. Code no longer creates TTL index, but MongoDB still contains a historical `expires_at_1` TTL index (expireAfterSeconds:0). Reproduced via `db.user_sessions.index_information()` during this run. Mitigation: perform one-time index drop migration if TTL behavior must be fully removed."
+}

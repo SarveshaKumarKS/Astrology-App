@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Central design tokens — warm, light & airy, Apple-minimalist with saffron accents.
 // Derived from /app/design_guidelines.json.
 
@@ -64,18 +66,24 @@ export const lineHeights = {
 
 // Soft, Apple-clean elevation (tier 1). Subtle, not heavy.
 export const shadow = {
-  card: {
-    shadowColor: '#8A6B3F',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 3,
-  },
-  soft: {
-    shadowColor: '#8A6B3F',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
+  card: Platform.select({
+    web: { boxShadow: '0 6px 16px rgba(138, 107, 63, 0.08)' },
+    default: {
+      shadowColor: '#8A6B3F',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 3,
+    },
+  })!,
+  soft: Platform.select({
+    web: { boxShadow: '0 2px 8px rgba(138, 107, 63, 0.06)' },
+    default: {
+      shadowColor: '#8A6B3F',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+  })!,
 } as const;

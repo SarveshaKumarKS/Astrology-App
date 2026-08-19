@@ -18,7 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { ApiError, fetchJson, isAbortError } from '../lib/api';
 import ScreenHeader from '../components/ScreenHeader';
-import { colors } from '../lib/theme';
+import { colors, shadow } from '../lib/theme';
 
 interface BirthDetails {
   name: string;
@@ -430,11 +430,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    ...shadow.soft,
   },
   sectionTitle: {
     fontSize: 16,
@@ -472,11 +468,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    ...shadow.soft,
   },
   inputGroup: {
     marginBottom: 16,

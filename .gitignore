@@ -79,10 +79,6 @@ agenthub/agents/youtube/db
 # Mobile development
 android-sdk/
 
-# Environment files
-*.env
-*.env.*
-
 # Test/debug artifacts
 generate_test_pdfs.py
 test_pdfs/
@@ -93,23 +89,9 @@ NKV_Palan_Logic_Summary.docx
 
 # Claude Code worktree metadata
 .claude/
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
 java_harness/out/
 java_harness/TestDebug*.java
 java_harness/TestMonthStarts.java
-.env
-.env.*
 credentials.json
 *.key
 .credentials

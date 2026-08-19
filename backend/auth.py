@@ -42,7 +42,8 @@ async def ensure_indexes() -> None:
         await _db.users.create_index("user_id", unique=True)
         await _db.user_sessions.create_index("session_token", unique=True)
         await _db.user_sessions.create_index("user_id")
-        await _db.user_sessions.create_index("expires_at", expireAfterSeconds=0)
+        # Expiry is enforced in _resolve_user. Avoid a MongoDB TTL index here:
+        # deployment startup must not register automatic destructive cleanup.
     except Exception as e:  # pragma: no cover
         logger.warning(f"Auth index creation skipped (DB unavailable): {e}")
 
