@@ -627,10 +627,14 @@ async def submit_corrections(payload: CorrectionsPayload, request: Request):
 
 # Panchangam (Thirukkanitham only)
 @api_router.get("/panchangam/{date}")
-async def get_panchangam(date: date, language: str = "tamil"):
+async def get_panchangam(date: date, language: str = "tamil", system: str = "vakkiam"):
     try:
-        panchangam = thirukkanitham_calc.get_daily_panchangam(date, language)
-        return panchangam
+        # Default to the Vakya (Vakkiyam) panchangam; the Drik/Thirukkanitham
+        # panchangam remains available via ?system=thirukkanitham. Both return
+        # the same field structure.
+        if system == "thirukkanitham":
+            return thirukkanitham_calc.get_daily_panchangam(date, language)
+        return vakkiam_calc.get_daily_panchangam(date, language)
     except Exception as e:
         logging.error(f"Error getting panchangam: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting panchangam: {str(e)}")

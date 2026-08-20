@@ -89,15 +89,13 @@ PLANET_DESC: Dict[str, dict] = {
     },
     'Venus': {
         # k.java c(): j<=63 → goa.txt (res 2131427334), j>63 → dlf.txt (res 2131427333)
-        # Mandocca 90 (was 93) — unused doc field, per Vakyakarana.
-        # NOTE: the treatise's ±1' Sodhya/M2/M3/M4 dhruva and nadi values are
-        # HELD (kept at ICS values) — applying them regressed the ICS 729-case
-        # validation (Venus dropped below 100% nakshatra). Pending the
-        # ICS-vs-treatise decision.
+        # Vakyakarana (Venugopal Table 14): Sodhya dhruva +17 (was +18);
+        # M1 nadi 9 (was 0); M2 nadi 8/dhruva +29 (was 7/+28); M3 dhruva -58
+        # (was -57); M4 nadi 23/dhruva +2103 (was 22/+2102). Mandocca 90 (was 93).
         'khandas': [1561937, 437945, 174594, 88756, 44962, 2919],
-        'gh':      [44, 0, 7, 53, 22, 38],
+        'gh':      [44, 9, 8, 53, 23, 38],
         'vi':      [0, 0, 0, 0, 0, 0],
-        'bija':    [18, 0, 28, -57, 2102, -144],
+        'bija':    [17, 0, 29, -58, 2103, -144],
         'period': 584, 'rows': 40, 'split': 63,
         'file_low': 'goa.txt', 'file_high': 'dlf.txt',
         'cycle_mod': None, 'col': 5, 'search': 'gt',
@@ -116,14 +114,12 @@ PLANET_DESC: Dict[str, dict] = {
     },
     'Mercury': {
         # k.java h(): j<=223 → rap.txt (res 2131427347), j>223 → qnl.txt (res 2131427346)
-        # Mandocca 210 (was 240) — unused doc field, per Vakyakarana.
-        # NOTE: the treatise's Sodhya dhruva -32 and M3 dhruva -447 are HELD
-        # (kept at ICS values -33/-446) — applying them regressed the ICS
-        # 729-case validation. Pending the ICS-vs-treatise decision.
+        # Vakyakarana (Venugopal Table 12): Sodhya dhruva -32 (was -33);
+        # M3 dhruva -447 (was -446). Mandocca 210 (was 240).
         'khandas': [1592740, 16801, 4750, 2549],
         'gh':      [22, 54, 53, 15],
         'vi':      [0, 0, 0, 0],
-        'bija':    [-33, -1, 149, -446],
+        'bija':    [-32, -1, 149, -447],
         'period': 116, 'rows': 25, 'split': 223,
         'file_low': 'rap.txt', 'file_high': 'qnl.txt',
         'cycle_mod': None, 'col': 4, 'search': 'gt',
