@@ -67,17 +67,21 @@ PLANET_DESC: Dict[str, dict] = {
         'khandas': [1552827, 634089, 132589, 28857, 17158, 11699],
         'gh':      [35, 9, 21, 41, 37, 4],
         'vi':      [0, 0, 0, 0, 0, 0],
-        'bija':    [-402, 5, 27, 133, -504, 638],
+        # Vakyakarana (Venugopal Table 11): M1 dhruva +4 (was +5).
+        'bija':    [-402, 4, 27, 133, -504, 638],
         'period': 780, 'rows': 39, 'split': 468,
         'file_low': 'arp.txt', 'file_high': 'pys.txt',
         'cycle_mod': None, 'col': 4, 'search': 'gt',
         'strict': False, 'special': (118, 0, -6),
     },
     'Jupiter': {
-        'khandas': [1570425, 974875, 125648, 65018, 30315, 21539, 4387],
-        'gh':      [17, 26, 50, 17, 17, 48, 44],
+        # Vakyakarana (Venugopal Table 16; Chandra Hari p.53): Mandala 1 is
+        # 474875 days 27 nadi, dhruva +0 (engine previously had 974875-26/+1,
+        # a transcription error; dormant for births before ~AD 2470).
+        'khandas': [1570425, 474875, 125648, 65018, 30315, 21539, 4387],
+        'gh':      [17, 27, 50, 17, 17, 48, 44],
         'vi':      [0, 0, 0, 0, 0, 0, 0],
-        'bija':    [-261, 1, -9, 133, -71, -619, 274],
+        'bija':    [-261, 0, -9, 133, -71, -619, 274],
         'period': 399, 'rows': 22, 'split': 168,
         'file_low': 'boi.txt', 'file_high': 'cip.txt',
         'cycle_mod': None, 'col': 4, 'search': 'gt',
@@ -85,6 +89,11 @@ PLANET_DESC: Dict[str, dict] = {
     },
     'Venus': {
         # k.java c(): j<=63 → goa.txt (res 2131427334), j>63 → dlf.txt (res 2131427333)
+        # Mandocca 90 (was 93) — unused doc field, per Vakyakarana.
+        # NOTE: the treatise's ±1' Sodhya/M2/M3/M4 dhruva and nadi values are
+        # HELD (kept at ICS values) — applying them regressed the ICS 729-case
+        # validation (Venus dropped below 100% nakshatra). Pending the
+        # ICS-vs-treatise decision.
         'khandas': [1561937, 437945, 174594, 88756, 44962, 2919],
         'gh':      [44, 0, 7, 53, 22, 38],
         'vi':      [0, 0, 0, 0, 0, 0],
@@ -92,7 +101,7 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 584, 'rows': 40, 'split': 63,
         'file_low': 'goa.txt', 'file_high': 'dlf.txt',
         'cycle_mod': None, 'col': 5, 'search': 'gt',
-        'strict': False, 'special': (93, 0, -1),
+        'strict': False, 'special': (90, 0, -1),
     },
     'Saturn': {
         # k.java d(): j<=190 → tcm.txt (res 2131427351), j>190 → htc.txt (res 2131427336)
@@ -107,6 +116,10 @@ PLANET_DESC: Dict[str, dict] = {
     },
     'Mercury': {
         # k.java h(): j<=223 → rap.txt (res 2131427347), j>223 → qnl.txt (res 2131427346)
+        # Mandocca 210 (was 240) — unused doc field, per Vakyakarana.
+        # NOTE: the treatise's Sodhya dhruva -32 and M3 dhruva -447 are HELD
+        # (kept at ICS values -33/-446) — applying them regressed the ICS
+        # 729-case validation. Pending the ICS-vs-treatise decision.
         'khandas': [1592740, 16801, 4750, 2549],
         'gh':      [22, 54, 53, 15],
         'vi':      [0, 0, 0, 0],
@@ -114,7 +127,7 @@ PLANET_DESC: Dict[str, dict] = {
         'period': 116, 'rows': 25, 'split': 223,
         'file_low': 'rap.txt', 'file_high': 'qnl.txt',
         'cycle_mod': None, 'col': 4, 'search': 'gt',
-        'strict': False, 'special': (240, 0, -3),
+        'strict': False, 'special': (210, 0, -3),
     },
 }
 
