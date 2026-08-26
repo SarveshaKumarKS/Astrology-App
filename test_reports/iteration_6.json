@@ -1,0 +1,63 @@
+{
+  "summary": "Frontend-only mobile-web validation completed on preview URL for global Tamil/English propagation and native/web date-time picker behavior. Most requested flows passed; Panchangam content API returned 501 in preview.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/panchangam/{date}",
+        "issue": "Returns HTTP 501 (\"Daily Panchangam is not available in this build\") during UI integration flow.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Home -> Panchangam load",
+        "issue": "Screen language and date picker work, but Panchangam data fetch fails due backend 501.",
+        "affected_testIDs": [
+          "home-service-panchangam",
+          "panchangam-date-button"
+        ]
+      }
+    ],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "Runtime console",
+        "issue": "Deprecation warning repeats: props.pointerEvents is deprecated; use style.pointerEvents"
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/artifacts_iter7/frontend_load_mobile.jpeg",
+    "/app/test_reports/artifacts_iter7/final_mobile_validation.jpeg",
+    "/app/test_reports/artifacts_iter7/language_propagation_secondary_flows.jpeg",
+    "/root/.emergent/automation_output/20260819_052113/console_20260819_052113.log",
+    "/root/.emergent/automation_output/20260819_052150/console_20260819_052150.log",
+    "/root/.emergent/automation_output/20260819_052205/console_20260819_052205.log"
+  ],
+  "action_items": [
+    "Fix backend Panchangam availability in preview so /api/panchangam/{date} does not return 501.",
+    "Add missing testID attributes to interactive elements in Compatibility/Account/Profiles (inputs and action buttons) to improve testability and regression coverage.",
+    "Optional cleanup: remove pointerEvents deprecated prop usage to reduce runtime warnings."
+  ],
+  "critical_code_review_comments": [
+    "Global language provider wiring is correct across Home, Horoscope, Compatibility, Panchangam, Saved Charts, and Account; toggle propagation works in both directions.",
+    "NativeDateTimePicker web fallback uses numeric day/month/year + hour/minute inputs with confirm/cancel and shared picker IDs, and behaved correctly in Horoscope/Compatibility/Panchangam picker-open flows.",
+    "Several interactive controls still lack testID (e.g., Compatibility text inputs, Account modal actions, Profiles action controls), which violates mobile testability standards for RN web automation."
+  ],
+  "updated_files": [
+    "/app/test_reports/iteration_6.json"
+  ],
+  "success_rate": {
+    "backend": "N/A (not requested)",
+    "frontend": "93% (all requested UI/state/picker checks passed except Panchangam data integration)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Language propagation and date/time picker behavior are stable across tested screens/viewports (390x844 and 320x700). Re-test Panchangam screen after backend endpoint availability fix; then re-run full mobile propagation suite.",
+  "rca_of_issue": "Reproduction: Navigate Home -> Panchangam in English state. Console shows failed resource 501 and ApiError: 'Daily Panchangam is not available in this build.' Root cause appears backend feature disabled/unavailable in deployed preview build, not a frontend picker or localization regression."
+}

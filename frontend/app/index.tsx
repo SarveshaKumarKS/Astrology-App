@@ -1,270 +1,140 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
-  Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { colors, spacing, radius, font, shadow, lineHeights } from '../lib/theme';
+import { useAuth } from '../lib/auth';
+import { useLanguage } from '../lib/language';
 
 export default function HomePage() {
-  const [language, setLanguage] = useState<'tamil' | 'english'>('tamil');
-  const [system, setSystem] = useState<'vakkiam' | 'thirukkanitham'>('vakkiam');
+  const { user } = useAuth();
+  const { language, toggleLanguage, getText } = useLanguage();
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'tamil' ? 'english' : 'tamil');
-  };
+  const appVersion =
+    (Constants.expoConfig?.version as string) ||
+    ((Constants as any).manifest?.version as string) ||
+    '1.0.0';
 
-  const toggleSystem = () => {
-    setSystem(system === 'vakkiam' ? 'thirukkanitham' : 'vakkiam');
-  };
-
-  const getText = (tamil: string, english: string) => {
-    return language === 'tamil' ? tamil : english;
-  };
-
-  const navigationOptions = [
+  const services: Array<{
+    title: string;
+    subtitle: string;
+    icon: 'planet-outline' | 'heart-outline' | 'bookmark-outline' | 'calendar-outline';
+    route: '/horoscope' | '/compatibility' | '/profiles' | '/panchangam';
+  }> = [
     {
       title: getText('ஜாதகம் கணித்தல்', 'Generate Horoscope'),
-      subtitle: getText('தனிப்பட்ட ஜாதகம் உருவாக்குதல்', 'Create Personal Horoscope'),
-      icon: 'planet-outline',
-      color: '#4A90E2',
-      route: '/horoscope'
+      subtitle: getText('தனிப்பட்ட ஜாதகம் உருவாக்குதல்', 'Create a personal chart'),
+      icon: 'planet-outline' as const,
+      route: '/horoscope',
     },
     {
       title: getText('திருமணப் பொருத்தம்', 'Marriage Compatibility'),
-      subtitle: getText('திருமணப் பொருத்தம் பார்த்தல்', 'Check Marriage Compatibility'),
-      icon: 'heart-outline',
-      color: '#E74C3C',
-      route: '/compatibility'
+      subtitle: getText('திருமணப் பொருத்தம் பார்த்தல்', 'Check marriage matching'),
+      icon: 'heart-outline' as const,
+      route: '/compatibility',
     },
     {
-      title: getText('சேமிக்கப்பட்ட விவரங்கள்', 'Saved Profiles'),
-      subtitle: getText('ஜாதகங்களை சேமித்தல்', 'Manage Birth Profiles'),
-      icon: 'person-outline',
-      color: '#27AE60',
-      route: '/profiles'
+      title: getText('சேமிக்கப்பட்ட விவரங்கள்', 'Saved Charts'),
+      subtitle: getText('ஜாதகங்களை நிர்வகித்தல்', 'Manage saved horoscopes'),
+      icon: 'bookmark-outline' as const,
+      route: '/profiles',
     },
     {
       title: getText('தினசரி பஞ்சாங்கம்', 'Daily Panchangam'),
-      subtitle: getText('இன்றைய பஞ்சாங்க விவரங்கள்', "Today's Panchangam Details"),
-      icon: 'calendar-outline',
-      color: '#F39C12',
+      subtitle: getText('இன்றைய பஞ்சாங்க விவரங்கள்', "Today's panchangam"),
+      icon: 'calendar-outline' as const,
       route: '/panchangam',
-      systemRestriction: 'thirukkanitham'
-    }
+    },
   ];
 
-  const handleNavigation = (route: string, systemRestriction?: string) => {
-    if (systemRestriction && system !== systemRestriction) {
-      Alert.alert(
-        getText('அமைப்பு தேவை', 'System Required'),
-        getText(
-          'இந்த அம்சம் திருக்கணித அமைப்பில் மட்டுமே கிடைக்கும்',
-          'This feature is only available in Thirukkanitham system'
-        ),
-        [
-          {
-            text: getText('ரத்து செய்', 'Cancel'),
-            style: 'cancel'
-          },
-          {
-            text: getText('மாற்று', 'Switch'),
-            onPress: () => {
-              setSystem('thirukkanitham');
-              // Navigate after switching
-              setTimeout(() => {
-                // TODO: Navigate to route
-                console.log('Navigate to:', route);
-              }, 100);
-            }
-          }
-        ]
-      );
-      return;
-    }
-    
-    // TODO: Navigate to route
-    console.log('Navigate to:', route, 'with system:', system);
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C3E50" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>
-            {getText('தமிழ் ஜோதிடம்', 'Tamil Astrology')}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {getText('பாரம்பரிய ஜோதிட சேவை', 'Traditional Astrology Service')}
-          </Text>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.languageToggle}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
+
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          testID="home-language-button"
+          style={styles.langChip}
           onPress={toggleLanguage}
         >
-          <Text style={styles.languageText}>
-            {language === 'tamil' ? 'த' : 'En'}
-          </Text>
+          <Ionicons name="language-outline" size={16} color={colors.brandStrong} />
+          <Text style={styles.langChipText}>{language === 'tamil' ? 'தமிழ்' : 'EN'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity testID="home-account-button" style={styles.accountBtn} onPress={() => router.push('/account')}>
+          {user?.picture ? (
+            <View style={styles.avatarRing}>
+              <Ionicons name="person" size={18} color={colors.brandStrong} />
+            </View>
+          ) : (
+            <Ionicons name="person-circle-outline" size={30} color={colors.brandStrong} />
+          )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* System Selection */}
-        <View style={styles.systemSection}>
-          <Text style={styles.sectionTitle}>
-            {getText('அமைப்பு தேர்வு', 'System Selection')}
-          </Text>
-          
-          <View style={styles.systemButtons}>
-            <TouchableOpacity
-              style={[
-                styles.systemButton,
-                system === 'vakkiam' && styles.systemButtonActive
-              ]}
-              onPress={() => setSystem('vakkiam')}
-            >
-              <Text style={[
-                styles.systemButtonText,
-                system === 'vakkiam' && styles.systemButtonTextActive
-              ]}>
-                {getText('வாக்கிய பஞ்சாங்கம்', 'Vakkiam Panchangam')}
-              </Text>
-              <Text style={[
-                styles.systemButtonSubtext,
-                system === 'vakkiam' && styles.systemButtonSubtextActive
-              ]}>
-                {getText('பாரம்பரிய கணக்கீடு', 'Traditional Calculation')}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.systemButton,
-                system === 'thirukkanitham' && styles.systemButtonActive
-              ]}
-              onPress={() => setSystem('thirukkanitham')}
-            >
-              <Text style={[
-                styles.systemButtonText,
-                system === 'thirukkanitham' && styles.systemButtonTextActive
-              ]}>
-                {getText('திருக்கணித பஞ்சாங்கம்', 'Thirukkanitham Panchangam')}
-              </Text>
-              <Text style={[
-                styles.systemButtonSubtext,
-                system === 'thirukkanitham' && styles.systemButtonSubtextActive
-              ]}>
-                {getText('திருக்கணித கணக்கீடு', 'Thirukkanitham Calculation')}
-              </Text>
-            </TouchableOpacity>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: spacing.xxxl }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View style={styles.motif}>
+            <Ionicons name="sunny" size={30} color={colors.brand} />
           </View>
-        </View>
-
-        {/* Navigation Options */}
-        <View style={styles.navigationSection}>
-          <Text style={styles.sectionTitle}>
-            {getText('சேவைகள்', 'Services')}
+          <Text style={styles.heroTitle}>
+            {getText('தமிழ் ஜோதிடம்', 'Tamil Astrology')}
           </Text>
-          
-          {navigationOptions.map((option, index) => {
-            const isDisabled = option.systemRestriction && system !== option.systemRestriction;
-            
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.navigationCard,
-                  isDisabled && styles.navigationCardDisabled
-                ]}
-                onPress={() => handleNavigation(option.route, option.systemRestriction)}
-                disabled={isDisabled}
-              >
-                <View style={[styles.navigationIcon, { backgroundColor: `${option.color}20` }]}>
-                  <Ionicons 
-                    name={option.icon as any} 
-                    size={28} 
-                    color={isDisabled ? '#95A5A6' : option.color} 
-                  />
-                </View>
-                
-                <View style={styles.navigationContent}>
-                  <Text style={[
-                    styles.navigationTitle,
-                    isDisabled && styles.navigationTitleDisabled
-                  ]}>
-                    {option.title}
-                  </Text>
-                  <Text style={[
-                    styles.navigationSubtitle,
-                    isDisabled && styles.navigationSubtitleDisabled
-                  ]}>
-                    {option.subtitle}
-                  </Text>
-                  {option.systemRestriction && (
-                    <Text style={styles.systemRestriction}>
-                      {getText('திருக்கணித மட்டும்', 'Thirukkanitham Only')}
-                    </Text>
-                  )}
-                </View>
-                
-                <Ionicons 
-                  name="chevron-forward" 
-                  size={20} 
-                  color={isDisabled ? '#95A5A6' : '#7F8C8D'} 
-                />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Current System Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>
-              {getText('தற்போதைய அமைப்பு', 'Current System')}
-            </Text>
-            <Text style={styles.infoContent}>
-              {system === 'vakkiam' 
-                ? getText('வாக்கிய பஞ்சாங்கம்', 'Vakkiam Panchangam')
-                : getText('திருக்கணித பஞ்சாங்கம்', 'Thirukkanitham Panchangam')
-              }
-            </Text>
-            
-            <Text style={styles.infoDescription}>
-              {system === 'vakkiam'
-                ? getText(
-                    'பாரம்பரிய வாக்கிய முறையில் கணிக்கப்படும் ஜோதிட சேவை',
-                    'Traditional Vakkiam method astrology calculations'
-                  )
-                : getText(
-                    'திருக்கணித முறையில் கணிக்கப்படும் ஜோதிட சேவை மற்றும் தினசரி பஞ்சாங்கம்',
-                    'Thirukkanitham method astrology calculations with daily Panchangam'
-                  )
-              }
-            </Text>
-          </View>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.aboutSection}>
-          <Text style={styles.aboutTitle}>
-            {getText('பற்றி', 'About')}
+          <Text style={styles.heroSubtitle}>
+            {getText('பாரம்பரிய ஜோதிட சேவை', 'Traditional astrology, refined')}
           </Text>
+        </View>
+
+        {/* Services */}
+        <Text style={styles.sectionLabel}>{getText('சேவைகள்', 'Services')}</Text>
+
+        {services.map((s) => (
+          <TouchableOpacity
+            key={s.route}
+            testID={`home-service-${String(s.route).replace('/', '')}`}
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => router.push(s.route)}
+          >
+            <View style={styles.iconWrap}>
+              <Ionicons name={s.icon} size={24} color={colors.brandStrong} />
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>{s.title}</Text>
+              <Text style={styles.cardSubtitle}>{s.subtitle}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
+        ))}
+
+        {/* About */}
+        <View style={styles.aboutCard}>
+          <Text style={styles.aboutTitle}>{getText('பற்றி', 'About')}</Text>
           <Text style={styles.aboutText}>
             {getText(
-              'இது ஒரு பாரம்பரிய தமிழ் ஜோதிட மொபைல் பயன்பாட்டு ஆகும். வாக்கிய மற்றும் திருக்கணித இரு முறைகளிலும் ஜாதகம் கணித்தல், திருமணப் பொருத்தம் பார்த்தல் போன்ற சேவைகள் வழங்கப்படுகின்றன.',
-              'This is a traditional Tamil astrology mobile application. It provides services like horoscope generation and marriage compatibility checking in both Vakkiam and Thirukkanitham systems.'
+              'வாக்கிய மற்றும் திருக்கணித முறைகளில் ஜாதகம் கணித்தல், திருமணப் பொருத்தம் மற்றும் பஞ்சாங்கம் ஆகிய சேவைகளை வழங்கும் பாரம்பரிய தமிழ் ஜோதிட செயலி.',
+              'A traditional Tamil astrology app offering horoscope generation, marriage compatibility and panchangam in both Vakkiam and Thirukkanitham systems.'
             )}
           </Text>
+        </View>
+
+        <View testID="app-version-label" style={styles.versionWrap}>
+          <Text style={styles.versionText}>{getText('பதிப்பு', 'Version')} {appVersion}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -272,205 +142,126 @@ export default function HomePage() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+  container: { flex: 1, backgroundColor: colors.bg },
+  topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  headerLeft: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#BDC3C7',
-  },
-  languageToggle: {
-    backgroundColor: '#34495E',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  languageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  systemSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 16,
-  },
-  systemButtons: {
-    gap: 12,
-  },
-  systemButton: {
-    borderWidth: 2,
-    borderColor: '#E8E8E8',
-    borderRadius: 12,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  systemButtonActive: {
-    borderColor: '#4A90E2',
-    backgroundColor: '#F0F8FF',
-  },
-  systemButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#34495E',
-    marginBottom: 4,
-  },
-  systemButtonTextActive: {
-    color: '#4A90E2',
-  },
-  systemButtonSubtext: {
-    fontSize: 14,
-    color: '#7F8C8D',
-  },
-  systemButtonSubtextActive: {
-    color: '#5BA0F2',
-  },
-  navigationSection: {
-    marginTop: 24,
-  },
-  navigationCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 12,
+  langChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    backgroundColor: colors.brandSoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    gap: 6,
   },
-  navigationCardDisabled: {
-    opacity: 0.6,
-  },
-  navigationIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  langChipText: { color: colors.brandStrong, fontSize: font.sm, fontWeight: '700' },
+  accountBtn: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  navigationContent: {
-    flex: 1,
+  avatarRing: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.brandSoft,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  navigationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 4,
+  content: { flex: 1, paddingHorizontal: spacing.lg },
+  hero: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
   },
-  navigationTitleDisabled: {
-    color: '#95A5A6',
+  motif: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.brandSoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  navigationSubtitle: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    marginBottom: 4,
+  heroTitle: {
+    fontSize: font.xxxl,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: 0.2,
+    lineHeight: lineHeights.title,
+    textAlign: 'center',
   },
-  navigationSubtitleDisabled: {
-    color: '#BDC3C7',
+  heroSubtitle: {
+    fontSize: font.base,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
-  systemRestriction: {
-    fontSize: 12,
-    color: '#E67E22',
-    fontStyle: 'italic',
+  sectionLabel: {
+    fontSize: font.sm,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
   },
-  infoSection: {
-    marginTop: 24,
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...shadow.card,
   },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+  iconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.brandSoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.lg,
   },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 8,
+  cardBody: { flex: 1 },
+  cardTitle: {
+    fontSize: font.lg,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 2,
   },
-  infoContent: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#4A90E2',
-    marginBottom: 12,
-  },
-  infoDescription: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    lineHeight: 20,
-  },
-  aboutSection: {
-    marginTop: 24,
-    marginBottom: 32,
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+  cardSubtitle: { fontSize: font.base, color: colors.textSecondary },
+  aboutCard: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    marginTop: spacing.lg,
+    ...shadow.soft,
   },
   aboutTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 12,
+    fontSize: font.lg,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   aboutText: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    lineHeight: 20,
+    fontSize: font.base,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+  versionWrap: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    paddingVertical: spacing.sm,
+  },
+  versionText: {
+    fontSize: font.sm,
+    color: colors.textMuted,
   },
 });

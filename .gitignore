@@ -77,7 +77,24 @@ agenthub/agents/youtube/db
 .cache/
 
 # Mobile development
-android-sdk/ -e 
-# Environment files
+android-sdk/
+
+# Test/debug artifacts
+generate_test_pdfs.py
+test_pdfs/
+NKV_Palan_Logic_Summary.docx
+
+# Cursor
+.cursor/
+
+# Claude Code worktree metadata
+.claude/
+java_harness/out/
+java_harness/TestDebug*.java
+java_harness/TestMonthStarts.java
+credentials.json
+*.key
+.credentials
+.env
+.env.*
 *.env
-*.env.*

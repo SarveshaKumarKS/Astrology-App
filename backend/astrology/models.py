@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, field_serializer
 from typing import List, Dict, Any, Optional
 from datetime import datetime, date, time
 
 class BirthDetails(BaseModel):
     name: str
+    mother_name: Optional[str] = None  # தாய் பெயர்
+    father_name: Optional[str] = None  # தந்தை பெயர்
     date_of_birth: date
     time_of_birth: time
     place_of_birth: str
@@ -11,6 +13,14 @@ class BirthDetails(BaseModel):
     longitude: float
     timezone: str
     time_correction: int = 0  # in minutes
+    
+    @field_serializer('date_of_birth', when_used='json')
+    def serialize_date(self, value):
+        return value.isoformat() if value else None
+    
+    @field_serializer('time_of_birth', when_used='json')
+    def serialize_time(self, value):
+        return value.isoformat() if value else None
 
 class PlanetaryPosition(BaseModel):
     planet: str
@@ -24,8 +34,16 @@ class PlanetaryPosition(BaseModel):
     nakshatra_name_tamil: str
     house: int  # 1-12
     retrograde: bool = False
+    longitude_dms: Optional[str] = None  # DMS-formatted sidereal longitude
+    longitude_in_sign: Optional[float] = None  # Longitude within its zodiac sign
+    longitude_in_sign_dms: Optional[str] = None  # DMS-formatted longitude within the sign
+    nakshatra_pada: Optional[int] = None  # 1-4 depending on which quarter of the nakshatra
+    nakshatra_lord: Optional[str] = None  # Ruling planet of the nakshatra
+    nakshatra_lord_tamil: Optional[str] = None  # Ruling planet of the nakshatra (Tamil name)
 
 class DasaPeriod(BaseModel):
+    model_config = ConfigDict(json_encoders={date: lambda v: v.isoformat() if v else None})
+    
     planet: str
     planet_tamil: str
     start_date: date
@@ -34,14 +52,31 @@ class DasaPeriod(BaseModel):
     years: float
     months: int
     days: int
+    # Extended fields for current dasa
+    balance_years: Optional[int] = None  # First dasha balance (திசை இருப்பு)
+    balance_months: Optional[int] = None
+    balance_days: Optional[int] = None
+    first_dasha_planet: Optional[str] = None  # First dasha planet name
+    first_dasha_planet_tamil: Optional[str] = None  # First dasha planet Tamil name
+    next_dasa_planet: Optional[str] = None
+    next_dasa_planet_tamil: Optional[str] = None
+    next_dasa_end_date: Optional[str] = None  # Store as string
+    current_bhukti_planet: Optional[str] = None
+    current_bhukti_planet_tamil: Optional[str] = None
+    current_bhukti_end_date: Optional[str] = None  # Store as string
+    next_bhukti_planet: Optional[str] = None
+    next_bhukti_planet_tamil: Optional[str] = None
+    next_bhukti_end_date: Optional[str] = None  # Store as string
 
 class Chart(BaseModel):
     chart_type: str  # "rasi", "navamsa"
     houses: Dict[int, List[str]]  # house_number -> list of planets
     houses_tamil: Dict[int, List[str]]  # house_number -> list of planets in Tamil
     ascendant_house: int
+    image_base64: Optional[str] = None  # South Indian chart image as base64
     
 class HoroscopeResult(BaseModel):
+    system_type: str = "Modern"
     birth_details: BirthDetails
     system: str  # "vakkiam" or "thirukkanitham"
     language: str
@@ -59,6 +94,58 @@ class HoroscopeResult(BaseModel):
     special_yogas: List[str] = []
     special_yogas_tamil: List[str] = []
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+    # Extended fields
+    retrograde_planets: List[str] = []
+    retrograde_planets_tamil: List[str] = []
+    bhava_maruthal: Dict[str, int] = {}  # Planet -> House number
+    bhava_maruthal_tamil: Dict[str, int] = {}  # Tamil planet name -> House number
+    
+    # Panchangam details for PDF
+    sunrise_time: Optional[str] = None
+    sunset_time: Optional[str] = None
+    paksha: Optional[str] = None  # Krishna/Shukla
+    paksha_tamil: Optional[str] = None
+    tithi: Optional[str] = None
+    tithi_tamil: Optional[str] = None
+    yoga: Optional[str] = None
+    yoga_tamil: Optional[str] = None
+    karana: Optional[str] = None
+    karana_tamil: Optional[str] = None
+    ayanamsa: Optional[str] = None
+    tamil_month: Optional[str] = None
+    tamil_day: Optional[int] = None
+    tamil_year: Optional[int] = None
+    tamil_year_name: Optional[str] = None
+    udayadi_nazhigai: Optional[str] = None
+    yogi_planet: Optional[str] = None
+    yogi_planet_tamil: Optional[str] = None
+    avayogi_planet: Optional[str] = None
+    avayogi_planet_tamil: Optional[str] = None
+    
+    # Tamil horoscope detail fields
+    retrograde_status_tamil: Optional[str] = None  # கிரக வக்ர நிலை
+    bhava_change_tamil: Optional[str] = None  # பாவக மாற்றம்
+    dasa_balance_tamil: Optional[str] = None  # திசை இருப்பு
+    current_dasa_bhukthi_tamil: Optional[str] = None  # நடப்பு திசை புத்தி
+    # Karu Udayam derived chart fields
+    karu_udayam_rasi_chart: Optional[Chart] = None
+    karu_udayam_date_of_birth: Optional[date] = None
+    karu_udayam_time_of_birth: Optional[time] = None
+    karu_udayam_tamil_month: Optional[str] = None
+    karu_udayam_tamil_day: Optional[int] = None
+    karu_udayam_approx_diff_days: Optional[int] = None
+    
+    @field_serializer('generated_at', when_used='json')
+    def serialize_datetime(self, value):
+        return value.isoformat() if value else None
+
+    @field_serializer('karu_udayam_date_of_birth', when_used='json')
+    def serialize_karu_udayam_date(self, value):
+        return value.isoformat() if value else None
+
+    @field_serializer('karu_udayam_time_of_birth', when_used='json')
+    def serialize_karu_udayam_time(self, value):
+        return value.isoformat() if value else None
 
 class CompatibilityFactor(BaseModel):
     factor_name: str
@@ -87,6 +174,43 @@ class CompatibilityResult(BaseModel):
     recommendation: str
     recommendation_tamil: str
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class NKVPlanetaryContext(BaseModel):
+    planet: str
+    planet_tamil: str
+    sign: str
+    sign_tamil: str
+    house: int
+    house_type: str  # "Kendra", "Trikona", "Dusthana", "Upachaya", "Maraka", "Neutral"
+    house_type_tamil: str
+
+class NKVPalanResult(BaseModel):
+    birth_summary: Dict[str, str]
+    planetary_context: Dict[str, NKVPlanetaryContext]
+    rahu_ketu_axis: str
+    rahu_ketu_axis_tamil: str
+    saturn_moon_aspect: str
+    saturn_moon_aspect_tamil: str
+    rahu_dispositor: str
+    rahu_dispositor_tamil: str
+    rahu_dispositor_strong: bool
+    section1_title: str
+    section1_title_tamil: str
+    section1_placement: str
+    section1_placement_tamil: str
+    section1_palan: str
+    section1_palan_tamil: str
+    section2_title: str
+    section2_title_tamil: str
+    section2_placement: str
+    section2_placement_tamil: str
+    section2_palan: str
+    section2_palan_tamil: str
+    section3_title: str
+    section3_title_tamil: str
+    section3_advice: str
+    section3_advice_tamil: str
+
 
 class PanchangamDetails(BaseModel):
     date: date

@@ -1,0 +1,45 @@
+{
+  "summary": "Re-validated SDK regression and backend/frontend integration on public preview. Expo config reports sdkVersion 54.0.0, expo-doctor passed 18/18, frontend loads and Home -> Horoscope navigation works, backend health is 200, and full backend regression passed including session-expiry and no-TTL-index checks.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "Runtime console",
+        "issue": "Non-blocking warning persists: props.pointerEvents is deprecated; use style.pointerEvents. No shadow deprecation warnings observed in this run."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auth_and_profiles.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/artifacts_iter3/frontend_load_mobile.jpg",
+    "/app/test_reports/artifacts_iter3/home_to_horoscope.jpg"
+  ],
+  "action_items": [
+    "Optional: investigate source of pointerEvents deprecation warning in web runtime bundle; not blocking functional flows.",
+    "No SDK/TTL/auth-startup regression fixes required from this validation run."
+  ],
+  "critical_code_review_comments": [
+    "Confirmed auth startup path does not create TTL index (no expireAfterSeconds index creation in backend/auth.py ensure_indexes).",
+    "Confirmed no TTL indexes exist on user_sessions via passing regression test test_no_ttl_index_on_user_sessions.",
+    "Code still includes fallback defaults for MONGO_URL/DB_NAME in runtime modules; env-only fail-fast would be stricter for deployment consistency."
+  ],
+  "updated_files": [
+    "/app/test_reports/iteration_3.json"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23)",
+    "frontend": "100% (scoped flows passed: load, navigation, console error scan)"
+  },
+  "seed_data_creation": "No new seed scripts added. Existing pytest fixtures seeded temporary users/sessions and cleaned up automatically.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use EXPO_PUBLIC_BACKEND_URL from frontend/.env for public-endpoint validation in this workspace. Google OAuth interactive login still requires a real Google account and remains out of this SDK regression scope.",
+  "rca_of_issue": "Previously failing TTL-index regression is resolved: historical user_sessions.expires_at_1 TTL index no longer present in preview DB after one-time migration. Application-level expires_at enforcement remains active and expired sessions return 401."
+}

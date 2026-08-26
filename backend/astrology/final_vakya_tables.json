@@ -1,0 +1,86 @@
+{
+    "Sun": {
+        "epoch_l0": 255.9622377129232,
+        "mean_motion": 0.9856028218900699,
+        "apogee_l0": 76.30549857960575,
+        "manda_coeff": 2.1486799405558914,
+        "is_synodic": false,
+        "type": "aryabhatiya_epicycle"
+    },
+    "Moon": {
+        "epoch_l0": 187.74279838310702,
+        "mean_motion": 13.17635489,
+        "apogee_l0": 61.911443362098765,
+        "apogee_rate": 0.11138658,
+        "amplitude": 4.956042240728303,
+        "is_synodic": false,
+        "type": "aryabhatiya_epicycle"
+    },
+    "Mars": {
+        "epoch_l0": 326.9822347632891,
+        "sun_l0_ref": 256.35108364935513,
+        "apogee_l0": 126.9245956081672,
+        "manda_coeff": 17.70307657901408,
+        "sighra_circ": 232.81714576983242,
+        "mean_motion": 0.52401766,
+        "sun_rate_ref": 0.98560267,
+        "type": "aryabhatiya_double_epicycle",
+        "is_synodic": true
+    },
+    "Mercury": {
+        "sun_l0_ref": 255.75644970782594,
+        "epoch_l0": 260.77419207062127,
+        "apogee_l0": 209.33903802312523,
+        "manda_coeff": 3.6772039535935694,
+        "sighra_circ": 132.0985785352606,
+        "mean_motion": 4.09233845,
+        "sun_rate_ref": 0.98560267,
+        "type": "aryabhatiya_inner_planet",
+        "is_synodic": true
+    },
+    "Jupiter": {
+        "epoch_l0": 11.534785093867594,
+        "sun_l0_ref": 256.2988662130155,
+        "apogee_l0": 180.08299277463124,
+        "manda_coeff": 5.817945186868968,
+        "sighra_circ": 67.61235893217057,
+        "mean_motion": 0.08309115,
+        "sun_rate_ref": 0.98560267,
+        "type": "aryabhatiya_double_epicycle",
+        "is_synodic": true
+    },
+    "Venus": {
+        "sun_l0_ref": 255.96001931974934,
+        "epoch_l0": 154.30682106091712,
+        "apogee_l0": 80.77688543739944,
+        "manda_coeff": 1.5248285183690706,
+        "sighra_circ": 259.6532884621374,
+        "mean_motion": 1.6021467282034707,
+        "sun_rate_ref": 0.9856028594650861,
+        "type": "aryabhatiya_inner_planet",
+        "is_synodic": true
+    },
+    "Saturn": {
+        "epoch_l0": 19.744226036016105,
+        "apogee_l0": 240.10458864433207,
+        "manda_coeff": 6.943168286141573,
+        "sun_l0_ref": 256.99291820415186,
+        "sighra_circ": 36.44594133651722,
+        "mean_motion": 0.03343840219783354,
+        "sun_rate_ref": 0.9856028594650861,
+        "type": "aryabhatiya_double_epicycle",
+        "is_synodic": true
+    },
+    "Rahu": {
+        "epoch_l0": 100.15746459960934,
+        "mean_motion": -0.05298208556530998,
+        "type": "aryabhatiya_mean_node",
+        "is_synodic": false
+    },
+    "Ketu": {
+        "epoch_l0": 280.15746459960934,
+        "mean_motion": -0.05298208556530998,
+        "type": "aryabhatiya_mean_node",
+        "is_synodic": false
+    }
+}

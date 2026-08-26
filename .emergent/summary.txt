@@ -1,0 +1,87 @@
+<analysis>
+The previous AI engineer’s work began by addressing an unresponsive Generate horoscope button for the Thirukkanitham system. This involved debugging backend calculation errors in Dasa periods and a missing  statement in Navamsa calculations, eventually confirming both Vakkiam and Thirukkanitham backend systems were operational. Frontend UI enhancements included adding an NKV system - coming soon button and removing the System Selection from the home screen. A significant refactoring focused on differentiating Vakkiam (traditional) and Thirukkanitham (drik) astrological calculations and correcting the Rasi chart generation from house-based to sign-based. Initial attempts to render charts using Matplotlib were discarded in favor of a native React Native component, which was then debugged for correct visual layout. A major architectural shift involved migrating from  to  for enhanced astronomical accuracy, overcoming several implementation hurdles related to 's data structures. The current task revolves around aligning the Vakkiam system's calculations, specifically its Ayanamsa and Local Mean Time (LMT) handling, with a user-provided traditional reference chart for Vaibhavi's data, which showed persistent planetary and ascendant discrepancies despite previous fixes. The engineer is actively implementing the  and LMT-based calculations.
+</analysis>
+
+<product_requirements>
+The objective is to develop a bilingual (Tamil/English) Android astrology application with subscription models. Key features include:
+1.  **Vakkiam System:** Personal Horoscope (Ascendant, Moon Sign, Planetary Positions, Rasi/Navamsa Charts, Dasa Periods), Marriage Compatibility, Birth Profile Management, PDF Horoscope Reports.
+2.  **Thirukkanitham System:** Personal Horoscope (using Thirukkanitham calculations), Marriage Compatibility, Daily Astrological Calendar (Panchangam), and configurable North/South Indian Chart Styles.
+**MVP Priority:** Core horoscope generation (Vakkiam and Thirukkanitham) and Marriage Compatibility (Vakkiam and Thirukkanitham).
+**Current State:** The application generates horoscopes for both Vakkiam and Thirukkanitham systems using  for calculations, and displays them with a South Indian chart layout. Frontend navigation and form inputs (date, time, geocoding) are functional. The primary challenge is accurately matching the Vakkiam system's astrological output to traditional reference charts, specifically concerning Ayanamsa and time correction methodologies.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Expo/React Native:** Frontend for cross-platform mobile app.
+-   **FastAPI:** Python backend for API services.
+-   **MongoDB:** Database for persistence.
+-   **:** File-based routing for navigation.
+-   **:** Industry-standard library for astronomical calculations (replaced ).
+-   **Vakkiam & Thirukkanitham Systems:** Two distinct Indian astrological calculation methodologies.
+-   **Lahiri & Traditional Vakkiam Ayanamsa:** Different sidereal correction methods.
+-   **Topocentric vs. Geocentric:** Observer's position for calculations.
+-   **True vs. Mean Node/Obliquity:** Astronomical accuracy variations.
+-   **Local Mean Time (LMT) Correction:** Timezone handling for traditional systems.
+-   **South Indian Chart Layout:** Specific grid display for astrological charts.
+</key_technical_concepts>
+
+<code_architecture>
+The application employs a full-stack architecture with an Expo React Native frontend, a FastAPI Python backend, and MongoDB.
+
+
+
+-   ****: FastAPI entry point, handling API routes and dispatching to  or .
+    -   *Summary of changes*: No direct edits in trajectory, but relies on changes in calculation modules.
+-   ****: Core astronomical calculation logic. **(Extensively rewritten)**
+    -   *Summary of importance*: This file is central to all astronomical computations.
+    -   *Summary of changes*: Migrated from  to . Dasa calculation methods moved here from . Ascendant calculation formula fixed multiple times to correct 180° sign flips, and then adjusted to use  and a  degree shift for the eastern point. New methods added for , , ,  for Thirukkanitham, and recently , , ,  for Vakkiam. Contains parsing logic for  tuple outputs.
+-   ****: Implements Vakkiam logic.
+    -   *Summary of importance*: Defines Vakkiam-specific horoscope generation and chart creation.
+    -   *Summary of changes*:  modified to bucket planets by *sign* instead of *house*. Removed  chart image generation. Updated  call to pass , and  to mark the Navamsa ascendant.
+-   ****: Implements Thirukkanitham logic.
+    -   *Summary of importance*: Defines Thirukkanitham-specific horoscope generation and chart creation.
+    -   *Summary of changes*:  updated to use  and  for Drik system differentiation.  also updated for sign-bucketing. Removed  chart image generation. Updated  call to pass , and  to mark the Navamsa ascendant.
+-   ****: Pydantic models for data structures.
+    -   *Summary of changes*:  model updated to include an optional  field (though backend image generation was later removed).
+-   ****: Contains  mapping for South Indian chart layout.
+    -   *Summary of importance*: Defines the fixed grid layout for South Indian charts.
+    -   *Summary of changes*: Initially held  rendering logic, but this was removed as frontend handles rendering. Retained .
+-   ****: Main entry and home screen.
+    -   *Summary of changes*: System selection UI and related logic removed from this screen.
+-   ****: Form for horoscope generation.
+    -   *Summary of changes*: Added NKV system - coming soon button with disabled styling. Layout adjusted for three system buttons.
+-   ****: Displays generated horoscope report.
+    -   *Summary of changes*: Updated to use the new  React Native component for displaying Rasi and Navamsa charts, replacing  image rendering.
+-   ****: React Native component for South Indian chart display.
+    -   *Summary of importance*: Renders the South Indian astrological chart layout on the frontend.
+    -   *Summary of changes*: Created from scratch to mimic user-provided HTML/CSS, then fixed for proper React Native flexbox layout to match traditional charts.
+</code_architecture>
+
+<pending_tasks>
+-   Implement actual compatibility calculation logic for both Vakkiam and Thirukkanitham.
+-   Develop user profile saving and management features.
+-   Integrate the Razorpay payment gateway for subscriptions.
+-   Implement PDF report generation with traditional charts and Tamil text.
+-   Develop the daily Panchangam feature.
+-   Implement North/South Indian chart style selection (beyond the current South Indian default).
+-   Implement logic for  and .
+-   Complete implementation and verification of Traditional Vakkiam ayanamsa and LMT calculations to match reference charts.
+</pending_tasks>
+
+<current_work>
+Immediately before this summary request, the AI engineer was working on resolving discrepancies between the application's Vakkiam horoscope output and a user-provided traditional reference chart for specific birth details (Vaibhavi, DOB 12/12/1999, 7:36 AM, Attur).
+
+**Problem:** While basic astronomical calculations are now powered by , and the  and  render charts correctly by sign and layout, the planetary and ascendant positions for the Vakkiam system still do not precisely match the reference. The user clarified that the reference uses a **Traditional Vakkiam Ayanamsa** (base 23.5°, drift 50″/century) and **Local Mean Time (LMT) correction** for Julian Day calculations, rather than the Lahiri Ayanamsa and standard UTC conversion primarily used.
+
+**Actions Taken (and currently ongoing):**
+The AI engineer is in the process of implementing these specific traditional methodologies:
+1.  **Added :** A new method in  to compute the Ayanamsa according to the Traditional Vakkiam formula (Chat Message 387).
+2.  **Added :** A new method in  to calculate Julian Day using Local Mean Time correction (Chat Message 389).
+3.  **Added :** A new method in  for planetary calculations using the traditional Ayanamsa (Chat Message 391).
+4.  **Added :** A new method in  for ascendant calculations using the traditional Ayanamsa (Chat Message 393).
+
+The current work involves integrating these new traditional calculation methods into the  to accurately match the user's reference chart, ensuring the Vakkiam system behaves as per its traditional definition while the Thirukkanitham system retains its Drik (modern observational) characteristics.
+</current_work>
+
+<optional_next_step>
+Complete the integration of the newly added traditional Vakkiam calculation methods into , then re-test with Vaibhavi's data.
+</optional_next_step>
